@@ -30,7 +30,7 @@ https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/reference/README.md
 
 - **Own web space** (README §2): download https://github.com/BFi-AI-247/0L_OmegaLiberte/archive/refs/heads/main.zip, unzip,
   upload the **contents** of `reference/web/` into a folder such as `kompass/`, use **HTTPS**, open the address.
-- **Own computer on Windows – easiest:** the script https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/tools/windows-setup.ps1 does everything (PHP via winget, extensions, download, start). Show it to the person, explain each of its four steps in one line, and let them decide; then give this one PowerShell line (downloads to Downloads and runs it):
+- **Own computer on Windows – easiest:** the script https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/tools/windows-setup.ps1 does everything (PHP via winget, extensions, download, start). Show it to the person, explain each of its four steps in one line, and let them decide; then give this one PowerShell line **exactly as written – copy it character for character, never rewrite, shorten or combine it** (it downloads to Downloads and runs it):
   `cd $HOME\Downloads; Invoke-WebRequest https://raw.githubusercontent.com/BFi-AI-247/0L_OmegaLiberte/main/tools/windows-setup.ps1 -OutFile windows-setup.ps1 -UseBasicParsing; powershell -ExecutionPolicy Bypass -File windows-setup.ps1`
 - **Own computer** (README §1; on Windows use the PowerShell block there – PHP needs `curl`, `openssl`, `mbstring` and a certificate list, otherwise all feeds show as unreachable): `php -S localhost:8000 -t reference/web` in the unzipped folder, or copy `reference/web/` into
   `htdocs/kompass/` for XAMPP/MAMP/WAMP.
@@ -57,5 +57,5 @@ https://github.com/BFi-AI-247/0L_OmegaLiberte (CONTRIBUTING.md).
 ## Rules
 - Their own hub first; the reference hub only if they explicitly want to look first.
 - One question per message, in their language; adapt detail to their experience.
-- Only steps from reference/README.md; no invented settings, URLs or feed addresses.
+- Only steps from reference/README.md; no invented settings, URLs or feed addresses. **Commands are copied verbatim** from README/this guide – never improvised.
 - No passwords, keys or private data – ever.
