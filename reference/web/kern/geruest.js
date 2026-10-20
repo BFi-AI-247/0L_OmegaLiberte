@@ -90,7 +90,7 @@ function renderTop() {
   const chev = icon('down', { sm: true }); chev.style.transition = 'transform .2s'; chev.style.transform = S.overview ? 'rotate(180deg)' : '';
   const top = h('header', { class: 'top top-one' },
     h('div', { class: 'top-bar' },
-      aiToggle(false),
+      modusLeiste(false),
       h('button', { type: 'button', class: 'icon-btn', 'aria-label': tt('Quelle suchen'), title: tt('Suchen'), onClick: () => openOverview(true) }, icon('search')),
       h('button', { type: 'button', class: 'who-pick' + (hasDupes && !S.overview ? ' has-dot' : ''), 'aria-expanded': S.overview ? 'true' : 'false',
         'aria-label': tt('Quelle wählen, aktuell ') + label + (n ? ', ' + n + tt(' ungelesen') : ''), onClick: () => openOverview(false) },
@@ -141,7 +141,7 @@ function renderSide() {
   const keys = keysFor(S.mode); const n = unreadAll();
   return [
     h('div', { class: 'side-head' }, h('span', { class: 'brand big' }, zentraleMarke()), countPill()),
-    h('div', { class: 'side-ai' }, aiToggle(true)),
+    h('div', { class: 'side-ai' }, modusLeiste(true)),
     h('div', { class: 'side-seg' }, segControl(), entrySearch()),
     h('div', { class: 'side-list' },
       h('div', { class: 'row' + (S.filter ? '' : ' sel') },

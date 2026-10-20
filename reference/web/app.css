@@ -458,3 +458,12 @@ a.mini { display: inline-flex; align-items: center; text-decoration: none; color
 .ping-zeile input { flex: none; width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--accent); }
 .ping-mehr summary { cursor: pointer; color: var(--accent-ink); }
 .brand { max-width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Einstellungen in Reitern, geführtes Willkommen (kern/einstellungen.js) */
+.einst-reiter { padding: 0 16px 10px; border-bottom: 1px solid var(--line); flex: none; }
+.einr-pakete { display: flex; flex-wrap: wrap; gap: 8px; }
+.einr-knoepfe .btn { flex: 1; }
+.einst-frage { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border: 1px solid var(--danger); border-radius: 12px; }
+.mini.danger-btn { background: var(--danger); border-color: var(--danger); color: #fff; }
+.app.wide .einst-reiter { justify-content: center; }
+.dav-dienste { margin: 2px 0 4px; padding-left: 18px; line-height: 1.45; color: var(--ink2); }

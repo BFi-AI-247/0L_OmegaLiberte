@@ -435,9 +435,7 @@ function kibKopf() {
   return h('div', { class: 'kib-kopfzeile' + (S.ai.err ? ' err' : '') },
     h('div', { class: 'kib-kopf-reihe' },
       h('span', { class: 'kib-marke' }, zentraleMarke()),
-      h('div', { class: 'kib-umschalter', role: 'group', 'aria-label': tt('Ansicht') },
-        h('button', { type: 'button', 'aria-pressed': 'false', onClick: () => setAiMode(false) }, tt('Chronologisch')),
-        h('button', { type: 'button', 'aria-pressed': 'true' }, h('span', { 'aria-hidden': 'true' }, '✦ '), 'KI-Auswahl')),
+      modusLeiste(true),  // Kern-Leiste ✦ · ☰ · ✎ statt des eigenen Umschalters
       h('span', { class: 'kib-stand', role: 'status' }, st),
       h('button', { type: 'button', class: 'kib-knopf', 'aria-expanded': S.ai.wunschOpen ? 'true' : 'false', disabled: S.ai.busy, onClick: () => { S.ai.wunschOpen = !S.ai.wunschOpen; render(); } }, tt('Wunsch')),
       h('button', { type: 'button', class: 'kib-knopf', disabled: S.ai.busy, onClick: curate }, S.ai.busy ? tt('Kuratiere …') : tt('Neu kuratieren')),

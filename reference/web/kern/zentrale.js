@@ -84,3 +84,26 @@ function zentralePingUebernehmen(f) {
   if (f.ping && !pingAn()) { pingEinwilligen(); flash(tt('Danke! Deine Installation wird gezählt. Widerruf jederzeit über das Kästchen.')); }
   else if (!f.ping && pingAn()) { pingWiderrufen(); flash(tt('Alles klar. Es wird nichts mehr gesendet; die Nummer wurde auf deinem Gerät gelöscht.')); }
 }
+
+// Darstellung: settings.thema 'system' | 'hell' | 'dunkel'. Schaltet die Media-Regeln „prefers-color-scheme: dark“ der eigenen
+// Stylesheets um (dunkel = immer, hell = nie, system = wie gehabt) – keine doppelten Farbtabellen nötig.
+const THEMA_MEDIA = 'prefers-color-scheme: dark';
+function zentraleThema() {
+  const t = settings.thema === 'hell' || settings.thema === 'dunkel' ? settings.thema : 'system';
+  for (const sh of document.styleSheets) {
+    let regeln; try { regeln = sh.cssRules; } catch (e) { continue; }
+    for (const r of regeln) {
+      if (!(r instanceof CSSMediaRule)) continue;
+      if (r._olMedia == null) { if (!r.media.mediaText.includes(THEMA_MEDIA)) continue; r._olMedia = r.media.mediaText; }
+      const ziel = t === 'dunkel' ? 'all' : t === 'hell' ? 'not all' : r._olMedia;
+      if (r.media.mediaText !== ziel) r.media.mediaText = ziel;
+    }
+  }
+  document.documentElement.dataset.thema = t;
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
+    if (m._olMedia == null) m._olMedia = m.getAttribute('media') || '';
+    const dunkel = /dark/.test(m._olMedia);
+    if (t === 'system') m.setAttribute('media', m._olMedia); else m.setAttribute('media', (t === 'dunkel') === dunkel ? 'all' : 'not all');
+  });
+}
+if (settings.thema && settings.thema !== 'system') zentraleThema();

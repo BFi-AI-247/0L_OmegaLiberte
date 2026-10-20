@@ -59,3 +59,29 @@ function modusGeruest() {
 }
 // Gegenstand des Dialogs rechts (null = der aktuelle Beitrag wie bisher)
 function modusChatBezug() { const m = aktiverModus(); return (m && typeof m.chatBezug === 'function' && m.chatBezug()) || null; }
+
+// Modus-Leiste: ✦ KI-Auswahl · ☰ Chronologisch · ✎ Schreiben (Reihenfolge fest). Ersetzt den ✦-Schalter im Handy-Kopf,
+// in der Laptop-Seitenspalte und in der KI-Kopfzeile. Schreiben ohne verbundenen Dienst: ausgegraut, Druck → Konten.
+function modusAktuell() { return S.schreiben && typeof postenVerbunden === 'function' && postenVerbunden() ? 'schreiben' : S.ai.on ? 'ki' : 'chrono'; }
+function modusWahl(ziel) {
+  const jetzt = modusAktuell(); if (ziel === jetzt) return;
+  if (ziel === 'schreiben' && !postenVerbunden()) {
+    flash(tt('Zum Schreiben verbinde zuerst Mastodon oder Bluesky.'));
+    S.screen = 'settings'; S.einstReiter = 'konten'; S.form = null; S.overview = false; render(); return;
+  }
+  if (ziel === 'ki') { S.schreiben = false; setAiMode(true); return; }
+  if (ziel === 'chrono') { const warSchreiben = S.schreiben; S.schreiben = false; if (S.ai.on) setAiMode(false); else if (warSchreiben) render(true); return; }
+  // Schreiben: KI still aus, Bühne übernimmt
+  if (S.ai.on) { S.ai.on = false; store.set('aiOn', false); kibStapelOhneKi(); }
+  S.schreiben = true; S.filter = null; S.overview = false; render(true);
+}
+function modusLeiste(wide) {
+  const a = modusAktuell(); const kannSchreiben = typeof postenVerbunden === 'function' && postenVerbunden();
+  const knopf = (id, sym, label) => h('button', { type: 'button', class: 'modus-knopf' + (id === 'schreiben' && !kannSchreiben ? ' aus' : ''), 'data-modus': id,
+    'aria-pressed': a === id ? 'true' : 'false', title: label + (id === 'schreiben' && !kannSchreiben ? tt(' – erst Mastodon oder Bluesky verbinden') : ''), 'aria-label': label, onClick: () => modusWahl(id) },
+    sym, wide ? h('span', { class: 'modus-text' }, label) : null);
+  return h('div', { class: 'modus-leiste' + (wide ? ' wide' : ''), role: 'group', 'aria-label': tt('Ansicht') },
+    knopf('ki', h('span', { class: 'ai-spark', 'aria-hidden': 'true' }, '✦'), tt('KI-Auswahl')),
+    knopf('chrono', icon('liste', { sm: true }), tt('Chronologisch')),
+    knopf('schreiben', icon('stift', { sm: true }), tt('Schreiben')));
+}

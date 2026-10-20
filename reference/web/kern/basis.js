@@ -11,7 +11,7 @@
 'use strict';
 
 /* ---------- Hilfen ---------------------------------------------------- */
-const VERSION = 'v0.30';
+const VERSION = 'v0.31';
 const LS = 'kompass.v0.';
 const store = {
   get(k, d) { try { const v = localStorage.getItem(LS + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -50,7 +50,9 @@ const PATHS = {
   settings: ['M4 21v-7', 'M4 10V3', 'M12 21v-9', 'M12 8V3', 'M20 21v-5', 'M20 12V3', 'M1 14h6', 'M9 8h6', 'M17 16h6'],
   refresh: ['M21 12a9 9 0 1 1-2.6-6.4L21 8', 'M21 3v5h-5'],
   question: ['M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3', 'M12 17h.01'],
-  all: ['M4 4h6v6H4z', 'M14 4h6v6h-6z', 'M4 14h6v6H4z', 'M14 14h6v6h-6z']
+  all: ['M4 4h6v6H4z', 'M14 4h6v6h-6z', 'M4 14h6v6H4z', 'M14 14h6v6h-6z'],
+  liste: ['M4 6h.01', 'M4 12h.01', 'M4 18h.01', 'M9 6h11', 'M9 12h11', 'M9 18h11'],
+  stift: ['M12 20h9', 'M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z']
 };
 function icon(name, opts = {}) {
   const ns = 'http://www.w3.org/2000/svg';
@@ -168,6 +170,12 @@ const CATALOG = [
     ['MrWissen2go', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCZHpIFMfoJJ_1QxNGLJTzyA', 'youtube.com', 'youtube'],
     ['Dinge Erklärt – Kurzgesagt', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCwRH985XgMYXQ6NxXDo8npw', 'youtube.com', 'youtube']] }
 ];
+// Sprache je Katalog-Quelle (5. Feld oder nach Domain, Standard de). Anzeige: zuerst die Quellen in der Sprache der Oberfläche
+const KATALOG_SPRACHE = { 'bbc.co.uk': 'en', 'theguardian.com': 'en' };
+function katalogSprache(item) { return item[4] || KATALOG_SPRACHE[item[2]] || 'de'; }
+function katalogItems(g) { return g.items.slice().sort((a, b) => (katalogSprache(b) === LANG) - (katalogSprache(a) === LANG)); }
+// Für ein angetipptes Thema: nur die Quellen in der eigenen Sprache, solange es welche gibt
+function katalogFuerMich(g) { const eig = g.items.filter((x) => katalogSprache(x) === LANG); return eig.length ? eig : g.items; }
 function hashId(s) { let h = 5381; for (const ch of String(s)) h = ((h * 33) ^ ch.charCodeAt(0)) >>> 0; return h.toString(36); }
 function shortTitle(t) { const s = String(t || '').trim(); if (s.length <= 32) return s; const k = s.split(/\s[-|–]\s/)[0]; return (k.length >= 3 ? k : s).slice(0, 60); }
 const wideMQ = window.matchMedia('(min-width: 1024px)');

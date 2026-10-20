@@ -149,10 +149,11 @@ function renderAdd() {
   if (A.tab === 'katalog') {
     const ql = A.q.toLowerCase().trim();
     body = CATALOG.map((g) => {
-      const items = g.items.filter(([n, u, d]) => !ql || (n + ' ' + d).toLowerCase().includes(ql));
+      const items = katalogItems(g).filter(([n, u, d]) => !ql || (n + ' ' + d + ' ' + tt(g.gruppe)).toLowerCase().includes(ql));  // eigene Sprache zuerst
       if (!items.length) return null;
-      return [h('div', { class: 'side-label small' }, g.gruppe), items.map(([n, u, d, kind]) => {
-        const r = { kind: 'feed', url: u, name: n, service: kind === 'youtube' ? 'youtube' : 'rss', sub: (kind === 'youtube' ? 'YouTube-Kanal' : tt('Feed')) + ' · ' + d,
+      return [h('div', { class: 'side-label small' }, tt(g.gruppe)), items.map(([n, u, d, kind, spr]) => {
+        const sprache = katalogSprache([n, u, d, kind, spr]);
+        const r = { kind: 'feed', url: u, name: n, service: kind === 'youtube' ? 'youtube' : 'rss', sub: (kind === 'youtube' ? 'YouTube-Kanal' : tt('Feed')) + ' · ' + d + (sprache !== LANG ? ' · ' + sprache.toUpperCase() : ''),
           feed: { url: u, title: n, kind: kind === 'youtube' ? 'youtube' : 'rss', icon: '', site: 'https://' + d + '/' } };
         return row(r, btn(r));
       })];

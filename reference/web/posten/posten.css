@@ -9,3 +9,25 @@
 .posten-vorschau { display: flex; flex-direction: column; gap: 4px; }
 .posten-vorschau-text { white-space: pre-wrap; padding: 10px 12px; border: 1px solid var(--line2); border-radius: 12px; background: var(--surface); line-height: 1.5; overflow-wrap: anywhere; }
 .posten-fehler { color: var(--danger, #B3261E); }
+
+/* Modus-Leiste (kern/modi.js) und Bühne „Schreiben“ (posten/schreiben.js) */
+.modus-leiste { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface2); flex: none; }
+.modus-leiste.wide { display: flex; width: 100%; }
+.modus-knopf { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 38px; min-height: 36px; padding: 0 10px; border: 0; border-radius: 999px; background: transparent; color: var(--ink2); font-size: 14px; }
+.modus-leiste.wide .modus-knopf { flex: none; min-width: 38px; min-height: 34px; padding: 0 10px; }  /* 34 + 2·3 = 40 px wie der frühere KI-Knopf */
+.modus-leiste.wide .modus-knopf[aria-pressed="true"] { flex: 1; min-width: 0; }
+.modus-leiste.wide .modus-knopf[aria-pressed="false"] .modus-text { display: none; }  /* schmale Seitenleiste: nur der aktive Knopf trägt Text */
+.modus-knopf .modus-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.modus-knopf[aria-pressed="true"] { background: var(--seg-on); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px var(--shadow); }
+.modus-knopf[data-modus="ki"][aria-pressed="true"] { background: var(--accent); color: #fff; }
+.modus-knopf.aus { opacity: .45; }
+.modus-knopf .ai-spark { font-size: 15px; }
+.app.wide[data-modus="ki"] .kib-kopf-reihe .modus-leiste.wide { width: auto; flex: none; }
+.schreiben { max-width: 760px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; height: 100%; box-sizing: border-box; }
+.schreiben-kopf { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.schreiben-kopf h1 { margin: 0; font-size: 22px; }
+.schreiben-feld { gap: 10px; }
+.schreiben-liste { display: flex; flex-direction: column; gap: 6px; }
+.schreiben-acts { display: inline-flex; gap: 6px; flex: none; align-items: center; }
+.schreiben-h3 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.schreiben-h3 h3 { margin: 0; }
