@@ -704,7 +704,7 @@ SPRACHE.en = Object.fromEntries(Object.entries({
   "KI": "AI",
   "Konten": "Accounts",
   "Kopiere diesen Satz in deine KI (ChatGPT, Le Chat, Claude …). Sie stellt dir ein paar Fragen und gibt dir ein Paket.": "Copy this sentence into your AI (ChatGPT, Le Chat, Claude …). It asks you a few questions and gives you a pack.",
-  "Lies https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/prompts/setup.md und richte mit mir mein KOMPASS ein. Meine Adresse: ": "Read https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/prompts/setup.md and set up my KOMPASS with me. My address: ",
+  "Lies https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/prompts/sources.md und stell mit mir die Quellen für meine Zentrale zusammen. Meine Adresse: ": "Read https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/prompts/sources.md and put together the sources for my hub with me. My address: ",
   "Lokale Daten löschen …": "Delete local data …",
   "Löscht auf diesem Gerät alle KOMPASS-Daten: Einstellungen, Quellen, Verlauf, Favoriten, KI- und Posten-Zugänge. Dein verbundener Speicher bleibt unberührt.": "Deletes all KOMPASS data on this device: settings, sources, history, favourites, AI and posting access. Your connected storage stays untouched.",
   "Mit Nachrichten starten": "Start with news",

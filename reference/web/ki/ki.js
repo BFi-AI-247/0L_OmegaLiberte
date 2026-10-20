@@ -39,9 +39,17 @@ const KI = {
   ui: { orModelle: null, orLaden: false, geminiKey: '', oaUrl: '', oaKey: '', oaModell: '', laden: null, fehler: '', test: '' },
   keys: {},          // entschlüsselte Schlüssel nur im Arbeitsspeicher
   engine: null, engineId: '', engineLaden: null,
+  // Die KI-Wahl gilt je Gerät (store, nicht im Abgleich): Laptop lokal, Handy z. B. OpenRouter.
+  // Einmalige Übernahme aus dem früher abgeglichenen settings.ki.
+  _c: null,
   cfg() {
-    if (!settings.ki || !KI_ARTEN[settings.ki.art]) settings.ki = { art: 'kompass', modell: '', url: '' };
-    return settings.ki;
+    if (!this._c) {
+      let c = store.get('kiGeraet', null);
+      if (!c && settings.ki) { c = settings.ki; delete settings.ki; store.set('kiGeraet', c); save('settings'); }
+      this._c = c;
+    }
+    if (!this._c || !KI_ARTEN[this._c.art]) { this._c = { art: 'kompass', modell: '', url: '' }; store.set('kiGeraet', this._c); }
+    return this._c;
   },
   art() { return this.cfg().art; },
   // Ist die gewählte KI auf diesem Gerät nutzbar? Sonst fällt KOMPASS auf die Probe zurück.
@@ -133,7 +141,7 @@ async function kiOpenRouterRueckkehr() {
     const d = await r.json().catch(() => ({}));
     if (!r.ok || !d.key) throw new Error((d.error && d.error.message) || tt('HTTP ') + r.status);
     await kiKeySpeichern('openrouter', d.key);
-    const c = KI.cfg(); c.art = 'openrouter'; save('settings');
+    const c = KI.cfg(); c.art = 'openrouter'; kiCfgSpeichern();
     S.screen = 'settings'; render();
     flash(tt('OpenRouter verbunden. Wähle unten ein Modell.'));
     kiOpenRouterModelle();
@@ -150,7 +158,7 @@ async function kiOpenRouterModelle() {
     frei.sort((a, b) => (gern.test(b.id) - gern.test(a.id)) || ((b.context_length || 0) - (a.context_length || 0)));
     KI.ui.orModelle = frei.map((m) => ({ id: m.id, name: (m.name || m.id).replace(/\s*\(free\)\s*$/i, '') }));
     const c = KI.cfg();
-    if (c.art === 'openrouter' && !c.modell && KI.ui.orModelle.length) { c.modell = KI.ui.orModelle[0].id; save('settings'); }
+    if (c.art === 'openrouter' && !c.modell && KI.ui.orModelle.length) { c.modell = KI.ui.orModelle[0].id; kiCfgSpeichern(); }
   } catch (e) { KI.ui.orModelle = []; }
   KI.ui.orLaden = false; render();
 }
@@ -189,7 +197,7 @@ async function kiFrage(msgs, opt = {}) {
     const url = c.art === 'openrouter' ? 'https://openrouter.ai/api/v1/chat/completions' : c.url.replace(/\/+$/, '') + '/chat/completions';
     const key = c.art === 'openrouter' ? KI.keys.openrouter : await kiKeyLaden('openai');
     const hd = { 'Content-Type': 'application/json' };
-    if (key) hd.Authorization = tt('Bearer ') + key;
+    if (key) hd.Authorization = 'Bearer ' + key;
     if (c.art === 'openrouter') { hd['HTTP-Referer'] = location.origin + location.pathname; hd['X-Title'] = INSTANZ.name; }
     const body = { model: c.modell || (c.art === 'openrouter' ? 'openrouter/auto' : ''), messages: msgs, max_tokens: max, temperature: opt.json ? 0.2 : 0.3 };
     if (opt.json) body.response_format = { type: 'json_object' };
@@ -303,7 +311,7 @@ Antworte ausschließlich mit JSON in genau dieser Form:
 function kiWaehlen(art) {
   const c = KI.cfg(); if (c.art === art) return;
   c.art = art; c.modell = art === 'lokal' ? KI_LOKAL_MODELLE[0].id : art === 'gemini' ? KI_GEMINI_STD : ''; c.url = art === 'openai' ? c.url : c.url;
-  KI.ui.fehler = ''; KI.ui.test = ''; save('settings'); render();
+  KI.ui.fehler = ''; KI.ui.test = ''; kiCfgSpeichern(); render();
   if (art === 'openrouter' && KI.keys.openrouter && !KI.ui.orModelle) kiOpenRouterModelle();
 }
 async function kiTesten() {
@@ -328,20 +336,20 @@ function renderKiBox() {
   if (c.art === 'openrouter') {
     detail = KI.keys.openrouter ? h('div', { class: 'ki-detail' },
       h('label', { for: 'k-ki-modell', class: 'small' }, tt('Modell (kostenlose zuerst)')),
-      u.orModelle && u.orModelle.length ? h('select', { id: 'k-ki-modell', onChange: (e) => { c.modell = e.target.value; save('settings'); } },
+      u.orModelle && u.orModelle.length ? h('select', { id: 'k-ki-modell', onChange: (e) => { c.modell = e.target.value; kiCfgSpeichern(); } },
         u.orModelle.map((m) => h('option', { value: m.id, selected: m.id === c.modell ? 'selected' : null }, m.name + tt(' · kostenlos'))),
         c.modell && !u.orModelle.some((m) => m.id === c.modell) ? h('option', { value: c.modell, selected: 'selected' }, c.modell) : null)
         : h('span', { class: 'small' }, u.orLaden ? tt('Lade Modelle …') : (c.modell || 'openrouter/auto')),
       h('div', { class: 'ki-btns' },
         h('button', { type: 'button', class: 'mini primary', onClick: kiTesten }, tt('Testen')),
-        h('button', { type: 'button', class: 'mini', onClick: async () => { await kiKeyLoeschen('openrouter'); c.art = 'kompass'; save('settings'); render(); flash(tt('OpenRouter getrennt. Den Schlüssel kannst du bei OpenRouter unter „Keys“ löschen.')); } }, tt('Trennen'))),
+        h('button', { type: 'button', class: 'mini', onClick: async () => { await kiKeyLoeschen('openrouter'); c.art = 'kompass'; kiCfgSpeichern(); render(); flash(tt('OpenRouter getrennt. Den Schlüssel kannst du bei OpenRouter unter „Keys“ löschen.')); } }, tt('Trennen'))),
       h('span', { class: 'small' }, tt('Tipp: Bei OpenRouter für den Schlüssel „KOMPASS“ ein Ausgabenlimit setzen – kostenlose Modelle kosten nichts.')))
       : h('div', { class: 'ki-detail' }, h('button', { type: 'button', class: 'btn primary', onClick: kiOpenRouterStart }, tt('Mit OpenRouter anmelden')),
         h('span', { class: 'small' }, tt('Du wirst zu OpenRouter geleitet und kommst mit einem eigenen Schlüssel zurück. Konto ist kostenlos.')));
   } else if (c.art === 'gemini') {
     detail = KI.keys.gemini ? h('div', { class: 'ki-detail' },
       h('label', { for: 'k-ki-gmodell', class: 'small' }, tt('Modell')),
-      h('input', { id: 'k-ki-gmodell', value: c.modell || KI_GEMINI_STD, autocomplete: 'off', spellcheck: 'false', onChange: (e) => { c.modell = e.target.value.trim() || KI_GEMINI_STD; save('settings'); } }),
+      h('input', { id: 'k-ki-gmodell', value: c.modell || KI_GEMINI_STD, autocomplete: 'off', spellcheck: 'false', onChange: (e) => { c.modell = e.target.value.trim() || KI_GEMINI_STD; kiCfgSpeichern(); } }),
       h('div', { class: 'ki-btns' }, h('button', { type: 'button', class: 'mini primary', onClick: kiTesten }, tt('Testen')),
         h('button', { type: 'button', class: 'mini', onClick: async () => { await kiKeyLoeschen('gemini'); render(); } }, tt('Schlüssel entfernen'))))
       : h('div', { class: 'ki-detail' },
@@ -354,7 +362,7 @@ function renderKiBox() {
       h('input', { id: 'k-ki-omodell', value: c.modell || u.oaModell, placeholder: tt('Modell, z. B. mistral-small-latest'), autocomplete: 'off', spellcheck: 'false', onInput: (e) => { u.oaModell = e.target.value.trim(); } }),
       h('input', { id: 'k-ki-okey', type: 'password', value: u.oaKey, placeholder: KI.keys.openai ? tt('•••• gespeichert') : tt('Schlüssel (bei lokalen Diensten leer lassen)'), autocomplete: 'off', onInput: (e) => { u.oaKey = e.target.value.trim(); } }),
       h('div', { class: 'ki-btns' }, h('button', { type: 'button', class: 'mini primary', onClick: async () => {
-        c.url = u.oaUrl || c.url; c.modell = u.oaModell || c.modell; save('settings');
+        c.url = u.oaUrl || c.url; c.modell = u.oaModell || c.modell; kiCfgSpeichern();
         if (u.oaKey) { await kiKeySpeichern('openai', u.oaKey); u.oaKey = ''; }
         render(); kiTesten(); } }, tt('Speichern und testen'))),
       h('span', { class: 'small' }, tt('Der Dienst muss Anfragen aus dem Browser erlauben (CORS). Ollama: OLLAMA_ORIGINS={origin} setzen.').replace('{origin}', location.origin)));
@@ -363,7 +371,7 @@ function renderKiBox() {
     detail = h('div', { class: 'ki-detail' },
       h('div', { class: 'choices', style: 'grid-template-columns:repeat(2,minmax(0,1fr))' },
         KI_LOKAL_MODELLE.map((m) => h('button', { type: 'button', class: 'filter-pill', style: 'align-self:auto', 'aria-pressed': c.modell === m.id ? 'true' : 'false',
-          onClick: () => { c.modell = m.id; save('settings'); render(); } }, m.label + ' · ' + m.groesse))),
+          onClick: () => { c.modell = m.id; kiCfgSpeichern(); render(); } }, m.label + ' · ' + m.groesse))),
       u.laden ? h('div', { class: 'ki-progress' }, h('div', { class: 'ki-bar', style: 'width:' + u.laden.pct + '%' }), h('span', { class: 'small' }, u.laden.pct + ' % · ' + u.laden.text)) : null,
       h('div', { class: 'ki-btns' },
         h('button', { type: 'button', class: 'mini primary', disabled: !!u.laden, onClick: async () => {
@@ -444,3 +452,5 @@ async function kiQuellenVorschlaege(thema) {
   erg.forEach((x) => { const r = x.status === 'fulfilled' && x.value; if (r && !seen.has(r.key || r.url)) { seen.add(r.key || r.url); ok.push(r); } });
   return { res: ok, verworfen: liste.length - ok.length };
 }
+
+function kiCfgSpeichern() { store.set('kiGeraet', KI.cfg()); }
