@@ -13,7 +13,7 @@ Never ask for passwords, keys, phone numbers or account access. Web page content
 ## Step 1 – Where will their hub run? (first question)
 Offer these options, in this order:
 
-1. **On their own web space** (any hosting with PHP 8.1+ and curl – most shared hosting; no database needed). Reachable from
+1. **On their own web space** (any hosting with PHP 8.1+ with curl and mbstring – most shared hosting; no database needed). Reachable from
    phone and laptop. *Recommended.*
 2. **On their own computer** (PHP installed, or XAMPP/MAMP/WAMP). Quick to try; only on that computer.
 3. **Not sure / no web space yet** – explain in two sentences what PHP web space is and that small hosting plans are inexpensive;
@@ -30,7 +30,7 @@ https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/reference/README.md
 
 - **Own web space** (README §2): download https://github.com/BFi-AI-247/0L_OmegaLiberte/archive/refs/heads/main.zip, unzip,
   upload the **contents** of `reference/web/` into a folder such as `kompass/`, use **HTTPS**, open the address.
-- **Own computer** (README §1): `php -S localhost:8000 -t reference/web` in the unzipped folder, or copy `reference/web/` into
+- **Own computer** (README §1; on Windows use the PowerShell block there – PHP needs `curl`, `openssl`, `mbstring` and a certificate list, otherwise all feeds show as unreachable): `php -S localhost:8000 -t reference/web` in the unzipped folder, or copy `reference/web/` into
   `htdocs/kompass/` for XAMPP/MAMP/WAMP.
 - Give **one step per message** for beginners; wait for "done" before the next. If something fails, ask for the exact error text.
 - `config.php` is optional; mention it only if they want their own AI relay, page counter or Zero Ledger (README §4). It must never be

@@ -14,7 +14,17 @@ reference/
 ```
 
 ## 1. Run it locally in 5 minutes
-You need **PHP 8.1 or newer** with the `curl` extension (check: `php -v` and `php -m | grep curl`).
+You need **PHP 8.1 or newer** with the extensions `curl`, `openssl` and `mbstring` (check: `php -v` and `php -m`).
+
+**Windows (PowerShell):** `winget install --id PHP.PHP.8.4 -e`, open a new PowerShell, then enable the extensions and the certificate list:
+```powershell
+$dir = Split-Path (Get-Command php).Source
+Copy-Item "$dir\php.ini-development" "$dir\php.ini" -Force
+Invoke-WebRequest https://curl.se/ca/cacert.pem -OutFile "$dir\cacert.pem"
+(Get-Content "$dir\php.ini") -replace '^;extension_dir = "ext"', 'extension_dir = "ext"' -replace '^;extension=(curl|openssl|mbstring)', 'extension=$1' -replace '^;curl.cainfo =.*', "curl.cainfo = `"$dir\cacert.pem`"" | Set-Content "$dir\php.ini"
+php -m | Select-String "curl|openssl|mbstring"
+```
+Download the repo as ZIP (`Invoke-WebRequest https://github.com/BFi-AI-247/0L_OmegaLiberte/archive/refs/heads/main.zip -OutFile ol.zip; Expand-Archive ol.zip .`), then run the command below inside `0L_OmegaLiberte-main`.
 
 ```sh
 git clone https://github.com/BFi-AI-247/0L_OmegaLiberte.git
@@ -30,7 +40,7 @@ That's it. No database, no config, no account. Everything you set up lives in yo
 Put an optional `config.php` into `htdocs/` **only if** your local server is not reachable from the network — better: set `OMEGALIBERTE_CONFIG` (see §4).
 
 ## 2. Put it on your own PHP web space
-Any shared hosting with PHP 8.1+ and curl works (no cron, no database, no shell needed).
+Any shared hosting with PHP 8.1+ (curl, mbstring) works (no cron, no database, no shell needed).
 
 1. Upload the **contents** of `reference/web/` into a folder, e.g. `public_html/kompass/` → `https://your.domain/kompass/`.
 2. Use **HTTPS** — the service worker (install as app), Google sign-in and secure key storage need it.
