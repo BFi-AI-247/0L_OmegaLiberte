@@ -1,0 +1,350 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Kern – Abgleich mit Google Drive und WebDAV. Besitzer: Bau-Kern.
+// Teil von KOMPASS. Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
+
+/* ---------- Speicher: Abgleich über Google Drive oder WebDAV -----------------
+   Zwei lesbare JSON-Dateien im Ordner „KOMPASS“ des Nutzers. Bewusst ohne Verschlüsselung
+   (Björn, 18.10.2026): Übertragung per HTTPS, der Nutzer kann alles lesen und prüfen.
+   Abgleich: Teile mit Zeitstempel – der neuere gewinnt; Verlauf, Gesehen, Faktenchecks und
+   Beitrags-Kurzfassungen werden vereinigt; Zähler nehmen den höheren Wert. */
+const SYNC_FILES = {
+  einstellungen: { name: 'kompass-einstellungen.json', parts: ['settings', 'favs', 'cfg', 'merges', 'kfollows', 'names'] },
+  verlauf: { name: 'kompass-verlauf.json', parts: ['history', 'seen', 'marked', 'liked', 'checks', 'cache', 'zaehler'] }
+};
+const PART_FILE = {};
+Object.entries(SYNC_FILES).forEach(([f, d]) => d.parts.forEach((p) => { PART_FILE[p] = f; }));
+const UNION = { history: true, seen: true, checks: true, cache: true, zaehler: true };
+const sync = Object.assign({ provider: null, t: {}, last: 0, gdrive: {}, dav: {} }, store.get('sync', {}));
+const SY = { busy: false, again: false, timer: null, at: 0, error: '', applying: false, json: {}, pick: null, gState: '', clientId: '',
+  dav: { url: (sync.dav && sync.dav.url) || '', user: (sync.dav && sync.dav.user) || '', pass: '' } };
+function storeSync() { store.set('sync', sync); }
+function deviceName() {
+  const ua = navigator.userAgent;
+  const os = /Android/.test(ua) ? tt('Android') : /iPhone|iPad/.test(ua) ? 'iOS' : /Windows/.test(ua) ? tt('Windows') : /Mac/.test(ua) ? tt('Mac') : /Linux/.test(ua) ? tt('Linux') : tt('Gerät');
+  const br = /Edg\//.test(ua) ? tt('Edge') : /Firefox\//.test(ua) ? tt('Firefox') : /Chrome\//.test(ua) ? tt('Chrome') : /Safari\//.test(ua) ? tt('Safari') : '';
+  return os + (br ? ' · ' + br : '');
+}
+function partGet(p) {
+  if (p === 'settings') return settings;
+  if (p === 'zaehler') return { day: S.day, total: S.total };
+  return S[p];
+}
+function partSet(p, v) {
+  if (p === 'settings') { Object.assign(settings, v); store.set('settings', settings); S.nextPauseAt = S.day.n + (settings.pauseAfter || 0); }
+  else if (p === 'zaehler') {
+    // Fremder Tageszähler nur, wenn er von heute ist und weiter ist; die Pause zählt weiter ab dem Öffnen (sonst kam sie sofort)
+    if (v.day && v.day.d === today() && v.day.n > S.day.n) { S.nextPauseAt += v.day.n - S.day.n; S.day = v.day; }
+    S.total = v.total || 0; store.set('day', S.day); store.set('total', S.total);
+  }
+  else if (p === 'seen') {
+    const o = {}; Object.entries(v || {}).forEach(([k, t]) => { const h = k.length > 12 ? sk(k) : k; if (!o[h] || o[h] > t) o[h] = t; });
+    S.seen = o; store.set('seen', o);
+  } else { S[p] = v; store.set(p, v); }
+  SY.json[p] = JSON.stringify(partGet(p));
+}
+// Merkt sich echte Änderungen (nicht jedes Speichern) und plant den Abgleich
+function noteChange(keys) {
+  if (SY.applying) return;
+  let soon = false; let any = false;
+  for (const k of keys) {
+    const p = k === 'day' || k === 'total' ? 'zaehler' : k;
+    if (!PART_FILE[p]) continue;
+    if (!UNION[p]) { const j = JSON.stringify(partGet(p)); if (SY.json[p] === j) continue; SY.json[p] = j; }
+    sync.t[p] = Date.now(); any = true;
+    if (PART_FILE[p] === 'einstellungen') soon = true;
+  }
+  if (!any) return;
+  storeSync();
+  scheduleSync(soon ? 3000 : 300000);
+}
+function scheduleSync(ms) {
+  if (!sync.provider) return;
+  const at = Date.now() + ms;
+  if (SY.timer && SY.at <= at) return;
+  clearTimeout(SY.timer); SY.at = at;
+  SY.timer = setTimeout(() => { SY.timer = null; syncNow(); }, ms);
+}
+function mergePart(p, local, remote) {
+  if (p === 'history') {
+    const m = new Map();
+    [...(remote || []), ...(local || [])].forEach((x) => { if (x && x.id && (!m.has(x.id) || m.get(x.id).t < x.t)) m.set(x.id, x); });
+    return [...m.values()].sort((a, b) => b.t - a.t).slice(0, 500);
+  }
+  if (p === 'seen') {
+    const o = Object.assign({}, remote || {});
+    for (const [k, v] of Object.entries(local || {})) o[k] = o[k] ? Math.min(o[k], v) : v;
+    const ks = Object.keys(o);
+    if (ks.length > 3000) ks.sort((a, b) => o[a] - o[b]).slice(0, ks.length - 3000).forEach((k) => delete o[k]);
+    return o;
+  }
+  if (p === 'cache') {
+    const o = Object.assign({}, remote || {}, local || {});
+    const ks = Object.keys(o); if (ks.length > 500) ks.slice(0, ks.length - 500).forEach((k) => delete o[k]);
+    return o;
+  }
+  if (p === 'checks') {
+    const o = Object.assign({}, remote || {});
+    for (const [k, v] of Object.entries(local || {})) {
+      const r = o[k];
+      if (!r || (v.state === 'done' && (r.state !== 'done' || (v.at || 0) > (r.at || 0)))) o[k] = v;
+    }
+    return o;
+  }
+  if (p === 'zaehler') {
+    const l = local || {}; const r = remote || {};
+    const ld = l.day || {}; const rd = r.day || {};
+    const day = ld.d === rd.d ? { d: ld.d, n: Math.max(ld.n || 0, rd.n || 0) } : (rd.d === today() ? rd : ld.d ? ld : { d: today(), n: 0 });
+    return { day, total: Math.max(l.total || 0, r.total || 0) };
+  }
+  return local;
+}
+// Was in den Speicher geht – schlank: Verlauf 100 Einträge, „Gesehen“ 14 Tage, Beitrags-Kurzfassungen nur für Gemerktes und den Verlauf
+const SYNC_SEEN_DAYS = 14; const SYNC_HISTORY = 100;
+function outgoing(p, v) {
+  if (p === 'history') return (v || []).slice(0, SYNC_HISTORY);
+  if (p === 'seen') { const lim = Date.now() - SYNC_SEEN_DAYS * 86400000; const o = {}; Object.entries(v || {}).forEach(([k, t]) => { if (t >= lim) o[k] = t; }); return o; }
+  if (p === 'cache') {
+    const want = new Set(Object.keys(S.marked).concat((S.history || []).slice(0, SYNC_HISTORY).map((x) => x.id)));
+    const o = {};
+    Object.entries(v || {}).forEach(([id, c]) => {
+      if (!want.has(id) || !c) return;
+      o[id] = { id, service: c.service, who: c.who, whoKey: c.whoKey, handle: c.handle, title: c.title || '', text: String(c.text || '').slice(0, 200), link: c.link, date: c.date };
+    });
+    return o;
+  }
+  return v;
+}
+function fileFor(fkey) {
+  const teile = {};
+  for (const p of SYNC_FILES[fkey].parts) {
+    const t = sync.t[p] || 0;
+    teile[p] = { geaendert: t ? new Date(t).toISOString() : null, t, wert: outgoing(p, partGet(p)) };
+  }
+  return { kompass: 'sync-v1', datei: fkey, hinweis: tt('Von KOMPASS geschrieben. Lesbar, aber bitte nicht von Hand ändern, während eine App offen ist.'),
+    geraet: deviceName(), stand: new Date().toISOString(), teile };
+}
+function sourcesKey() { return JSON.stringify([settings.mastodon, settings.bluesky, settings.radar]); }
+
+async function syncNow(manual) {
+  if (!sync.provider) return;
+  if (SY.busy) { SY.again = true; return; }
+  const conn = CONN[sync.provider];
+  SY.busy = true; SY.error = ''; if (S.screen) render();
+  const before = sourcesKey(); const wasOnboarded = settings.onboarded;
+  let changed = false;
+  try {
+    for (const [fkey, fdef] of Object.entries(SYNC_FILES)) {
+      const remote = await conn.read(fdef.name);
+      const rt = (remote && remote.teile) || {};
+      let push = !remote;
+      SY.applying = true;
+      for (const p of fdef.parts) {
+        const r = rt[p]; const lt = sync.t[p] || 0;
+        if (!r) { if (!lt) sync.t[p] = Date.now(); push = true; continue; }
+        const rtT = r.t || 0;
+        if (UNION[p]) {
+          const local = partGet(p);
+          const merged = mergePart(p, local, r.wert);
+          const mj = JSON.stringify(merged);
+          if (mj !== JSON.stringify(local)) { partSet(p, merged); changed = true; }
+          if (JSON.stringify(outgoing(p, merged)) !== JSON.stringify(r.wert)) push = true;
+          sync.t[p] = Math.max(lt, rtT);
+        } else if (rtT > lt) {
+          if (JSON.stringify(r.wert) !== JSON.stringify(partGet(p))) { partSet(p, r.wert); changed = true; }
+          sync.t[p] = rtT;
+        } else if (lt > rtT) push = true;
+      }
+      SY.applying = false;
+      if (push) await conn.write(fdef.name, fileFor(fkey));
+    }
+    sync.last = Date.now(); storeSync();
+    if (manual) flash(tt('Abgeglichen mit ') + conn.label() + '.');
+  } catch (e) {
+    SY.error = e.message || String(e);
+    if (manual) flash(tt('Abgleich fehlgeschlagen: ') + SY.error);
+  } finally {
+    SY.applying = false; SY.busy = false;
+  }
+  if (changed) {
+    if (settings.onboarded && !wasOnboarded && S.screen === 'onboarding') { S.screen = null; S.form = null; }
+    if (settings.onboarded && (sourcesKey() !== before || !wasOnboarded)) loadAll();
+    else { build(); render(true); }
+  } else render();
+  if (SY.again) { SY.again = false; syncNow(); }
+}
+
+/* Google Drive: Berechtigung drive.file – KOMPASS sieht nur die eigenen Dateien im Ordner KOMPASS */
+const GD = {
+  api: 'https://www.googleapis.com/drive/v3/',
+  up: 'https://www.googleapis.com/upload/drive/v3/files',
+  label() { return tt('Google Drive') + (sync.gdrive.konto ? ' (' + sync.gdrive.konto + ')' : ''); },
+  openUrl() { return sync.gdrive.folder ? 'https://drive.google.com/drive/folders/' + sync.gdrive.folder : 'https://drive.google.com/'; },
+  async token(force) {
+    const g = sync.gdrive;
+    if (!force && g.access && g.exp > Date.now() + 60000) return g.access;
+    if (!g.refresh) throw new Error(tt('Google-Anmeldung fehlt – bitte neu verbinden.'));
+    const r = await fetch('api/gdrive.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'refresh', refresh_token: g.refresh }) });
+    const d = await r.json().catch(() => ({}));
+    if (d.status !== 'ok') throw new Error(d.antwort || tt('Google-Anmeldung fehlgeschlagen.'));
+    g.access = d.access_token; g.exp = Date.now() + (d.expires_in || 3600) * 1000; storeSync();
+    return g.access;
+  },
+  async call(url, opts, retry) {
+    const t = await this.token(retry);
+    const o = Object.assign({}, opts || {});
+    o.headers = Object.assign({ Authorization: tt('Bearer ') + t }, (opts && opts.headers) || {});
+    const r = await fetch(url.startsWith('http') ? url : this.api + url, o);
+    if (r.status === 401 && !retry) return this.call(url, opts, true);
+    if (r.status === 404) return r;
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      const er = (d && d.error) || {}; const reason = ((er.errors || [])[0] || {}).reason || (er.details && er.details[0] && er.details[0].reason) || '';
+      const msg = String(er.message || '');
+      let hint = '';
+      if (/accessNotConfigured|SERVICE_DISABLED/.test(reason) || /has not been used|is disabled/i.test(msg)) hint = tt('Die Google Drive API ist im Google-Cloud-Projekt nicht aktiviert (APIs & Dienste → Bibliothek → Google Drive API → Aktivieren, danach ein paar Minuten warten).');
+      else if (/insufficient|ACCESS_TOKEN_SCOPE_INSUFFICIENT/i.test(reason + msg)) hint = tt('Die Drive-Berechtigung fehlt – Speicher trennen und neu verbinden, dabei den Drive-Zugriff bestätigen.');
+      else if (msg) hint = msg.slice(0, 220);
+      throw new Error(tt('Google Drive antwortet mit ') + r.status + (hint ? ': ' + hint : '.'));
+    }
+    return r;
+  },
+  async folder() {
+    if (sync.gdrive.folder) return sync.gdrive.folder;
+    const q = "name='KOMPASS' and mimeType='application/vnd.google-apps.folder' and trashed=false";
+    const d = await (await this.call('files?fields=files(id)&q=' + encodeURIComponent(q))).json();
+    let id = d.files && d.files[0] && d.files[0].id;
+    if (!id) {
+      const r = await this.call('files?fields=id', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'KOMPASS', mimeType: 'application/vnd.google-apps.folder', description: tt('Daten der App KOMPASS ({ort})').replace('{ort}', location.host + location.pathname.replace(/\/[^/]*$/, '')) }) });
+      id = (await r.json()).id;
+    }
+    sync.gdrive.folder = id; storeSync(); return id;
+  },
+  async fileId(name) {
+    const f = sync.gdrive.files || (sync.gdrive.files = {});
+    if (f[name]) return f[name];
+    const folder = await this.folder();
+    const q = "name='" + name + "' and '" + folder + "' in parents and trashed=false";
+    const d = await (await this.call('files?fields=files(id)&q=' + encodeURIComponent(q))).json();
+    const id = d.files && d.files[0] && d.files[0].id;
+    if (id) { f[name] = id; storeSync(); }
+    return id || null;
+  },
+  async read(name) {
+    const id = await this.fileId(name); if (!id) return null;
+    const r = await this.call('files/' + id + '?alt=media');
+    if (r.status === 404) { delete sync.gdrive.files[name]; storeSync(); return null; }
+    return r.json();
+  },
+  async write(name, obj) {
+    const body = JSON.stringify(obj, null, 2);
+    const id = await this.fileId(name);
+    if (id) {
+      const r = await this.call(this.up + '/' + id + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': tt('application/json; charset=utf-8') }, body });
+      if (r.status !== 404) return;
+      delete sync.gdrive.files[name];
+    }
+    const meta = { name, parents: [await this.folder()], mimeType: 'application/json' };
+    const b = 'kompass' + Math.random().toString(36).slice(2);
+    const multi = '--' + b + tt('\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n') + JSON.stringify(meta) + '\r\n--' + b +
+      tt('\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n') + body + '\r\n--' + b + '--';
+    const r = await this.call(this.up + '?uploadType=multipart&fields=id', { method: 'POST', headers: { 'Content-Type': tt('multipart/related; boundary=') + b }, body: multi });
+    sync.gdrive.files[name] = (await r.json()).id; storeSync();
+  },
+  async prepare() {
+    SY.pick = 'gdrive'; SY.gState = 'lade'; render();
+    try {
+      const info = await getJSON('api/gdrive.php');
+      if (!info.bereit) { SY.gState = 'fehlt'; render(); return; }
+      SY.clientId = info.client_id;
+      await loadScript('https://accounts.google.com/gsi/client');
+      SY.gState = 'bereit';
+    } catch (e) { SY.gState = 'fehler'; }
+    render();
+  },
+  // Muss direkt im Klick laufen (sonst blockiert der Browser das Anmeldefenster)
+  start() {
+    const client = window.google.accounts.oauth2.initCodeClient({
+      client_id: SY.clientId, scope: 'https://www.googleapis.com/auth/drive.file', ux_mode: 'popup',
+      callback: (r) => this.finish(r),
+      error_callback: (e) => flash(e && e.type === 'popup_closed' ? tt('Anmeldung abgebrochen.') : tt('Google-Anmeldung fehlgeschlagen.'))
+    });
+    client.requestCode();
+  },
+  async finish(r) {
+    if (!r || !r.code) { flash(tt('Google-Anmeldung abgebrochen.')); return; }
+    try {
+      const res = await fetch('api/gdrive.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'code', code: r.code }) });
+      const d = await res.json().catch(() => ({}));
+      if (d.status !== 'ok') throw new Error(d.antwort || tt('Anmeldung fehlgeschlagen.'));
+      if (!/drive\.file/.test(d.scope || 'drive.file')) throw new Error(tt('Die Drive-Berechtigung wurde nicht erteilt.'));
+      sync.gdrive = { access: d.access_token, exp: Date.now() + (d.expires_in || 3600) * 1000, refresh: d.refresh_token || null, files: {} };
+      try { const a = await (await this.call('about?fields=user(emailAddress)')).json(); sync.gdrive.konto = a.user && a.user.emailAddress; } catch (e) { /* egal */ }
+      await activate('gdrive');
+    } catch (e) { flash(e.message); }
+  },
+  async disconnect() {
+    const t = sync.gdrive.refresh || sync.gdrive.access;
+    if (t) fetch('api/gdrive.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'abmelden', token: t }) }).catch(() => {});
+    sync.gdrive = {};
+  }
+};
+
+/* WebDAV (europäische Speicher: Nextcloud, Strato HiDrive, MagentaCLOUD …) über api/dav.php */
+const DAV = {
+  label() { try { return tt('WebDAV (') + new URL(sync.dav.url).host + ')'; } catch (e) { return 'WebDAV'; } },
+  openUrl() { return null; },
+  folderUrl(url) { return String(url || sync.dav.url).replace(/\/+$/, '') + '/KOMPASS/'; },
+  async req(methode, name, inhalt, cred) {
+    const c = cred || sync.dav;
+    const r = await fetch('api/dav.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: this.folderUrl(c.url) + (name || ''), user: c.user, pass: c.pass, methode, inhalt }) });
+    const d = await r.json().catch(() => ({}));
+    if (d.status !== 'ok') throw new Error(d.antwort || tt('WebDAV-Speicher nicht erreichbar.'));
+    if (d.code === 401 || d.code === 403) throw new Error(tt('Benutzer oder App-Passwort stimmt nicht.'));
+    return d;
+  },
+  async read(name) {
+    const d = await this.req('GET', name);
+    if (d.code === 404) return null;
+    if (d.code !== 200) throw new Error(tt('WebDAV antwortet mit ') + d.code + '.');
+    try { return JSON.parse(d.inhalt); } catch (e) { throw new Error(name + tt(' ist kein gültiges JSON.')); }
+  },
+  async write(name, obj) {
+    const body = JSON.stringify(obj, null, 2);
+    let d = await this.req('PUT', name, body);
+    if (d.code === 404 || d.code === 409) { await this.req('MKCOL', ''); d = await this.req('PUT', name, body); }
+    if (![200, 201, 204].includes(d.code)) throw new Error(tt('WebDAV speichert nicht (') + d.code + ').');
+  },
+  async connect(cred) {
+    if (!/^https:\/\/[^/]+/.test(cred.url)) throw new Error(tt('Bitte die WebDAV-Adresse mit https:// angeben.'));
+    let d = await this.req('PROPFIND', '', null, cred);
+    if (d.code === 404) { d = await this.req('MKCOL', '', null, cred); if (![200, 201, 204, 405].includes(d.code)) throw new Error(tt('Ordner KOMPASS lässt sich nicht anlegen (') + d.code + ').'); }
+    else if (d.code !== 207 && d.code !== 200) throw new Error(tt('WebDAV antwortet mit ') + d.code + tt(' – Adresse prüfen.'));
+    sync.dav = { url: cred.url.replace(/\/+$/, '') + '/', user: cred.user, pass: cred.pass };
+    await activate('dav');
+  },
+  async disconnect() { sync.dav = { url: sync.dav.url, user: sync.dav.user }; }
+};
+const CONN = { gdrive: GD, dav: DAV };
+Object.keys(PART_FILE).forEach((p) => { if (!UNION[p]) SY.json[p] = JSON.stringify(partGet(p)); });
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    if (document.querySelector('script[src="' + src + '"]')) { res(); return; }
+    const s = document.createElement('script'); s.src = src; s.async = true;
+    s.onload = () => res(); s.onerror = () => rej(new Error(tt('Skript nicht ladbar')));
+    document.head.appendChild(s);
+  });
+}
+async function activate(kind) {
+  sync.provider = kind; SY.pick = null; storeSync();
+  flash(tt('Verbunden mit ') + CONN[kind].label() + tt(' – gleiche ab …'));
+  await syncNow(true);
+}
+async function disconnectStorage() {
+  if (!sync.provider) return;
+  if (!confirm(tt('Speicher trennen? Die Daten bleiben auf diesem Gerät und im Speicher erhalten.'))) return;
+  await CONN[sync.provider].disconnect();
+  sync.provider = null; storeSync(); flash(tt('Getrennt – Daten bleiben nur auf diesem Gerät.')); render();
+}

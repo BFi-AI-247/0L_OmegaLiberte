@@ -1,0 +1,5 @@
+# Echte Konfiguration nie ins Repo
+config.php
+.env
+*.key
+data/

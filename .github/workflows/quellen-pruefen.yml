@@ -1,0 +1,60 @@
+# Test bench (Quellen prüfen): checks a source list or source pack with the same api/rss.php as the reference app.
+# Manual: Actions → "Quellen prüfen" → Run workflow (or: gh workflow run quellen-pruefen.yml -f liste=catalogs/de-starter.json)
+# Automatic: on pull requests that change catalogs/ or pruefstand/lists/ (report only, does not block).
+# Uploads nothing anywhere; the result is in the run summary and as a downloadable artifact.
+# Taken from KOMPASS .github/workflows/quellen-pruefen.yml, adapted to reference/web.
+name: Quellen prüfen
+on:
+  workflow_dispatch:
+    inputs:
+      liste:
+        description: Source list (.txt) or source pack (.json), path in the repo
+        default: pruefstand/lists/de-sources.txt
+  pull_request:
+    paths:
+      - "catalogs/**"
+      - "pruefstand/lists/**"
+      - "pruefstand/pruefe.py"
+      - "reference/web/api/rss.php"
+permissions:
+  contents: read
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax check reference/web PHP
+        run: for f in $(find reference/web -name '*.php'); do php -l "$f"; done
+      - name: Start PHP server with reference/web
+        run: |
+          php -v | head -1
+          nohup php -S 127.0.0.1:8099 -t reference/web >/tmp/php.log 2>&1 &
+          sleep 2
+          curl -fsS http://127.0.0.1:8099/api/health.php
+      - name: Which lists?
+        id: listen
+        env:
+          EINGABE: ${{ github.event.inputs.liste }}
+          BASIS: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -n "$EINGABE" ]; then echo "liste=$EINGABE" >> "$GITHUB_OUTPUT"; exit 0; fi
+          git fetch -q --depth=1 origin "$BASIS"
+          l=$(git diff --name-only "$BASIS" HEAD -- catalogs pruefstand/lists | grep -E '\.(json|txt)$' | tr '\n' ' ')
+          echo "liste=${l:-catalogs/de-starter.json}" >> "$GITHUB_OUTPUT"
+      - name: Check
+        env:
+          LISTE: ${{ steps.listen.outputs.liste }}
+        run: |
+          : > ergebnis.md
+          for l in $LISTE; do
+            [ -f "$l" ] || continue
+            python3 pruefstand/pruefe.py "$l" > teil.md
+            { echo "## $l"; echo; cat teil.md; echo; } | tee -a ergebnis.md
+            fehlt=$(grep '❌' teil.md | cut -d'|' -f2 | sed 's/^ *//;s/ *$//' | paste -sd ',' | cut -c1-900)
+            echo "::notice title=$l::$(tail -n 1 teil.md)${fehlt:+ Not confirmed: $fehlt}"
+          done
+          cat ergebnis.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pruefstand-ergebnis
+          path: ergebnis.md

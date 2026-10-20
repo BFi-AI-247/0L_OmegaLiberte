@@ -1,0 +1,301 @@
+{
+  "format": "0l.source-pack/1",
+  "title": "Starter catalog (German) – verified via test bench, Oct 2026",
+  "language": "de",
+  "sources": [
+    {
+      "kind": "rss",
+      "title": "Tagesschau",
+      "url": "https://www.tagesschau.de/index~rss2.xml",
+      "site": "https://tagesschau.de",
+      "topic": "Nachrichten"
+    },
+    {
+      "kind": "rss",
+      "title": "ZDFheute",
+      "url": "https://www.zdfheute.de/rss/zdf/nachrichten",
+      "site": "https://zdfheute.de",
+      "topic": "Nachrichten"
+    },
+    {
+      "kind": "rss",
+      "title": "Deutschlandfunk",
+      "url": "https://www.deutschlandfunk.de/nachrichten-100.rss",
+      "site": "https://deutschlandfunk.de",
+      "topic": "Nachrichten"
+    },
+    {
+      "kind": "rss",
+      "title": "DER SPIEGEL",
+      "url": "https://www.spiegel.de/schlagzeilen/index.rss",
+      "site": "https://spiegel.de",
+      "topic": "Nachrichten"
+    },
+    {
+      "kind": "rss",
+      "title": "DIE ZEIT",
+      "url": "https://newsfeed.zeit.de/index",
+      "site": "https://zeit.de",
+      "topic": "Nachrichten"
+    },
+    {
+      "kind": "rss",
+      "title": "taz",
+      "url": "https://taz.de/!p4608;rss/",
+      "site": "https://taz.de",
+      "topic": "Nachrichten"
+    },
+    {
+      "kind": "rss",
+      "title": "BBC News – World",
+      "url": "https://feeds.bbci.co.uk/news/world/rss.xml",
+      "site": "https://bbc.co.uk",
+      "topic": "Nachrichten"
+    },
+    {
+      "kind": "rss",
+      "title": "The Guardian – World",
+      "url": "https://www.theguardian.com/world/rss",
+      "site": "https://theguardian.com",
+      "topic": "Nachrichten"
+    },
+    {
+      "kind": "rss",
+      "title": "Dlf – Die Nachrichten",
+      "url": "https://www.deutschlandfunk.de/nachrichten-108.xml",
+      "site": "https://deutschlandfunk.de",
+      "topic": "Podcasts"
+    },
+    {
+      "kind": "rss",
+      "title": "Dlf – Der Tag",
+      "url": "https://www.deutschlandfunk.de/podcast-104.xml",
+      "site": "https://deutschlandfunk.de",
+      "topic": "Podcasts"
+    },
+    {
+      "kind": "rss",
+      "title": "Lage der Nation",
+      "url": "https://lagedernation.org/feed/mp3/",
+      "site": "https://lagedernation.org",
+      "topic": "Podcasts"
+    },
+    {
+      "kind": "rss",
+      "title": "Dlf – Forschung aktuell",
+      "url": "https://www.deutschlandfunk.de/forschung-aktuell-104.xml",
+      "site": "https://deutschlandfunk.de",
+      "topic": "Podcasts"
+    },
+    {
+      "kind": "rss",
+      "title": "Hörsaal (Dlf Nova)",
+      "url": "https://www.deutschlandfunknova.de/podcast/hoersaal-der-podcast",
+      "site": "https://deutschlandfunknova.de",
+      "topic": "Podcasts"
+    },
+    {
+      "kind": "rss",
+      "title": "Senkrechtstarter (Raumfahrt)",
+      "url": "https://senkrechtstarter.podigee.io/feed/mp3",
+      "site": "https://podigee.io",
+      "topic": "Podcasts"
+    },
+    {
+      "kind": "rss",
+      "title": "WDR 2 Einfach Fußball",
+      "url": "https://www1.wdr.de/mediathek/audio/wdr2/wdr2-bundesliga-togo/bundesliga-togo-102.podcast",
+      "site": "https://wdr.de",
+      "topic": "Podcasts"
+    },
+    {
+      "kind": "rss",
+      "title": "Dlf Sport",
+      "url": "https://www.deutschlandfunk.de/sport-aktuell-podcast-100.xml",
+      "site": "https://deutschlandfunk.de",
+      "topic": "Podcasts"
+    },
+    {
+      "kind": "rss",
+      "title": "Dlf – Essay und Diskurs",
+      "url": "https://www.deutschlandfunk.de/essay-und-diskurs-102.xml",
+      "site": "https://deutschlandfunk.de",
+      "topic": "Podcasts"
+    },
+    {
+      "kind": "rss",
+      "title": "Dlf – Tatort Kunst",
+      "url": "https://www.deutschlandfunk.de/tatort-kunst-102.xml",
+      "site": "https://deutschlandfunk.de",
+      "topic": "Podcasts"
+    },
+    {
+      "kind": "rss",
+      "title": "Ohrenbär (Kinder)",
+      "url": "https://www.ohrenbaer.de/podcast/podcast.xml/feed=podcast.xml",
+      "site": "https://ohrenbaer.de",
+      "topic": "Podcasts"
+    },
+    {
+      "kind": "rss",
+      "title": "Sportschau",
+      "url": "https://www.sportschau.de/index~rss2.xml",
+      "site": "https://sportschau.de",
+      "topic": "Sport"
+    },
+    {
+      "kind": "rss",
+      "title": "Sportschau – Bundesliga",
+      "url": "https://www.sportschau.de/fussball/bundesliga/index~rss2.xml",
+      "site": "https://sportschau.de",
+      "topic": "Sport"
+    },
+    {
+      "kind": "rss",
+      "title": "kicker",
+      "url": "https://newsfeed.kicker.de/news/aktuell",
+      "site": "https://kicker.de",
+      "topic": "Sport"
+    },
+    {
+      "kind": "youtube",
+      "title": "Bundesliga (YouTube)",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC6UL29enLNe4mqwTfAyeNuw",
+      "site": "https://youtube.com",
+      "topic": "Sport"
+    },
+    {
+      "kind": "youtube",
+      "title": "Sportschau (YouTube)",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCRFsyeKu07-LnHDG44O6uCA",
+      "site": "https://youtube.com",
+      "topic": "Sport"
+    },
+    {
+      "kind": "rss",
+      "title": "Deutschlandfunk – Kultur",
+      "url": "https://www.deutschlandfunk.de/kulturportal-100.rss",
+      "site": "https://deutschlandfunk.de",
+      "topic": "Kultur & Satire"
+    },
+    {
+      "kind": "youtube",
+      "title": "extra 3 (YouTube)",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCjhkuC_Pi85wGjnB0I1ydxw",
+      "site": "https://youtube.com",
+      "topic": "Kultur & Satire"
+    },
+    {
+      "kind": "youtube",
+      "title": "Hella & Tom (YouTube)",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCeBKU-99g_weNNPpZ2YMvvQ",
+      "site": "https://youtube.com",
+      "topic": "Lifestyle & Beauty"
+    },
+    {
+      "kind": "youtube",
+      "title": "BibisBeautyPalace (YouTube)",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCHfdTAyg5t4mb1G-3rJ6QsQ",
+      "site": "https://youtube.com",
+      "topic": "Lifestyle & Beauty"
+    },
+    {
+      "kind": "youtube",
+      "title": "Dagi Bee (YouTube)",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCpZ_DI-ZugwMzXcqccaTVsg",
+      "site": "https://youtube.com",
+      "topic": "Lifestyle & Beauty"
+    },
+    {
+      "kind": "youtube",
+      "title": "GLAMOUR Germany (YouTube)",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC7Jcy9H1paeaC9bqN6uYcHw",
+      "site": "https://youtube.com",
+      "topic": "Lifestyle & Beauty"
+    },
+    {
+      "kind": "rss",
+      "title": "Vogue Germany",
+      "url": "https://www.vogue.de/feed/rss",
+      "site": "https://vogue.de",
+      "topic": "Lifestyle & Beauty"
+    },
+    {
+      "kind": "rss",
+      "title": "GLAMOUR Germany",
+      "url": "https://www.glamour.de/feed/rss",
+      "site": "https://glamour.de",
+      "topic": "Lifestyle & Beauty"
+    },
+    {
+      "kind": "rss",
+      "title": "BRIGITTE",
+      "url": "https://www.brigitte.de/feed.rss",
+      "site": "https://brigitte.de",
+      "topic": "Lifestyle & Beauty"
+    },
+    {
+      "kind": "rss",
+      "title": "heise online",
+      "url": "https://www.heise.de/rss/heise-atom.xml",
+      "site": "https://heise.de",
+      "topic": "Tech & Netz"
+    },
+    {
+      "kind": "rss",
+      "title": "netzpolitik.org",
+      "url": "https://netzpolitik.org/feed/",
+      "site": "https://netzpolitik.org",
+      "topic": "Tech & Netz"
+    },
+    {
+      "kind": "rss",
+      "title": "Spektrum der Wissenschaft",
+      "url": "https://www.spektrum.de/alias/rss/spektrum-de-rss-feed/996406",
+      "site": "https://spektrum.de",
+      "topic": "Wissen & Raumfahrt"
+    },
+    {
+      "kind": "rss",
+      "title": "ESA – Weltraumforschung",
+      "url": "https://www.esa.int/rssfeed/Our_Activities/Space_Science",
+      "site": "https://esa.int",
+      "topic": "Wissen & Raumfahrt"
+    },
+    {
+      "kind": "rss",
+      "title": "wissenschaft.de – Bild der Wissenschaft",
+      "url": "https://wissenschaft.de/feed.xml",
+      "site": "https://wissenschaft.de",
+      "topic": "Wissen & Raumfahrt"
+    },
+    {
+      "kind": "youtube",
+      "title": "MAITHINK X – Mai Thi Nguyen-Kim (YouTube)",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCyHDQ5C6z1NDmJ4g6SerW8g",
+      "site": "https://youtube.com",
+      "topic": "Wissen & Raumfahrt"
+    },
+    {
+      "kind": "youtube",
+      "title": "Terra X Lesch & Co (YouTube)",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC5E9-r42JlymhLPnDv2wHuA",
+      "site": "https://youtube.com",
+      "topic": "Wissen & Raumfahrt"
+    },
+    {
+      "kind": "youtube",
+      "title": "MrWissen2go",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCZHpIFMfoJJ_1QxNGLJTzyA",
+      "site": "https://youtube.com",
+      "topic": "YouTube"
+    },
+    {
+      "kind": "youtube",
+      "title": "Dinge Erklärt – Kurzgesagt",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCwRH985XgMYXQ6NxXDo8npw",
+      "site": "https://youtube.com",
+      "topic": "YouTube"
+    }
+  ]
+}

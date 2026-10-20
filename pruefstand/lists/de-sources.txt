@@ -1,0 +1,47 @@
+# Prüfliste für den Quellen-Prüfstand (.github/workflows/quellen-pruefen.yml, pruefstand/pruefe.py)
+# Eine Quelle pro Zeile: Adresse | Bezeichnung   (Bluesky: bsky:<handle>, YouTube: https://www.youtube.com/@handle)
+# Herkunft dieser Liste: M001 (Mistral, 19.10.2026)
+https://www.deutschlandfunk.de/nachrichten-108.xml | Dlf Die Nachrichten
+http://www.deutschlandfunk.de/podcast-deutschlandfunk-der-tag.3417.de.podcast.xml | Dlf Der Tag
+https://lagedernation.podigee.io/feed/mpeg/ | Lage der Nation
+https://lagedernation.org | Lage der Nation (Seite)
+https://logbuch-netzpolitik.de/feed/mp3 | Logbuch:Netzpolitik
+https://www.zeit.de/podcasts/alles-gesagt.xml | Alles gesagt?
+https://www.zeit.de/serie/alles-gesagt | Alles gesagt? (Seite)
+https://www.deutschlandfunk.de/podcast-forschung-aktuell.677.de.podcast.xml | Dlf Forschung aktuell
+https://www.deutschlandfunknova.de/podcasts/download/hoersaal-der-podcast | Hörsaal (Dlf Nova)
+https://forschergeist.de/feed/m4a/ | Forschergeist
+https://www1.wdr.de/mediathek/audio/wdr5/zeitzeichen/zeitzeichen-104.podcast | WDR ZeitZeichen
+https://raumzeit-podcast.de/feed/mp3/ | Raumzeit
+https://senkrechtstarter.podigee.io/feed/mpeg/ | Senkrechtstarter
+https://www.hr-inforadio.de/podcast/weltraumwagner/index.html | WeltraumWagner (hr)
+https://www1.wdr.de/mediathek/audio/wdr2/wdr2-bundesliga-togo/bundesliga-togo-102.podcast | WDR 2 Einfach Fußball
+https://www.deutschlandfunk.de/sport-aktuell-podcast-100.xml | Dlf Sport aktuell
+http://rss.kicker.de/media/podcast | kicker Podcast
+http://www.deutschlandfunk.de/podcast-essay-und-diskurs.1185.de.podcast.xml | Dlf Essay und Diskurs
+https://www.deutschlandfunk.de/tatort-kunst-102.html | Dlf Tatort Kunst (Seite)
+https://www.zeit.de/serie/zeit-verbrechen | ZEIT Verbrechen (Seite)
+https://www.kakadu.de/podcast-landingpage-100.html | Kakadu (Seite)
+https://www.rbb-online.de/ohrenbaer/ | Ohrenbär (Seite)
+https://www.youtube.com/@bundesliga | YT Bundesliga
+https://www.youtube.com/@sportschau | YT Sportschau
+https://www.sportschau.de/fussball/bundesliga/index~rss2.xml | Sportschau Bundesliga RSS
+bsky:bundesliga.bsky.social | Bluesky Bundesliga
+https://www.transfermarkt.de/rss/news | Transfermarkt RSS
+https://www.youtube.com/@maiLab | YT maiLab
+https://www.youtube.com/@haraldlesch | YT Harald Lesch
+https://www.wissenschaft.de | wissenschaft.de
+bsky:nasa.bsky.social | Bluesky NASA
+bsky:nasa.gov | Bluesky NASA (Domain)
+https://www.youtube.com/@extra3 | YT extra 3
+https://www.youtube.com/@deutschlandfunkkultur | YT Dlf Kultur
+https://www.deutschlandfunk.de/kultur.1495.de.rss | Dlf Kultur-Ressort RSS
+https://www.zeit.de/kultur/index | ZEIT Kultur
+bsky:deutschlandfunkkultur.bsky.social | Bluesky Dlf Kultur
+https://www.youtube.com/@BibisBeautyPalace | YT BibisBeautyPalace
+https://www.youtube.com/@dagibee | YT Dagi Bee
+https://www.youtube.com/@glamourdeutschland | YT GLAMOUR DE
+https://www.vogue.de | Vogue DE
+https://www.glamour.de | GLAMOUR DE
+https://www.brigitte.de | BRIGITTE
+https://www.youtube.com/@hellagabbert | YT Hella Gabbert

@@ -1,0 +1,9 @@
+# Beispielquellen aus prompts/setup.md (M010, Mistral) – Prüfstand vor Übernahme
+https://www.tagesschau.de | tagesschau (web)
+https://www.wissenschaft.de | wissenschaft.de (web, ersetzt DLR: Startseite ohne auffindbaren Feed, 21.10.)
+https://www.youtube.com/@tagesschau | tagesschau (YouTube)
+bsky:esa.int | ESA (Bluesky)
+# Quellen aus dem Probelauf (Claude als KI nach setup.md, 21.10.2026)
+https://www.deutschlandfunk.de/nachrichten-100.rss | Deutschlandfunk (rss aus catalogs/de-starter.json; Startseite ohne auffindbaren Feed, 21.10.)
+https://www.spektrum.de | Spektrum der Wissenschaft (web)
+# https://www.klimareporter.de | klimareporter (web) – 21.10. ohne auffindbaren Feed, aus dem Probelauf gestrichen

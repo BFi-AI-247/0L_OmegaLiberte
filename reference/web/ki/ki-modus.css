@@ -1,0 +1,203 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* KI-Modus und KI-Einstellungen – Besitzer: KI-Modus. Wird nach app.css geladen. */
+.app.ai-mode { --accent: #6D4BC4; --accent-ink: #5B3CB0; }
+.app.ai-mode .top, .app.ai-mode .side { box-shadow: inset 0 3px 0 var(--accent); }
+.ai-spark { color: var(--accent-ink); font-weight: 700; }
+.ai-toggle[aria-pressed="true"] .ai-spark { color: #FFFFFF; }
+.ai-toggle.wide { width: 100%; min-height: 40px; border-radius: 12px; border: 1px solid var(--line2); background: var(--surface); font-weight: 600; font-size: 14px; }
+.ai-toggle.wide[aria-pressed="true"] { color: #FFFFFF; }
+.ai-band { margin: 8px 16px 0; padding: 8px 10px 8px 12px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 12%, var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); display: flex; flex-direction: column; gap: 8px; }
+.ai-band.err { border-color: var(--f-rot); }
+.ai-band-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ai-band-title { font-weight: 700; font-size: 14px; color: var(--accent-ink); }
+.ai-band-st { flex: 1 1 140px; font-size: 12px; color: var(--ink3); }
+.ai-band-btns { display: flex; gap: 6px; margin-left: auto; }
+.ai-wunsch { display: flex; gap: 8px; }
+.ai-wunsch input { flex: 1; min-width: 0; min-height: 36px; border: 1px solid var(--line2); border-radius: 10px; padding: 0 10px; background: var(--bg); font-size: 14px; }
+.app.wide .ai-band { margin: 16px max(24px, calc((100% - 720px) / 2)) 0; }
+.ai-note { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 10%, var(--surface)); flex: none; }
+.ai-why { font-size: 13px; font-weight: 600; color: var(--accent-ink); }
+.ai-also { font-size: 12px; color: var(--ink3); }
+.ai-also-btn { border: 0; background: none; padding: 0; color: var(--accent-ink); text-decoration: underline; text-underline-offset: 2px; font-size: 12px; }
+.lage-card { border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+.lage-item { display: flex; flex-direction: column; gap: 3px; text-align: left; border: 1px solid var(--line2); background: var(--bg); border-radius: 12px; padding: 10px 12px; flex: none; }
+.lage-item b { font-size: 15px; }
+.lage-satz { font-size: 14px; color: var(--ink2); line-height: 1.4; }
+.lage-q { font-size: 12px; color: var(--accent-ink); }
+.ai-bubble { position: relative; flex: 1.3 !important; gap: 6px; }
+.ai-bubble .dot { width: 10px; height: 10px; }
+.ai-bubble.on { border-color: var(--accent) !important; color: var(--accent-ink) !important; }
+.ai-note-top { flex: none; margin: -4px 0 10px; padding: 6px 10px; }
+.card-foot .ai-also { order: 4; flex-basis: 100%; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.who-pick-sub { font-size: 11px; font-weight: 500; color: var(--muted); }
+.overview > .ai-band { margin: 10px 12px 0; }
+.ki-row { align-items: flex-start; }
+.radio { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line2); margin-top: 2px; position: relative; }
+.ki-row[aria-pressed="true"] .radio { border-color: var(--accent); }
+.ki-row[aria-pressed="true"] .radio::after { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: var(--accent); }
+.ki-ok { color: var(--accent-ink); font-weight: 600; font-size: 13px; }
+.ki-detail { display: flex; flex-direction: column; gap: 8px; padding: 4px 8px 8px 8px; }
+.ki-detail input, .ki-detail select { height: 42px; border-radius: 10px; border: 1px solid var(--line2); background: var(--surface); color: var(--ink); padding: 0 10px; font: inherit; font-size: 14px; }
+.ki-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.ki-progress { position: relative; height: 26px; border-radius: 8px; background: var(--surface2); overflow: hidden; display: flex; align-items: center; }
+.ki-bar { position: absolute; left: 0; top: 0; bottom: 0; background: color-mix(in srgb, var(--accent) 35%, transparent); transition: width .3s; }
+.ki-progress .small { position: relative; padding: 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app.wide .ai-band { margin: 12px max(12px, calc((100% - 820px) / 2)) 0; }
+@media (prefers-color-scheme: dark) { .app.ai-mode { --accent: #7C5CD6; --accent-ink: #B9A3F0; } }
+.icon-btn.ai-toggle { font-size: 18px; margin-right: 4px; }
+.icon-btn.ai-toggle[aria-pressed="true"], .ai-toggle.wide[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); }
+.av.ai-av { background: var(--accent); font-size: 18px; }
+.app.wide .assist-rail .ai-spark { color: var(--accent-ink); font-size: 18px; }
+
+/* ---------- KI-Bühne (Laptop): Kopfzeile, Mosaik, Thema 2×2, volle Karte ---------- */
+/* Gerüst über die Kern-Haken (seitenspalte, rechts); hier nur, was der KI-Modus anders zeichnet */
+.app.wide[data-modus="ki"] { border-top: 3px solid var(--accent); }
+.app.wide[data-modus="ki"] .assist .msg, .app.wide[data-modus="ki"] .assist .msgs-empty, .app.wide[data-modus="ki"] .assist #k-chat { font-size: 16px; }
+@media (prefers-color-scheme: dark) {
+  .app.wide[data-modus="ki"] { --bg:#0F0E14; --surface:#1A1822; --surface2:#24212F; --seg-on:#2F2B3D; --line:#2F2B3D; --line2:#3A3550;
+    --ink:#F2F0F7; --ink2:#D7D3E3; --ink3:#ABA6BC; --muted:#ABA6BC; --accent:#7C5CD6; --accent-ink:#C3B3F5; }
+}
+.kib-kopfzeile { display: flex; flex-direction: column; gap: 8px; padding: 10px 20px; border-bottom: 1px solid var(--line); background: var(--bg); }
+.kib-kopfzeile.err .kib-stand { color: var(--danger); }
+.kib-kopf-reihe { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.kib-marke { font-weight: 800; font-size: 18px; letter-spacing: .06em; }
+.kib-umschalter { display: flex; flex: none; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 3px; }
+.kib-umschalter button { height: 36px; padding: 0 16px; border: 0; border-radius: 18px; background: transparent; color: var(--ink3); font-size: 14px; }
+.kib-umschalter button[aria-pressed="true"] { background: var(--accent); color: #FFFFFF; font-weight: 600; }
+.kib-stand { flex: 1; min-width: 0; font-size: 13px; color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kib-knopf { flex: none; min-height: 40px; padding: 0 14px; border-radius: 20px; border: 1px solid var(--line2); background: var(--surface); color: var(--ink); font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
+.kib-knopf:hover:not(:disabled) { border-color: var(--accent); }
+.kib-knopf:disabled { opacity: .6; cursor: default; }
+.kib-knopf.rund { width: 40px; padding: 0; justify-content: center; }
+.kib-knopf.primaer { background: var(--accent); border-color: var(--accent); color: #FFFFFF; font-weight: 600; }
+.kib-knopf[aria-pressed="true"] { border-color: var(--accent); color: var(--accent-ink); }
+.kib-taste { font-size: 11px; color: var(--muted); border: 1px solid var(--line2); border-radius: 5px; padding: 1px 5px; }
+@media (max-width: 1279px) {
+  .kib-kopf-reihe { gap: 8px; }
+  .kib-marke { font-size: 16px; }
+  .kib-umschalter button { padding: 0 12px; }
+  .kib-kopfzeile .kib-knopf { padding: 0 10px; }
+  .kib-kopfzeile .kib-knopf.rund { padding: 0; }
+  .kib-stand, .kib-themakopf p { display: none; } /* zu schmal: lieber weglassen als auf einen Buchstaben kürzen */
+}
+.kib-kopfzeile .ai-wunsch input { background: var(--surface); }
+
+.app.wide[data-modus="ki"] .stage { padding: 0; }
+.kib { position: absolute; inset: 14px 20px 18px; display: flex; flex-direction: column; gap: 12px; min-height: 0; user-select: none; }
+.kib-rein { animation: kib-rein .22s ease-out both; }
+@keyframes kib-rein { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .kib-rein { animation: none; } .kib-spur.sanft { transition: none !important; } }
+.kib-titel { display: flex; align-items: baseline; gap: 16px; flex: none; }
+.kib-titel h1 { margin: 0; flex: 1; min-width: 0; font-size: 24px; font-weight: 800; letter-spacing: -.015em; line-height: 1.1; }
+.kib-datum { font-size: 13px; color: var(--ink3); }
+.kib-hinweis { flex: none; display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); font-size: 14px; color: var(--ink2); }
+.kib-hinweis span { flex: 1; }
+.kib-leer { color: var(--ink3); font-size: 16px; }
+
+/* Mosaik: Fläche = Zahl der Beiträge, 4 px Fuge, Radius 14 px */
+.kib-flaeche { position: relative; flex: 1; min-height: 0; }
+.kib-kachel { position: absolute; padding: 16px; border: 0; border-radius: 14px; overflow: hidden; text-align: left; color: #F2F0F7; background: var(--kib-farbe, #24212F);
+  display: flex; flex-direction: column; gap: 6px; box-sizing: border-box; }
+.kib-kachel:hover { filter: brightness(1.12); }
+.kib-kachel:focus-visible { outline: 3px solid #C3B3F5; outline-offset: -3px; }
+.kib-kachel:active { transform: none; }
+.kib-kachel.alle { filter: saturate(.55) brightness(.85); }
+.kib-kachel.gross { padding: 0; justify-content: flex-end; }
+.kib-kachel.klein { justify-content: flex-end; padding: 12px; }
+.kib-bild { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.kib-zahl, .kib-leit, .kib-gelesen { position: absolute; font-size: 13px; font-weight: 600; background: rgba(15, 14, 20, .82); color: #F2F0F7; padding: 5px 10px; border-radius: 12px; }
+.kib-zahl { top: 12px; left: 12px; }
+.kib-leit { top: 12px; right: 12px; font-size: 11px; font-weight: 500; color: #D7D3E3; max-width: 55%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kib-gelesen { bottom: 10px; right: 10px; font-size: 12px; }
+.kib-kachel.gross .kib-gelesen { top: 44px; bottom: auto; left: 12px; right: auto; }
+.kib-feld { position: relative; display: flex; flex-direction: column; gap: 6px; background: rgba(15, 14, 20, .88); padding: 14px 16px 16px; }
+.kib-kachel.gross .kib-feld { margin: 0; border-radius: 0 0 14px 14px; }
+.kib-name { font-weight: 800; font-size: 19px; line-height: 1.08; overflow-wrap: anywhere; }
+.kib-kachel.gross .kib-name { font-size: 26px; }
+.kib-kachel.klein .kib-name { font-size: 16px; }
+.kib-satz { font-size: 14px; line-height: 1.4; color: #D7D3E3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.kib-zahl2 { font-size: 13px; color: #D7D3E3; }
+.kib-luft { flex: 1; }
+.kib-creator { display: flex; gap: 6px; align-items: center; margin-top: 2px; }
+.kib-creator .av { flex: none; color: #FFFFFF; box-shadow: 0 0 0 2px rgba(15, 14, 20, .6); }
+.kib-plus { font-size: 12px; color: #D7D3E3; }
+.kib-kachel.neues { background: transparent; border: 1.5px dashed var(--line2); color: var(--ink); justify-content: flex-end; gap: 2px; }
+.kib-kachel.neues .kib-satz { color: var(--ink3); font-size: 12px; }
+.kib-kachel.neues .kib-name { font-size: 17px; }
+.kib-frage { font-weight: 800; font-size: 26px; color: var(--accent-ink); }
+
+/* Liste als Alternative zur Grafik */
+.kib-liste { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding-right: 4px; user-select: text; }
+.kib-liste-thema { border-left: 6px solid var(--kib-farbe); padding-left: 12px; }
+.kib-liste-kopf { display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left; border: 0; background: none; padding: 6px 4px; border-radius: 8px; }
+.kib-liste-kopf h2 { margin: 0; font-size: 20px; }
+.kib-liste-kopf span { font-size: 15px; color: var(--ink2); }
+.kib-liste ul { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.kib-liste li button { width: 100%; text-align: left; border: 0; background: none; padding: 6px 4px; border-radius: 8px; display: flex; flex-direction: column; gap: 2px; font-size: 15px; }
+.kib-liste button:hover { background: var(--surface); }
+
+/* Thema: 2×2, blättert zeilenweise, oben und unten angedeutet */
+/* Kopf im Thema: eine Zeile, der Platz gehört den Bildern */
+.kib-thema { gap: 8px; inset: 8px 16px 12px; }
+.kib-themakopf { display: flex; align-items: center; gap: 12px; flex: none; min-width: 0; height: 40px; }
+.kib-mini { position: relative; flex: none; width: 60px; height: 40px; padding: 0; border: 1px solid var(--line2); border-radius: 8px; background: var(--surface); }
+.kib-mini span { position: absolute; margin: 3px; border-radius: 2px; background: var(--kib-farbe); filter: brightness(1.5); opacity: .7; }
+.kib-mini span.an { opacity: 1; filter: none; background: #C3B3F5; }
+.kib-mini:hover { border-color: var(--accent); }
+.kib-themakopf h1 { margin: 0; flex: 0 1 auto; min-width: 0; max-width: 55%; font-size: 17px; font-weight: 800; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kib-themakopf p { margin: 0; flex: 1; min-width: 0; font-size: 13px; color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kib-themakopf .kib-datum { flex: none; font-size: 12px; }
+.kib-knopf.klein { min-height: 32px; padding: 0 12px; font-size: 13px; border-radius: 16px; }
+.kib-fenster { position: relative; flex: 1; min-height: 0; overflow: hidden; border-radius: 12px; }
+.kib-spur { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: var(--kib-zh, 240px); gap: 6px; will-change: transform; }
+.kib-spur.sanft { transition: transform .25s ease-out; }
+.kib-post { position: relative; overflow: hidden; border: 0; border-radius: 14px; padding: 0; text-align: left; color: #F2F0F7; background: var(--kib-farbe, #24212F); display: flex; flex-direction: column; justify-content: flex-end; }
+.kib-post:hover { filter: brightness(1.1); }
+.kib-post:active { transform: none; }
+.kib-post:focus-visible { outline: 3px solid #C3B3F5; outline-offset: -3px; }
+.kib-post.gesehen .kib-bild { filter: saturate(.5) brightness(.8); }
+/* Text im Bild: Verlauf statt Block, damit das Bild die Kachel trägt */
+.kib-post .kib-feld { gap: 3px; padding: 28px 12px 10px; background: linear-gradient(rgba(15, 14, 20, 0), rgba(15, 14, 20, .86) 26px, rgba(15, 14, 20, .94)); text-shadow: 0 1px 2px rgba(0, 0, 0, .5); }
+.kib-post:not(.mit-bild) .kib-feld { background: transparent; flex: 1; justify-content: flex-end; }
+.kib-post:not(.mit-bild) .kib-posttitel { -webkit-line-clamp: 5; font-size: 15px; }
+.kib-quelle { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #D7D3E3; min-width: 0; }
+.kib-quelle > span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kib-quelle .av { color: #FFFFFF; }
+.kib-posttitel { font-weight: 650; font-size: 14px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.kib-warum { font-size: 11.5px; color: #C3B3F5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kib-marken { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; gap: 8px; justify-content: space-between; }
+.kib-play { width: 36px; height: 36px; border-radius: 18px; background: rgba(15, 14, 20, .72); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.kib-auch { font-size: 11px; font-weight: 600; background: rgba(15, 14, 20, .82); color: #F2F0F7; padding: 3px 8px; border-radius: 10px; align-self: flex-start; }
+.kib-gelesen2 { margin-left: auto; font-size: 11px; font-weight: 600; background: rgba(15, 14, 20, .82); padding: 3px 8px; border-radius: 10px; align-self: flex-start; }
+.kib-ende { border: 1.5px dashed var(--line2); border-radius: 14px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 10px; padding: 20px; }
+.kib-ende b { font-size: 18px; }
+.kib-mehr { position: absolute; left: 0; right: 0; height: 28px; border: 0; padding: 0; display: flex; align-items: center; justify-content: center; z-index: 2; color: var(--ink); }
+.kib-mehr[hidden] { display: none; }
+.kib-mehr.oben { top: 0; background: linear-gradient(var(--bg), color-mix(in srgb, var(--bg) 25%, transparent)); }
+.kib-mehr.unten { bottom: 0; background: linear-gradient(color-mix(in srgb, var(--bg) 25%, transparent), var(--bg)); }
+.kib-pille { font-size: 12px; font-weight: 600; background: var(--surface); border: 1px solid var(--line2); padding: 2px 10px; border-radius: 12px; }
+.kib-mehr:hover:not(:disabled) .kib-pille { border-color: var(--accent); }
+.kib-mehr:disabled { cursor: default; }
+.kib-mehr:active { transform: none; }
+
+/* Volle Karte: maximaler Platz, Leiste mit Weg zurück */
+.kib-leiste { position: absolute; top: 12px; left: 20px; right: 20px; height: 40px; display: flex; align-items: center; gap: 14px; z-index: 3; }
+.app.wide[data-modus="ki"] .stage[data-ebene="karte"] .card, .app.wide[data-modus="ki"] .stage[data-ebene="karte"] .empty { inset: 62px 20px 16px; }
+/* Kompakt: Überschriften der Beiträge kleiner, der Platz gehört Bild und Text */
+.app.wide[data-modus="ki"] .stage[data-ebene="karte"] .card h1, .app.wide[data-modus="ki"] .stage[data-ebene="karte"] .card .card-title { font-size: 17px; line-height: 1.3; }
+.app.wide[data-modus="ki"] .stage[data-ebene="karte"] .card-text { font-size: 16px; line-height: 1.55; }
+
+/* Rechts unten an der vollen Karte: „Auch berichtet von“ – bis zu drei flache Kacheln */
+.kib-auchfeld { flex: none; display: flex; flex-direction: column; gap: 6px; padding: 0 12px 12px; border-top: 1px solid var(--line); }
+.kib-auchfeld .assist-head { display: flex; align-items: baseline; justify-content: space-between; padding: 10px 4px 2px; }
+.kib-auchfeld .assist-head b { font-size: 14px; }
+.kib-auchkachel { display: flex; align-items: center; gap: 10px; width: 100%; height: 64px; padding: 0 10px 0 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface2); color: var(--ink); text-align: left; overflow: hidden; }
+.kib-auchkachel:hover { border-color: var(--accent); }
+.kib-auchkachel:active { transform: none; }
+.kib-auchkachel:focus-visible { outline: 3px solid #C3B3F5; outline-offset: -1px; }
+.kib-auchkachel.gesehen { opacity: .7; }
+.kib-auchkachel img, .kib-auchbild { flex: none; width: 86px; height: 100%; object-fit: cover; display: flex; align-items: center; justify-content: center; background: var(--seg-on); }
+.kib-auchbild .av { color: #FFFFFF; }
+.kib-auchtext { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.kib-auchtext .kib-quelle { color: var(--ink3); }
+.kib-auchtitel { font-size: 13px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

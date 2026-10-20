@@ -1,0 +1,11 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* Posten – Blatt „Neuer Beitrag“ und Knöpfe an Karten (posten/posten.js) */
+.posten-acts { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.posten-text { font: 15px/1.5 inherit; font-family: inherit; word-break: normal; }
+.posten-zaehler { display: flex; gap: 12px; justify-content: flex-end; color: var(--muted); }
+.posten-zahl.zu-lang { color: var(--danger, #B3261E); font-weight: 600; }
+.posten-ziele { display: flex; gap: 18px; flex-wrap: wrap; }
+.posten-bezug { padding: 8px 10px; border-left: 3px solid var(--line2); color: var(--ink2); }
+.posten-vorschau { display: flex; flex-direction: column; gap: 4px; }
+.posten-vorschau-text { white-space: pre-wrap; padding: 10px 12px; border: 1px solid var(--line2); border-radius: 12px; background: var(--surface); line-height: 1.5; overflow-wrap: anywhere; }
+.posten-fehler { color: var(--danger, #B3261E); }
