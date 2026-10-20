@@ -16,7 +16,9 @@ reference/
 ## 1. Run it locally in 5 minutes
 You need **PHP 8.1 or newer** with the extensions `curl`, `openssl` and `mbstring` (check: `php -v` and `php -m`).
 
-**Windows (PowerShell):** `winget install --id PHP.PHP.8.4 -e`, open a new PowerShell, then enable the extensions and the certificate list:
+**Windows, all in one:** [tools/windows-setup.ps1](../tools/windows-setup.ps1) installs PHP (winget), enables the extensions, downloads this repo and starts your hub — read it first, then: `powershell -ExecutionPolicy Bypass -File windows-setup.ps1`.
+
+**Windows, step by step (PowerShell):** `winget install --id PHP.PHP.8.4 -e`, open a new PowerShell, then enable the extensions and the certificate list:
 ```powershell
 $dir = Split-Path (Get-Command php).Source
 Copy-Item "$dir\php.ini-development" "$dir\php.ini" -Force
