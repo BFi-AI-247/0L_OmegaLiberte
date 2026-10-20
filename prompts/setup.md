@@ -30,7 +30,8 @@ https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/reference/README.md
 
 - **Own web space** (README §2): download https://github.com/BFi-AI-247/0L_OmegaLiberte/archive/refs/heads/main.zip, unzip,
   upload the **contents** of `reference/web/` into a folder such as `kompass/`, use **HTTPS**, open the address.
-- **Own computer on Windows – easiest:** the script https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/tools/windows-setup.ps1 does everything (PHP via winget, extensions, download, start). Show it to the person, explain each of its four steps in one line, and let them decide; download it, then `powershell -ExecutionPolicy Bypass -File windows-setup.ps1`.
+- **Own computer on Windows – easiest:** the script https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/tools/windows-setup.ps1 does everything (PHP via winget, extensions, download, start). Show it to the person, explain each of its four steps in one line, and let them decide; then give this one PowerShell line (downloads to Downloads and runs it):
+  `cd $HOME\Downloads; Invoke-WebRequest https://raw.githubusercontent.com/BFi-AI-247/0L_OmegaLiberte/main/tools/windows-setup.ps1 -OutFile windows-setup.ps1 -UseBasicParsing; powershell -ExecutionPolicy Bypass -File windows-setup.ps1`
 - **Own computer** (README §1; on Windows use the PowerShell block there – PHP needs `curl`, `openssl`, `mbstring` and a certificate list, otherwise all feeds show as unreachable): `php -S localhost:8000 -t reference/web` in the unzipped folder, or copy `reference/web/` into
   `htdocs/kompass/` for XAMPP/MAMP/WAMP.
 - Give **one step per message** for beginners; wait for "done" before the next. If something fails, ask for the exact error text.

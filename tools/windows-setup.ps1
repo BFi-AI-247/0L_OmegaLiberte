@@ -61,5 +61,6 @@ Write-Host "Unpacked to $web (your settings live in the browser, not here - upda
 
 # 4 - start
 Schritt "Your hub: http://localhost:$Port/  (Ctrl+C stops it)"
+Write-Host "Start it again later with:  php -S localhost:$Port -t `"$web`""
 Start-Process "http://localhost:$Port/"
 & php -S "localhost:$Port" -t $web
