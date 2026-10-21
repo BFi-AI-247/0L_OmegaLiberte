@@ -170,7 +170,8 @@ async function paketUebernehmen() {
 // Umgekehrt: eigene Quellen als Link (Kurzform) und als JSON
 function paketEigenes() {
   const q = [];
-  settings.feeds.forEach((f) => q.push(f.handle ? { kind: 'youtube', title: f.title, handle: f.handle } : { kind: 'rss', title: f.title, url: f.url }));
+  // Bluesky-Feeds/-Listen kennt das Paketformat 0l.source-pack/1 noch nicht (#16) – nicht mit exportieren
+  settings.feeds.filter((f) => f.kind !== 'bluesky').forEach((f) => q.push(f.handle ? { kind: 'youtube', title: f.title, handle: f.handle } : { kind: 'rss', title: f.title, url: f.url }));
   S.kfollows.forEach((k) => {
     const m = /^m:(.+)$/.exec(k.key || ''); const b = /^b:(.+)$/.exec(k.key || '');
     if (m) q.push({ kind: 'mastodon', title: k.name, handle: '@' + m[1] });

@@ -187,13 +187,70 @@ async function loadBluesky(handle) {
   return { people, posts };
 }
 
+/* Bluesky-Feeds, -Listen und Starter-Packs als Quelle (Issue #16, Modul 'bsky-quellen').
+   Gespeichert wie ein Feed in settings.feeds: { kind: 'bluesky', art: 'feed'|'liste'|'starter', uri: at://…, url: bsky.app-Adresse }.
+   Abruf direkt vom Gerät über public.api.bsky.app (ohne Anmeldung); Beiträge behalten ihre Autoren und tragen den Schlüssel der Quelle als Tag. */
+const BSKY_API = 'https://public.api.bsky.app/xrpc/';
+const BSKY_ARTEN = { feed: 'app.bsky.feed.generator', liste: 'app.bsky.graph.list', starter: 'app.bsky.graph.starterpack' };
+function bskyQuelleErkennen(q) {
+  const t = String(q || '').trim();
+  let m = /^(?:https?:\/\/)?(?:www\.)?bsky\.app\/profile\/([^/\s]+)\/(feed|lists)\/([A-Za-z0-9._~:-]+)/i.exec(t);
+  if (m) return { art: m[2].toLowerCase() === 'feed' ? 'feed' : 'liste', actor: decodeURIComponent(m[1]), rkey: m[3] };
+  m = /^(?:https?:\/\/)?(?:www\.)?bsky\.app\/starter-pack(?:-short)?\/([^/\s]+)\/([A-Za-z0-9._~:-]+)/i.exec(t);
+  if (m) return { art: 'starter', actor: decodeURIComponent(m[1]), rkey: m[2] };
+  m = /^at:\/\/([^/\s]+)\/(app\.bsky\.feed\.generator|app\.bsky\.graph\.list|app\.bsky\.graph\.starterpack)\/([A-Za-z0-9._~:-]+)$/.exec(t);
+  if (m) return { art: Object.keys(BSKY_ARTEN).find((k) => BSKY_ARTEN[k] === m[2]), actor: m[1], rkey: m[3] };
+  return null;
+}
+function bskyFehler(e) {
+  const m = String((e && e.message) || '');
+  return /HTTP 40[13]|Auth/i.test(m) ? tt('Dieser Bluesky-Feed zeigt Beiträge nur angemeldet – ohne Konto kann KOMPASS ihn nicht lesen.')
+    : /HTTP 400|HTTP 404|not found/i.test(m) ? tt('Diesen Bluesky-Feed bzw. diese Liste gibt es nicht (mehr).') : tt('Bluesky ist gerade nicht erreichbar.');
+}
+// Adresse → fertiger Eintrag für settings.feeds (Handle wird zur DID aufgelöst, Name und Bild aus der API)
+async function bskyQuelleAufloesen(q) {
+  const e = bskyQuelleErkennen(q); if (!e) return null;
+  let did = e.actor;
+  if (!/^did:/.test(did)) did = (await getJSON(BSKY_API + 'app.bsky.actor.getProfile?actor=' + encodeURIComponent(did))).did;
+  const uri = 'at://' + did + '/' + BSKY_ARTEN[e.art] + '/' + e.rkey;
+  let title = ''; let icon = ''; let beschreibung = ''; let liste = '';
+  if (e.art === 'feed') {
+    const v = (await getJSON(BSKY_API + 'app.bsky.feed.getFeedGenerator?feed=' + encodeURIComponent(uri))).view || {};
+    title = v.displayName; icon = v.avatar; beschreibung = v.description;
+  } else if (e.art === 'liste') {
+    const l = (await getJSON(BSKY_API + 'app.bsky.graph.getList?limit=1&list=' + encodeURIComponent(uri))).list || {};
+    title = l.name; icon = l.avatar; beschreibung = l.description;
+  } else {
+    const sp = (await getJSON(BSKY_API + 'app.bsky.graph.getStarterPack?starterPack=' + encodeURIComponent(uri))).starterPack || {};
+    title = (sp.record || {}).name; beschreibung = (sp.record || {}).description; liste = (sp.list || {}).uri || (sp.record || {}).list || '';
+    if (!liste) throw new Error(tt('Dieses Starter-Pack hat keine öffentliche Liste.'));
+  }
+  const pfad = e.art === 'feed' ? 'feed/' : e.art === 'liste' ? 'lists/' : '';
+  const url = e.art === 'starter' ? 'https://bsky.app/starter-pack/' + did + '/' + e.rkey : 'https://bsky.app/profile/' + did + '/' + pfad + e.rkey;
+  const f = { url, title: shortTitle(String(title || BSKY_ART_LABEL()[e.art])), kind: 'bluesky', art: e.art, uri: liste || uri, icon: icon || '', site: url };
+  return { feed: f, beschreibung: String(beschreibung || '').replace(/\s+/g, ' ').slice(0, 90) };
+}
+const BSKY_ART_LABEL = () => ({ feed: tt('Bluesky-Feed'), liste: tt('Bluesky-Liste'), starter: tt('Bluesky-Starter-Pack') });
+async function loadBskyQuelle(f) {
+  const key = 'f:' + f.id;
+  let d;
+  try {
+    d = f.art === 'feed' ? await getJSON(BSKY_API + 'app.bsky.feed.getFeed?limit=30&feed=' + encodeURIComponent(f.uri))
+      : await getJSON(BSKY_API + 'app.bsky.feed.getListFeed?limit=30&list=' + encodeURIComponent(f.uri));
+  } catch (e) { throw new Error(bskyFehler(e)); }
+  return (d.feed || []).filter((x) => x && x.post && !x.reason).map((x) => { const p = bskyPost(x); p.tags.push(key); return p; });
+}
+
 /* RSS/Atom und YouTube über api/rss.php */
 function feedEntry(f) {
+  if (f.kind === 'bluesky') return { key: 'f:' + f.id, name: f.title, type: 'creator', service: 'bluesky', avatar: f.icon || '', feed: f,
+    handle: (BSKY_ART_LABEL()[f.art] || 'Bluesky'), sub: tt('Creator · ') + (BSKY_ART_LABEL()[f.art] || 'Bluesky') };
   const yt = f.kind === 'youtube';
   return { key: 'f:' + f.id, name: f.title, type: 'creator', service: yt ? 'youtube' : 'rss', avatar: f.icon || '', feed: f,
     handle: hostOf(f.site || f.url), sub: tt('Creator · ') + (yt ? 'YouTube' : 'Web/RSS') };
 }
 async function loadFeed(f) {
+  if (f.kind === 'bluesky') return modulAn('bsky-quellen') ? loadBskyQuelle(f) : [];
   return feedPosts(f, await getJSON('api/rss.php?aktion=feed&url=' + encodeURIComponent(f.url)));
 }
 /* Viele Feeds auf einmal: Pakete zu FEED_PAKET Feeds (Favoriten zuerst), höchstens 3 gleichzeitig über
@@ -202,12 +259,15 @@ async function loadFeed(f) {
    wird das Paket einzeln geladen (wie bisher). */
 const FEED_PAKET = 6;
 async function loadFeeds(feeds, beiTeil) {
+  const bsky = feeds.filter((f) => f.kind === 'bluesky'); feeds = feeds.filter((f) => f.kind !== 'bluesky');
   const fav = (f) => (S.favs['f:' + f.id] || S.favs[S.alias['f:' + f.id]] ? 0 : 1);
   const liste = feeds.map((f, i) => [f, i]).sort((a, b) => fav(a[0]) - fav(b[0]) || a[1] - b[1]).map((x) => x[0]);
   const pakete = [];
   for (let i = 0; i < liste.length; i += FEED_PAKET) pakete.push(liste.slice(i, i + FEED_PAKET));
   const posts = []; const fehler = [];
   const melde = (ps) => { posts.push(...ps); if (ps.length && beiTeil) { try { beiTeil(ps); } catch (e) { /* Anzeige darf das Laden nicht stoppen */ } } };
+  // Bluesky-Feeds/-Listen direkt vom Gerät (nicht über rss.php), parallel zum Sammelabruf
+  const bskyJob = modulAn('bsky-quellen') ? pool(bsky, 3, (f) => loadBskyQuelle(f).then(melde).catch((e) => fehler.push(f.title + ': ' + e.message))) : null;
   await pool(pakete, 3, async (paket) => {
     let d = null;
     try {
@@ -226,6 +286,7 @@ async function loadFeeds(feeds, beiTeil) {
     }
     melde(ps);
   });
+  await bskyJob;
   return { posts, fehler };
 }
 /* Antwort von rss.php (aktion=feed bzw. ein Eintrag aus aktion=sammel) → Beiträge */

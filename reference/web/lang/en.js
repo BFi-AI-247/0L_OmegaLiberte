@@ -789,5 +789,13 @@ SPRACHE.en = Object.fromEntries(Object.entries({
   "Wirtschaft & Unternehmen": "Business & Companies",
   "Dossier Ukraine": "Ukraine dossier",
   "Regional: Borkum": "Regional: Borkum",
-  "Reddit lässt Abrufe über unseren Server gerade nicht zu (Sperre gegen automatische Abrufe). Später noch einmal versuchen oder den Beitrag direkt bei Reddit lesen.": "Reddit is currently blocking requests from our server (protection against automated access). Try again later or read it directly on Reddit."
+  "Reddit lässt Abrufe über unseren Server gerade nicht zu (Sperre gegen automatische Abrufe). Später noch einmal versuchen oder den Beitrag direkt bei Reddit lesen.": "Reddit is currently blocking requests from our server (protection against automated access). Try again later or read it directly on Reddit.",
+  "Dieser Bluesky-Feed zeigt Beiträge nur angemeldet – ohne Konto kann KOMPASS ihn nicht lesen.": "This Bluesky feed only shows posts to signed-in users – KOMPASS can't read it without an account.",
+  "Diesen Bluesky-Feed bzw. diese Liste gibt es nicht (mehr).": "This Bluesky feed or list doesn't exist (anymore).",
+  "Bluesky ist gerade nicht erreichbar.": "Bluesky can't be reached right now.",
+  "Dieses Starter-Pack hat keine öffentliche Liste.": "This starter pack has no public list.",
+  "Bluesky-Feed": "Bluesky feed",
+  "Bluesky-Liste": "Bluesky list",
+  "Bluesky-Starter-Pack": "Bluesky starter pack",
+  "Name, Handle oder Adresse eines Feeds/einer Liste": "Name, handle or address of a feed/list"
 }).filter(([, v]) => v));

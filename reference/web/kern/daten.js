@@ -220,7 +220,8 @@ function build() {
   R.people.forEach((p) => { byKey[p.key] = p; entries[p.key] = Object.assign({ sub: personSub(p.type, [SERVICE_LABEL[p.service]], p.kompass) }, p); });
   const feeds = Object.values(R.base).filter((e) => e.feed);
   feeds.forEach((e) => { byKey[e.key] = e; });
-  const { groups, suggest } = consolidate(R.people, feeds);
+  // Bluesky-Feeds/-Listen sind Sammlungen fremder Konten – nie mit Konten oder Websites zusammenführen
+  const { groups, suggest } = consolidate(R.people, feeds.filter((e) => e.feed.kind !== 'bluesky'));
   S.alias = {};
   groups.forEach((g) => {
     const rank = { mastodon: 0, bluesky: 1, youtube: 2, rss: 3 };
@@ -330,7 +331,7 @@ async function loadAll() {
   } else if (S.kfollows.some((x) => x.service === 'bluesky')) {
     jobs.push(loadKFOnly('bluesky').then((r) => { people.push(...r.people); posts.push(...r.posts); zwischenstand(); }).catch(() => {}));
   }
-  const yts = settings.feeds.filter((f) => f.kind === 'youtube'); const webs = settings.feeds.filter((f) => f.kind !== 'youtube');
+  const yts = settings.feeds.filter((f) => f.kind === 'youtube'); const webs = settings.feeds.filter((f) => f.kind !== 'youtube' && f.kind !== 'bluesky');
   if (yts.length) base.youtube = { key: 'youtube', name: 'YouTube', type: 'dienst', service: 'youtube', sub: tt('Dienst · ') + yts.length + (yts.length === 1 ? tt(' Kanal') : tt(' Kanäle')) };
   if (webs.length) base.rss = { key: 'rss', name: tt('Websites & RSS'), type: 'dienst', service: 'rss', sub: tt('Dienst · ') + webs.length + (webs.length === 1 ? tt(' Feed') : tt(' Feeds')) };
   settings.feeds.forEach((f) => { base['f:' + f.id] = feedEntry(f); });

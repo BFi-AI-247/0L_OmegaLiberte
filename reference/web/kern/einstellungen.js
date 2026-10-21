@@ -277,7 +277,7 @@ function renderSettings(onboarding) {
         h('p', { class: 'small', style: 'margin:0;line-height:1.5' }, tt('YouTube-Kanäle, Websites und Konten, denen du nur in KOMPASS folgst. Wird mit deinem Speicher abgeglichen.')),
         settings.feeds.length || S.kfollows.length ? h('div', { class: 'own-list' },
           settings.feeds.map((x) => h('div', { class: 'add-row' }, avatar({ key: 'f:' + x.id, name: x.title, avatar: x.icon }, 30),
-            h('span', { class: 'row-text' }, h('span', { class: 'row-title', style: 'font-size:14px' }, x.title), h('span', { class: 'row-sub' }, (x.kind === 'youtube' ? 'YouTube' : 'Web/RSS') + ' · ' + hostOf(x.site || x.url))),
+            h('span', { class: 'row-text' }, h('span', { class: 'row-title', style: 'font-size:14px' }, x.title), h('span', { class: 'row-sub' }, (x.kind === 'youtube' ? 'YouTube' : x.kind === 'bluesky' ? (BSKY_ART_LABEL()[x.art] || 'Bluesky') : 'Web/RSS') + ' · ' + (x.kind === 'bluesky' ? x.url.replace(/^https:\/\//, '') : hostOf(x.site || x.url)))),
             h('button', { type: 'button', class: 'ghost', 'aria-label': x.title + tt(' entfernen'), onClick: () => removeFeed(x.id) }, icon('close', { sm: true })))),
           S.kfollows.map((x) => h('div', { class: 'add-row' }, avatar({ key: x.key, name: x.name, avatar: x.avatar }, 30),
             h('span', { class: 'row-text' }, h('span', { class: 'row-title', style: 'font-size:14px' }, x.name), h('span', { class: 'row-sub' }, (SERVICE_LABEL[x.service] || x.service) + ' · ' + (x.handle || ''))),

@@ -20,7 +20,12 @@ async function runAddSearch() {
     // Eindeutige Links (ARD Sounds, Reddit, HN, Tumblr, Micro.blog) gehen immer über die Feed-Suche, egal welcher Reiter offen ist
     const direkt = tab !== 'ki' && (/\b(ardsounds|ardaudiothek)\.de\//i.test(q) || !!quelleErkennen(q));
     if (direkt) tab = 'web';
-    if (tab === 'ki') { const v = await kiQuellenVorschlaege(q); res = v.res; A.verworfen = v.verworfen; }
+    // Issue #16: Bluesky-Feed, -Liste oder Starter-Pack als Adresse – in jedem Reiter
+    const bq = tab !== 'ki' && modulAn('bsky-quellen') && bskyQuelleErkennen(q);
+    if (bq) {
+      let r; try { r = await bskyQuelleAufloesen(q); } catch (e) { throw new Error(/Starter-Pack/.test(e.message) ? e.message : bskyFehler(e)); }
+      res = [{ kind: 'feed', url: r.feed.url, name: r.feed.title, avatar: r.feed.icon, service: 'bluesky', sub: BSKY_ART_LABEL()[r.feed.art] + (r.beschreibung ? ' · ' + r.beschreibung : ''), feed: r.feed }];
+    } else if (tab === 'ki') { const v = await kiQuellenVorschlaege(q); res = v.res; A.verworfen = v.verworfen; }
     else if (tab === 'mastodon') res = await searchMastodon(q);
     else if (tab === 'bluesky') {
       const d = await getJSON('https://public.api.bsky.app/xrpc/app.bsky.actor.searchActors?limit=15&q=' + encodeURIComponent(q.replace(/^@/, '')));
@@ -92,7 +97,7 @@ async function addFeed(feed) {
   if (S.raw) {
     S.raw.base['f:' + f.id] = feedEntry(f);
     const n = settings.feeds.filter((x) => x.kind === f.kind).length;
-    if (f.kind === 'youtube') S.raw.base.youtube = { key: 'youtube', name: 'YouTube', type: 'dienst', service: 'youtube', sub: tt('Dienst · ') + n + (n === 1 ? tt(' Kanal') : tt(' Kanäle')) };
+    if (f.kind === 'bluesky') { /* eigener Eintrag reicht, kein Sammel-Dienst */ } else if (f.kind === 'youtube') S.raw.base.youtube = { key: 'youtube', name: 'YouTube', type: 'dienst', service: 'youtube', sub: tt('Dienst · ') + n + (n === 1 ? tt(' Kanal') : tt(' Kanäle')) };
     else S.raw.base.rss = { key: 'rss', name: tt('Websites & RSS'), type: 'dienst', service: 'rss', sub: tt('Dienst · ') + n + (n === 1 ? tt(' Feed') : tt(' Feeds')) };
     try { S.raw.posts.push(...await loadFeed(f)); flash(tt('Hinzugefügt: ') + f.title); } catch (e) { flash(f.title + tt(' hinzugefügt, aber gerade nicht erreichbar.')); }
     if (S.feedFix) { S.feedFix = false; save('settings'); S.raw.base['f:' + f.id] = feedEntry(f); }
@@ -105,9 +110,9 @@ function removeFeed(id) {
   settings.feeds = settings.feeds.filter((x) => x.id !== id); save('settings');
   const key = 'f:' + id;
   if (S.raw) {
-    delete S.raw.base[key]; S.raw.posts = S.raw.posts.filter((x) => x.whoKey !== key);
+    delete S.raw.base[key]; S.raw.posts = S.raw.posts.filter((x) => x.whoKey !== key && !(x.tags || []).includes(key));
     if (!settings.feeds.some((x) => x.kind === 'youtube')) delete S.raw.base.youtube;
-    if (!settings.feeds.some((x) => x.kind !== 'youtube')) delete S.raw.base.rss;
+    if (!settings.feeds.some((x) => x.kind !== 'youtube' && x.kind !== 'bluesky')) delete S.raw.base.rss;
     build();
   }
   if (S.filter === key) S.filter = null;
@@ -128,7 +133,7 @@ function removeKF(key) {
 function renderAdd() {
   const A = S.add;
   const close = () => { S.add = null; render(); };
-  const ph = { ki: tt('Thema, z. B. Fußball-Bundesliga, Raumfahrt, Kochen'), mastodon: tt('Name oder @name@instanz'), bluesky: tt('Name oder Handle'), youtube: tt('Kanal-Adresse oder @name'), web: tt('Website oder Feed-Adresse, z. B. heise.de'), katalog: tt('Katalog filtern …') }[A.tab];
+  const ph = { ki: tt('Thema, z. B. Fußball-Bundesliga, Raumfahrt, Kochen'), mastodon: tt('Name oder @name@instanz'), bluesky: tt('Name, Handle oder Adresse eines Feeds/einer Liste'), youtube: tt('Kanal-Adresse oder @name'), web: tt('Website oder Feed-Adresse, z. B. heise.de'), katalog: tt('Katalog filtern …') }[A.tab];
   const hint = {
     mastodon: tt('Sucht über ') + ((parseMastodon(settings.mastodon) || {}).host || 'mastodon.social') + '. Du folgst dann in KOMPASS (nur lesend), nicht auf Mastodon selbst.',
     bluesky: tt('Öffentliche Bluesky-Suche. Du folgst dann in KOMPASS (nur lesend), nicht auf Bluesky selbst.'),
