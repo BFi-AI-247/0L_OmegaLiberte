@@ -16,11 +16,11 @@ function chatArt() {
   const c = cur();
   return c && c.service === 'ki' ? (c.id === lageId() ? 'lage' : 'thema') : 'beitrag';
 }
-async function askAgent(frage, verlauf) {
+async function askAgent(frage, verlauf, lauf) {
   const beitrag = chatGegenstand();
   if (KI.art() !== 'kompass' && KI.bereit()) {
     try {
-      const antwort = await kiDialog(frage, verlauf, beitrag);
+      const antwort = await kiDialog(frage, verlauf, beitrag, lauf);
       return antwort ? { status: 'ok', antwort } : { status: 'fehler', antwort: tt('Deine KI hat leer geantwortet.') };
     } catch (e) { return { status: 'fehler', antwort: e.message || tt('Deine KI ist gerade nicht erreichbar.') }; }
   }
@@ -45,7 +45,7 @@ async function chat(q) {
   S.msgs.push({ who: 'du', text: q }, { who: 'agent', text: tt('Denke nach …'), wait: true });
   render();
   const id = S.stack[S.pos];
-  const d = await askAgent(q, verlauf);
+  const d = await askAgent(q, verlauf, 'dialog');
   if (S.stack[S.pos] !== id) return;
   S.msgs[S.msgs.length - 1] = { who: 'agent', text: d.antwort || tt('Keine Antwort erhalten.') };
   render();
@@ -55,7 +55,7 @@ async function factCheck() {
   if (c.service === 'ki' || chatArt() !== 'beitrag') { flash(tt('Der Faktencheck prüft einzelne Beiträge – öffne zuerst einen Beitrag.')); return; }
   S.checks[c.id] = { state: 'run' }; if (isWide()) { S.assistPin = true; S.assistPinId = c.id; } render();
   const d = await askAgent('Prüfe die Kernaussagen dieses Beitrags knapp: Was ist belegt, was ist fraglich, was ist Meinung, Satire oder Humor (Witz, Comedy, Ironie, Unterhaltung)? ' +
-    'Beende die Antwort mit genau einer Zeile „Urteil: bestätigt“, „Urteil: fraglich“, „Urteil: irreführend“, „Urteil: Satire/Humor“ oder „Urteil: nicht prüfbar“.');
+    'Beende die Antwort mit genau einer Zeile „Urteil: bestätigt“, „Urteil: fraglich“, „Urteil: irreführend“, „Urteil: Satire/Humor“ oder „Urteil: nicht prüfbar“.', [], 'fakt');
   if (d.status !== 'ok') { S.checks[c.id] = { state: 'fehler', text: d.antwort }; render(); return; }
   const m = /Urteil:\s*([^\n.]+)/i.exec(d.antwort || '');
   const u = m ? m[1].toLowerCase() : '';
@@ -72,7 +72,7 @@ function renderAssist() {
   const fact = FACT[chk && chk.state === 'done' ? chk.status : 'grau'];
   const input = h('input', { id: 'k-chat', placeholder: c ? tt('Frag deinen Agenten …  ( / )') : tt('Kein Beitrag ausgewählt'), value: S.draft, autocomplete: 'off', disabled: !c,
     onInput: (e) => { S.draft = e.target.value; }, onKeydown: (e) => { if (e.key === 'Enter') chat(S.draft); } });
-  const msgs = h('div', { class: 'msgs' }, S.msgs.length ? S.msgs.map((m) => h('div', { class: 'msg ' + m.who + (m.wait ? ' wait' : '') }, m.text))
+  const msgs = h('div', { class: 'msgs' }, S.msgs.length ? S.msgs.map((m) => h('div', { class: 'msg ' + m.who + (m.wait ? ' wait' : '') }, m.wait ? kiLaufAnzeige('dialog', m.text) : m.text))
     : h('p', { class: 'small msgs-empty' }, c ? tt('Frag nach Hintergründen, Begriffen oder der Gegenseite. Die Frage geht mit diesem Beitrag an deinen Agenten.') : ''));
   setTimeout(() => { msgs.scrollTop = msgs.scrollHeight; }, 0);
   const rail = h('button', { type: 'button', class: 'assist-rail', 'aria-label': tt('KI und Faktencheck öffnen'), 'aria-expanded': S.assistPin ? 'true' : 'false',
@@ -83,7 +83,7 @@ function renderAssist() {
     h('section', { class: 'assist-fact', 'aria-label': tt('Faktencheck') },
       h('div', { class: 'assist-head' }, h('b', {}, tt('Faktencheck')),
         S.assistPin ? h('button', { type: 'button', class: 'ghost assist-close', 'aria-label': tt('KI-Leiste einklappen'), title: tt('Einklappen (Esc)'), onClick: () => { S.assistPin = false; render(); } }, icon('close', { sm: true })) : null,
-        h('span', { class: 'fact-state' }, h('span', { class: 'dot', style: 'background:' + fact.color }), chk && chk.state === 'run' ? tt('läuft …') : fact.label)),
+        h('span', { class: 'fact-state' }, h('span', { class: 'dot', style: 'background:' + fact.color }), chk && chk.state === 'run' ? kiLaufAnzeige('fakt', tt('läuft …')) : fact.label)),
       h('div', { class: 'small' }, tt('Kontakte: noch keine geteilten Prüfungen · Gemeinschaft: kommt mit der Sammelstelle')),
       chk && (chk.state === 'done' || chk.state === 'fehler') ? h('div', { class: 'note fact-note' }, chk.text + (chk.by ? '\n\n— ' + chk.by : '')) : null,
       h('button', { type: 'button', class: 'btn primary', disabled: !c || (chk && chk.state === 'run'), title: tt('Taste f'), onClick: factCheck },
@@ -100,7 +100,7 @@ function renderAssistKi(c, bezug) {
   const lage = bezug === 'lage';
   const input = h('input', { id: 'k-chat', placeholder: (lage ? tt('Frag nach der Lage …') : tt('Frag nach dem Thema …')) + '  ( / )', value: S.draft, autocomplete: 'off',
     onInput: (e) => { S.draft = e.target.value; }, onKeydown: (e) => { if (e.key === 'Enter') chat(S.draft); } });
-  const msgs = h('div', { class: 'msgs' }, S.msgs.length ? S.msgs.map((m) => h('div', { class: 'msg ' + m.who + (m.wait ? ' wait' : '') }, m.text))
+  const msgs = h('div', { class: 'msgs' }, S.msgs.length ? S.msgs.map((m) => h('div', { class: 'msg ' + m.who + (m.wait ? ' wait' : '') }, m.wait ? kiLaufAnzeige('dialog', m.text) : m.text))
     : h('p', { class: 'small msgs-empty' }, lage ? tt('Frag nach den Themen des Tages. Die KI kennt nur, was deine Quellen berichten.')
       : tt('Frag nach Hintergründen oder danach, wer wie berichtet. Die Frage geht mit allen Beiträgen dieses Themas an deine KI.')));
   setTimeout(() => { msgs.scrollTop = msgs.scrollHeight; }, 0);

@@ -782,5 +782,8 @@ SPRACHE.en = Object.fromEntries(Object.entries({
   "Zum Schreiben verbinde zuerst Mastodon oder Bluesky.": "To write, first connect Mastodon or Bluesky.",
   " – erst Mastodon oder Bluesky verbinden": " – connect Mastodon or Bluesky first",
   "KI-Auswahl": "AI selection",
-  "Noch keine Quellen in deiner Sprache – diese sind auf ": "No sources in your language yet – these are in "
+  "Noch keine Quellen in deiner Sprache – diese sind auf ": "No sources in your language yet – these are in ",
+  "Lade Modell auf das Gerät … {p} %": "Loading model onto this device … {p} %",
+  "Das Modell schreibt …": "The model is writing …",
+  "Abgebrochen.": "Cancelled."
 }).filter(([, v]) => v));
