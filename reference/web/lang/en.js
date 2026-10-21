@@ -104,6 +104,7 @@ SPRACHE.en = Object.fromEntries(Object.entries({
   "Anmeldung abgebrochen.": "Sign-in canceled.",
   "Anmeldung fehlgeschlagen.": "Sign-in failed.",
   "Ansicht": "View",
+  "Regional: Gifhorn": "Regional: Gifhorn",
   "Deine KI hat nach {s} s nicht geantwortet – das Modell ist für diese Aufgabe vermutlich zu langsam. Ein kleineres Modell oder eine KI im Netz hilft.": "Your AI did not answer within {s} s – the model is probably too slow for this task. A smaller model or an online AI will help.",
   "Deine KI hat ein kleines Kontextfenster – KOMPASS schickt die Beiträge jetzt in Stücken (Einstellung „Kontext“).": "Your AI has a small context window – KOMPASS now sends the posts in chunks (setting \"Context\").",
   "Kontext (Token) – leer lassen, außer dein Dienst meldet „zu lang“; dann z. B. 8192": "Context (tokens) – leave empty unless your service reports \"too long\"; then e.g. 8192",

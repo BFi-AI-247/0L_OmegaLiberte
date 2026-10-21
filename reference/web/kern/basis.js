@@ -11,7 +11,7 @@
 'use strict';
 
 /* ---------- Hilfen ---------------------------------------------------- */
-const VERSION = 'v0.37';
+const VERSION = 'v0.38';
 const LS = 'kompass.v0.' + (INSTANZ.speicher ? INSTANZ.speicher + '.' : '');
 // Modul-Schalter (instanz.js → module): false zieht ein Feature zurück, fehlt = an
 function modulAn(id) { return !(INSTANZ.module && INSTANZ.module[id] === false); }
@@ -196,6 +196,13 @@ const CATALOG = [
     ['NASA', 'https://www.nasa.gov/feed/', 'nasa.gov', 'rss', 'en'],
     ['Space.com', 'https://www.space.com/feeds.xml', 'space.com', 'rss', 'en'],
     ['NASA (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCLA_DiR1FfKNvjuUpBHmylQ', 'youtube.com', 'youtube', 'en']] },
+  // Regionalpaket Gifhorn (Issue #1): M017/M018, Prüfstand 21.10.2026 – nur Quellen mit Feed
+  { gruppe: 'Regional: Gifhorn', items: [
+    ['NDR Niedersachsen', 'https://www.ndr.de/nachrichten/niedersachsen/index~rss2.xml', 'ndr.de'],
+    ['Aller-Zeitung – Gifhorn', 'https://www.az-online.de/isenhagener-land/gifhorn/rssfeed.rdf', 'az-online.de'],
+    ['Braunschweiger Zeitung – Gifhorn', 'https://www.braunschweiger-zeitung.de/niedersachsen/gifhorn/rss', 'braunschweiger-zeitung.de'],
+    ['Polizeiinspektion Gifhorn', 'https://www.presseportal.de/rss/dienststelle_56517.rss2', 'presseportal.de'],
+    ['MTV Gifhorn', 'https://www.mtv-gifhorn.de/?format=feed&type=rss', 'mtv-gifhorn.de']] },
   { gruppe: 'YouTube', items: [
     ['MrWissen2go', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCZHpIFMfoJJ_1QxNGLJTzyA', 'youtube.com', 'youtube'],
     ['Dinge Erklärt – Kurzgesagt', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCwRH985XgMYXQ6NxXDo8npw', 'youtube.com', 'youtube'],
