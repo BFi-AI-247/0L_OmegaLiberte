@@ -1,5 +1,7 @@
 # Trial run of prompts/setup.md (21 Oct 2026)
 
+*The own-hub guide tested here is now [host.md](host.md); [setup.md](setup.md) starts people on the reference hub.*
+
 **Setting:** Claude played the AI and followed `prompts/setup.md`; the person was **simulated** (German, climate and science, ESA on Bluesky, no sport, few sources). The answer was then opened as a link (phone) and pasted whole into *Paste pack* (laptop): each time one click and one confirmation set up a new KOMPASS. Example sources are in `pruefstand/lists/setup-example.txt` and checked by the test bench.
 
 **Lesson:** three official homepages (DLR, Deutschlandfunk, klimareporter°) did not reveal a feed; the prompt now says to prefer `rss:` when the feed address is known for certain, and KOMPASS lists what it could not find.

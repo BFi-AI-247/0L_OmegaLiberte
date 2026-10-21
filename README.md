@@ -13,7 +13,7 @@ It is not a product with an owner. The valuable part is the **recipe**: principl
 | You want to … | Do this |
 |---|---|
 | **use it** | Open the reference instance **Kompass~OmegaLiberte**: <https://digifil.de/kompass/> — install it as an app, add your sources, done. |
-| **set it up with your AI** | Paste this into your AI (ChatGPT, Claude, Le Chat, …): *“Read https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/prompts/setup.md and set up my own OmegaLiberte hub with me.”* — it walks you through installing your own hub (web space or your own computer), naming it, and choosing sources; at the end you get a link that loads your sources into **your** hub after a preview. |
+| **set it up with your AI** | Paste this into your AI (ChatGPT, Claude, Le Chat, …): *“Read https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/prompts/setup.md and help me start with OmegaLiberte.”* — a few questions about your interests, then a link that loads your sources after a preview. Want your own hub on your web space or computer? The same AI follows [prompts/host.md](prompts/host.md). |
 | **build and run your own** | Read [RECIPE.md](RECIPE.md). Runs on any web space with PHP — or fully local (`php -S localhost:8000 -t reference/web`, or XAMPP). |
 
 ## What makes you free

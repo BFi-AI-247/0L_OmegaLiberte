@@ -1,6 +1,6 @@
 # Choosing sources for an OmegaLiberte hub with your AI
 
-*Step 2 of [setup.md](setup.md). Use it on its own when the person already has a hub. `<hub>` below means the address of **their** hub (e.g. `https://their.domain/kompass/` or `http://localhost:8000/`). Only if they explicitly chose to try the reference first is `<hub>` = `https://digifil.de/kompass/`.*
+*Step 2 of [setup.md](setup.md) and step 4 of [host.md](host.md). Use it on its own when the person already has a hub. `<hub>` below means the hub the person uses: `https://digifil.de/kompass/` when they came through setup.md, otherwise the address of **their own** hub (e.g. `https://their.domain/kompass/` or `http://localhost:8000/`).*
 
 KOMPASS gathers a person's own news sources in one quiet place. Reading happens on their device, no account required, no endless scroll. This prompt turns a short conversation into a personal starter package the person can import with one click.
 
