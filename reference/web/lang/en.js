@@ -785,5 +785,9 @@ SPRACHE.en = Object.fromEntries(Object.entries({
   "Noch keine Quellen in deiner Sprache – diese sind auf ": "No sources in your language yet – these are in ",
   "Lade Modell auf das Gerät … {p} %": "Loading model onto this device … {p} %",
   "Das Modell schreibt …": "The model is writing …",
-  "Abgebrochen.": "Cancelled."
+  "Abgebrochen.": "Cancelled.",
+  "Wirtschaft & Unternehmen": "Business & Companies",
+  "Dossier Ukraine": "Ukraine dossier",
+  "Regional: Borkum": "Regional: Borkum",
+  "Reddit lässt Abrufe über unseren Server gerade nicht zu (Sperre gegen automatische Abrufe). Später noch einmal versuchen oder den Beitrag direkt bei Reddit lesen.": "Reddit is currently blocking requests from our server (protection against automated access). Try again later or read it directly on Reddit."
 }).filter(([, v]) => v));

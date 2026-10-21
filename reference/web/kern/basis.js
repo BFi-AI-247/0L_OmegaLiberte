@@ -11,7 +11,7 @@
 'use strict';
 
 /* ---------- Hilfen ---------------------------------------------------- */
-const VERSION = 'v0.39';
+const VERSION = 'v0.41';
 const LS = 'kompass.v0.' + (INSTANZ.speicher ? INSTANZ.speicher + '.' : '');
 // Modul-Schalter (instanz.js → module): false zieht ein Feature zurück, fehlt = an
 function modulAn(id) { return !(INSTANZ.module && INSTANZ.module[id] === false); }
@@ -119,7 +119,8 @@ const FACT = {
 const MAX_ACCOUNTS = 25;
 const SERVICE_LABEL = { radar: tt('RADAR 724'), mastodon: tt('Mastodon'), bluesky: tt('Bluesky'), youtube: 'YouTube', rss: 'Web/RSS' };
 // Startkatalog: geprüfte Feeds (18./19.10.2026 über api/rss.php abgerufen; Podcasts, Sport, Kultur, Lifestyle aus M001, geprüft mit dem Quellen-Prüfstand;
-// englische Einträge (5. Feld 'en') aus M016, Prüfstand 21.10.2026)
+// englische Einträge (5. Feld 'en') aus M016, Prüfstand 21.10.2026; RADAR-Quellen aus M018, Prüfstand 21.10.2026 (#13) –
+// Unternehmens- und Behördenquellen tragen den Absender im Namen (Sorgfaltsregel RADAR))
 const CATALOG = [
   { gruppe: 'Nachrichten', items: [
     ['Tagesschau', 'https://www.tagesschau.de/index~rss2.xml', 'tagesschau.de'],
@@ -133,7 +134,14 @@ const CATALOG = [
     ['Sky News', 'https://feeds.skynews.com/feeds/rss/home.xml', 'news.sky.com', 'rss', 'en'],
     ['NPR News', 'https://feeds.npr.org/1001/rss.xml', 'npr.org', 'rss', 'en'],
     ['Al Jazeera English', 'https://www.aljazeera.com/xml/rss/all.xml', 'aljazeera.com', 'rss', 'en'],
-    ['RTÉ News', 'https://www.rte.ie/feeds/rss/?index=/news/', 'rte.ie', 'rss', 'en']] },
+    ['RTÉ News', 'https://www.rte.ie/feeds/rss/?index=/news/', 'rte.ie', 'rss', 'en'],
+    ['Süddeutsche Zeitung', 'https://rss.sueddeutsche.de/rss/Topthemen', 'sueddeutsche.de'],
+    ['n-tv', 'https://www.n-tv.de/rss', 'n-tv.de'],
+    ['Deutsche Welle', 'https://rss.dw.com/rdf/rss-de-all', 'dw.com'],
+    ['ORF', 'https://rss.orf.at/news.xml', 'orf.at'],
+    ['Euronews', 'https://www.euronews.com/rss', 'euronews.com', 'rss', 'en'],
+    ['Le Monde', 'https://www.lemonde.fr/rss/une.xml', 'lemonde.fr', 'rss', 'fr'],
+    ['DW Español', 'https://rss.dw.com/rdf/rss-sp-all', 'dw.com', 'rss', 'es']] },
   { gruppe: 'Podcasts', items: [
     ['Dlf – Die Nachrichten', 'https://www.deutschlandfunk.de/nachrichten-108.xml', 'deutschlandfunk.de'],
     ['Dlf – Der Tag', 'https://www.deutschlandfunk.de/podcast-104.xml', 'deutschlandfunk.de'],
@@ -184,7 +192,15 @@ const CATALOG = [
     ['The Verge', 'https://www.theverge.com/rss/index.xml', 'theverge.com', 'rss', 'en'],
     ['TechCrunch', 'https://techcrunch.com/feed/', 'techcrunch.com', 'rss', 'en'],
     ['WIRED', 'https://www.wired.com/feed/rss', 'wired.com', 'rss', 'en'],
-    ['Hacker News', 'https://news.ycombinator.com/rss', 'news.ycombinator.com', 'rss', 'en']] },
+    ['Hacker News', 'https://news.ycombinator.com/rss', 'news.ycombinator.com', 'rss', 'en'],
+    ['CORRECTIV', 'https://correctiv.org/feed/', 'correctiv.org'],
+    ['ProPublica', 'https://www.propublica.org/feed', 'propublica.org', 'rss', 'en']] },
+  { gruppe: 'Wirtschaft & Unternehmen', items: [
+    ['Moneycab', 'https://www.moneycab.com/feed/', 'moneycab.com'],
+    ['Volkswagen Group – Pressemitteilungen (Unternehmen)', 'https://www.volkswagen-group.com/de/feeds/pressemitteilungen', 'volkswagen-group.com'],
+    ['Lufthansa Group – Newsroom (Unternehmen)', 'https://newsroom.lufthansagroup.com/feed/de', 'lufthansagroup.com'],
+    ['Deutsche Bahn – Presseinformationen (Unternehmen)', 'https://www.deutschebahn.com/service/rss/de/6868410/feed.rss', 'deutschebahn.com'],
+    ['Quartz', 'https://qz.com/rss', 'qz.com', 'rss', 'en']] },
   { gruppe: 'Wissen & Raumfahrt', items: [
     ['Spektrum der Wissenschaft', 'https://www.spektrum.de/alias/rss/spektrum-de-rss-feed/996406', 'spektrum.de'],
     ['ESA – Weltraumforschung', 'https://www.esa.int/rssfeed/Our_Activities/Space_Science', 'esa.int'],
@@ -195,7 +211,17 @@ const CATALOG = [
     ['Phys.org', 'https://phys.org/rss-feed/', 'phys.org', 'rss', 'en'],
     ['NASA', 'https://www.nasa.gov/feed/', 'nasa.gov', 'rss', 'en'],
     ['Space.com', 'https://www.space.com/feeds.xml', 'space.com', 'rss', 'en'],
-    ['NASA (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCLA_DiR1FfKNvjuUpBHmylQ', 'youtube.com', 'youtube', 'en']] },
+    ['NASA (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCLA_DiR1FfKNvjuUpBHmylQ', 'youtube.com', 'youtube', 'en'],
+    ['GEO', 'https://www.geo.de/feed/rss/geo/', 'geo.de'],
+    ['idw – Pressemitteilungen aus der Forschung', 'https://idw-online.de/de/pressreleasesrss', 'idw-online.de'],
+    ['Uni Oldenburg – Nachrichten (Hochschule)', 'https://uol.de/aktuelles/rss', 'uol.de'],
+    ['WHO – News (Institution)', 'https://www.who.int/rss-feeds/news-english.xml', 'who.int', 'rss', 'en']] },
+  { gruppe: 'Dossier Ukraine', items: [
+    ['Russland verstehen (LibMod)', 'https://russlandverstehen.eu/de/feed/', 'russlandverstehen.eu'],
+    ['MDR – Was tun, Herr General?', 'https://www.mdr.de/nachrichten/podcast/general/russland-angriff-krieg-ukraine-mdr-100.xml', 'mdr.de'],
+    ['The Kyiv Independent', 'https://kyivindependent.com/news-archive/rss/', 'kyivindependent.com', 'rss', 'en'],
+    ['Ukrainska Pravda (EN)', 'https://www.pravda.com.ua/eng/rss', 'pravda.com.ua', 'rss', 'en'],
+    ['Meduza', 'https://meduza.io/rss/all', 'meduza.io', 'rss', 'ru']] },
   // Regionalpaket Gifhorn (Issue #1): M017/M018, Prüfstand 21.10.2026 – nur Quellen mit Feed
   { gruppe: 'Regional: Gifhorn', items: [
     ['NDR Niedersachsen', 'https://www.ndr.de/nachrichten/niedersachsen/index~rss2.xml', 'ndr.de'],
@@ -203,6 +229,11 @@ const CATALOG = [
     ['Braunschweiger Zeitung – Gifhorn', 'https://www.braunschweiger-zeitung.de/niedersachsen/gifhorn/rss', 'braunschweiger-zeitung.de'],
     ['Polizeiinspektion Gifhorn', 'https://www.presseportal.de/rss/dienststelle_56517.rss2', 'presseportal.de'],
     ['MTV Gifhorn', 'https://www.mtv-gifhorn.de/?format=feed&type=rss', 'mtv-gifhorn.de']] },
+  // Regionalpaket Borkum (Issue #13): M018 Abschnitt 10, Prüfstand 21.10.2026 – nur Quellen mit aktuellem Feed
+  { gruppe: 'Regional: Borkum', items: [
+    ['Borkum-News', 'https://www.borkum-news.de/feed/', 'borkum-news.de'],
+    ['Nationalpark Wattenmeer', 'https://www.nationalpark-wattenmeer.de/feed/', 'nationalpark-wattenmeer.de'],
+    ['Polizeiinspektion Leer/Emden', 'https://www.presseportal.de/rss/dienststelle_104235.rss2?langid=1', 'presseportal.de']] },
   { gruppe: 'YouTube', items: [
     ['MrWissen2go', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCZHpIFMfoJJ_1QxNGLJTzyA', 'youtube.com', 'youtube'],
     ['Dinge Erklärt – Kurzgesagt', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCwRH985XgMYXQ6NxXDo8npw', 'youtube.com', 'youtube'],

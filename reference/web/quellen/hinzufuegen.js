@@ -15,6 +15,7 @@ async function runAddSearch() {
   if (!q || tab === 'katalog') { A.res = []; A.err = ''; A.done = false; render(); return; }
   A.busy = true; A.err = ''; A.res = []; render();
   let res = []; let err = '';
+  const reddit = tab !== 'ki' && (quelleErkennen(q) || {}).art === 'reddit';
   try {
     // Eindeutige Links (ARD Sounds, Reddit, HN, Tumblr, Micro.blog) gehen immer über die Feed-Suche, egal welcher Reiter offen ist
     const direkt = tab !== 'ki' && (/\b(ardsounds|ardaudiothek)\.de\//i.test(q) || !!quelleErkennen(q));
@@ -41,6 +42,8 @@ async function runAddSearch() {
     }
     if (!res.length && tab !== 'ki') err = tt('Nichts gefunden.');
   } catch (e) { err = e.message || tt('Suche fehlgeschlagen.'); }
+  // Issue #18: Reddit sperrt Abrufe von Servern (Prüfstand 21.10.2026: 429 bzw. kein Feed) – verständlich sagen statt „Nichts gefunden“
+  if (err && reddit) err = tt('Reddit lässt Abrufe über unseren Server gerade nicht zu (Sperre gegen automatische Abrufe). Später noch einmal versuchen oder den Beitrag direkt bei Reddit lesen.');
   if (S.add !== A || A.seq !== seq) return; // inzwischen neue Suche gestartet
   A.res = res; A.err = err; A.busy = false; A.done = true; render();
 }
