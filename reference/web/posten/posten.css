@@ -13,6 +13,7 @@
 /* Modus-Leiste (kern/modi.js) und Bühne „Schreiben“ (posten/schreiben.js) */
 .modus-leiste { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface2); flex: none; }
 .modus-leiste.wide { display: flex; width: 100%; }
+.modus-leiste.kompakt .modus-knopf { min-width: 34px; padding: 0; }  /* Handy-Kopf: ✦ und ✎ als Schalter (Issue #2) */
 .modus-knopf { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 38px; min-height: 36px; padding: 0 10px; border: 0; border-radius: 999px; background: transparent; color: var(--ink2); font-size: 14px; }
 .modus-leiste.wide .modus-knopf { flex: none; min-width: 38px; min-height: 34px; padding: 0 10px; }  /* 34 + 2·3 = 40 px wie der frühere KI-Knopf */
 .modus-leiste.wide .modus-knopf[aria-pressed="true"] { flex: 1; min-width: 0; }

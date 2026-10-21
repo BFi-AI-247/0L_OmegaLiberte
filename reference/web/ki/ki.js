@@ -75,7 +75,7 @@ const KI = {
 /* ---------- Tresor: verschlüsselte Schlüssel in IndexedDB ---------- */
 function kiDb() {
   return new Promise((ok, fail) => {
-    const r = indexedDB.open('kompass-tresor', 1);
+    const r = indexedDB.open('kompass-tresor' + (INSTANZ.speicher ? '-' + INSTANZ.speicher : ''), 1);
     r.onupgradeneeded = () => r.result.createObjectStore('v');
     r.onsuccess = () => ok(r.result); r.onerror = () => fail(r.error);
   });
@@ -115,7 +115,7 @@ async function kiKeyLoeschen(art) {
   delete KI.keys[art];
   try { await kiIdb('readwrite', (st) => st.delete('key:' + art)); } catch (e) { /* egal */ }
 }
-async function kiTresorLeeren() { KI.keys = {}; try { indexedDB.deleteDatabase('kompass-tresor'); } catch (e) { /* egal */ } }
+async function kiTresorLeeren() { KI.keys = {}; try { indexedDB.deleteDatabase('kompass-tresor' + (INSTANZ.speicher ? '-' + INSTANZ.speicher : '')); } catch (e) { /* egal */ } }
 
 /* ---------- OpenRouter: Anmeldung mit PKCE ---------- */
 function kiB64url(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
@@ -185,8 +185,22 @@ async function kiLokalLaden(id, nurStart) {
 }
 
 /* ---------- Ein Aufruf für alle Anbieter ---------- */
-// msgs: [{role:'system'|'user'|'assistant', content}], opt: { json, max }
+// msgs: [{role:'system'|'user'|'assistant', content}], opt: { json, max, zeit (Sekunden) }
+// Zeitgrenze (Issue #3): Langsame Modelle enden mit einer verständlichen Meldung statt ohne Ende zu laufen.
+// Bei „Auf diesem Gerät“ zählt die Zeit erst nach dem Laden des Modells.
+function kiZeitgrenze(c) { return c.art === 'openai' ? 180 : 90; }
+async function kiMitZeit(sek, arbeit, abbruch) {
+  let t;
+  const zeit = new Promise((_, nein) => { t = setTimeout(() => { try { abbruch(); } catch (e) { /* egal */ }
+    nein(new Error(tt('Deine KI hat nach {s} s nicht geantwortet – das Modell ist für diese Aufgabe vermutlich zu langsam. Ein kleineres Modell oder eine KI im Netz hilft.').replace('{s}', sek))); }, sek * 1000); });
+  try { return await Promise.race([arbeit, zeit]); } finally { clearTimeout(t); }
+}
 async function kiFrage(msgs, opt = {}) {
+  const c = KI.cfg(); const ac = new AbortController(); let abbruch = () => ac.abort();
+  if (c.art === 'lokal') { const eng = await kiLokalLaden(c.modell || KI_LOKAL_MODELLE[0].id); abbruch = () => { ac.abort(); try { eng.interruptGenerate(); } catch (e) { /* egal */ } }; }
+  return kiMitZeit(opt.zeit || kiZeitgrenze(c), kiFrageRoh(msgs, opt, ac.signal), abbruch);
+}
+async function kiFrageRoh(msgs, opt, signal) {
   const c = KI.cfg(); const max = opt.max || 700;
   const fehler = async (r) => { const t = await r.text().catch(() => ''); let m = ''; try { const j = JSON.parse(t); m = (j.error && (j.error.message || j.error)) || j.message || ''; } catch (e) { m = t.slice(0, 160); }
     if (r.status === 401 || r.status === 403) return new Error(tt('Zugang abgelehnt – Schlüssel prüfen oder neu verbinden.'));
@@ -201,8 +215,12 @@ async function kiFrage(msgs, opt = {}) {
     if (c.art === 'openrouter') { hd['HTTP-Referer'] = location.origin + location.pathname; hd['X-Title'] = INSTANZ.name; }
     const body = { model: c.modell || (c.art === 'openrouter' ? 'openrouter/auto' : ''), messages: msgs, max_tokens: max, temperature: opt.json ? 0.2 : 0.3 };
     if (opt.json) body.response_format = { type: 'json_object' };
-    let r = await fetch(url, { method: 'POST', headers: hd, body: JSON.stringify(body) });
-    if (!r.ok && opt.json && r.status === 400) { delete body.response_format; r = await fetch(url, { method: 'POST', headers: hd, body: JSON.stringify(body) }); }
+    let r = await fetch(url, { method: 'POST', headers: hd, body: JSON.stringify(body), signal });
+    if (!r.ok && opt.json && r.status === 400) {
+      const t = await r.clone().text().catch(() => '');
+      if (c.art === 'openai' && KI_ZU_LANG.test(t)) throw await fehler(r);  // Kontext zu klein: nicht ohne json wiederholen, kiKuratieren stückelt
+      delete body.response_format; r = await fetch(url, { method: 'POST', headers: hd, body: JSON.stringify(body), signal });
+    }
     if (!r.ok) throw await fehler(r);
     const d = await r.json();
     return String((d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) || '').trim();
@@ -216,7 +234,7 @@ async function kiFrage(msgs, opt = {}) {
     };
     if (sys) body.systemInstruction = { parts: [{ text: sys }] };
     const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent',
-      { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': KI.keys.gemini || '' }, body: JSON.stringify(body) });
+      { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': KI.keys.gemini || '' }, body: JSON.stringify(body), signal });
     if (!r.ok) throw await fehler(r);
     const d = await r.json();
     return ((d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts) || []).map((p) => p.text || '').join('').trim();
@@ -229,7 +247,7 @@ async function kiFrage(msgs, opt = {}) {
     const session = await self.LanguageModel.create({ initialPrompts: [{ role: 'system', content: sys }].concat(rest),
       monitor(m) { m.addEventListener('downloadprogress', (e) => { KI.ui.laden = { pct: Math.round(e.loaded * 100), text: tt('Browser lädt seine KI …') }; render(); }); } });
     KI.ui.laden = null;
-    try { return String(await session.prompt(last.content)).trim(); } finally { try { session.destroy(); } catch (e) { /* egal */ } }
+    try { return String(await session.prompt(last.content, { signal })).trim(); } finally { try { session.destroy(); } catch (e) { /* egal */ } }
   }
   if (c.art === 'lokal') {
     const eng = await kiLokalLaden(c.modell || KI_LOKAL_MODELLE[0].id);
@@ -265,13 +283,60 @@ function kiJson(text) {
   return null;
 }
 // Gleiche Regeln wie api/kurator.php – jetzt auf dem Gerät gebaut, an die eigene KI geschickt
+// Kontextfenster (Issue #3): Kleine Kontexte (z. B. lokaler Dienst mit 8192 Token) bekommen die Beiträge in Stücken.
+// Einstellung „Kontext (Token)“ beim eigenen Dienst; meldet der Dienst „zu lang“, stellt KOMPASS selbst auf 8192.
+const KI_ZU_LANG = /context|n_ctx|too long|too many tokens|maximum.{0,30}tokens|exceed/i;
+const KI_KUR_MAX = 2000;  // Antwort-Token der KI-Auswahl
+function kiKontext() { const c = KI.cfg(); const k = Math.round(+c.kontext || 0); return c.art === 'openai' && k >= 1024 ? k : 0; }
+// Zeilen in Stücke, die mit Regeln und Antwort ins Kontextfenster passen (grob 3 Zeichen je Token, vorsichtig für Deutsch)
+function kiStuecke(zeilen, kontext) {
+  if (!kontext) return [zeilen];
+  const budget = Math.max(1200, (kontext - KI_KUR_MAX - 1100) * 3);
+  const stuecke = []; let akt = []; let laenge = 0;
+  zeilen.forEach((z) => { if (akt.length && laenge + z.length + 1 > budget) { stuecke.push(akt); akt = []; laenge = 0; } akt.push(z); laenge += z.length + 1; });
+  if (akt.length) stuecke.push(akt);
+  return stuecke;
+}
 async function kiKuratieren(kandidaten, wunsch, favoriten, anzahl) {
-  const klein = KI.klein();
-  const liste = kandidaten.slice(0, klein ? 35 : 150);
-  const n = Math.max(5, Math.min(30, klein ? Math.min(anzahl, 10) : anzahl));
+  try { return await kiKuratierenStuecke(kandidaten, wunsch, favoriten, anzahl, kiKontext()); } catch (e) {
+    if (KI.cfg().art !== 'openai' || kiKontext() || !KI_ZU_LANG.test(e.message || '')) throw e;
+    const c = KI.cfg(); c.kontext = 8192; kiCfgSpeichern();
+    flash(tt('Deine KI hat ein kleines Kontextfenster – KOMPASS schickt die Beiträge jetzt in Stücken (Einstellung „Kontext“).'));
+    return kiKuratierenStuecke(kandidaten, wunsch, favoriten, anzahl, 8192);
+  }
+}
+async function kiKuratierenStuecke(kandidaten, wunsch, favoriten, anzahl, kontext) {
+  const klein = KI.klein() || (kontext && kontext < 6000);
+  const liste = kandidaten.slice(0, klein && !kontext ? 35 : 150);
+  const n = Math.max(5, Math.min(30, KI.klein() ? Math.min(anzahl, 10) : anzahl));
+  const kurz = (x, i) => 'b' + (i + 1) + ' | ' + String(x.quelle).slice(0, 60) + ' | ' + String(x.titel).slice(0, klein ? 110 : 160) + (!klein && x.text ? ' — ' + String(x.text).slice(0, kontext ? 140 : 220) : '');
+  const stuecke = kiStuecke(liste.map(kurz), kontext);
+  if (stuecke.length === 1) return kiKuratierenTeil(liste, wunsch, favoriten, n);
+  // Mehrere Stücke: je Stück ein Teil der Auswahl, dann zusammenführen (Themen gleichen Namens verschmelzen)
+  const teile = []; let ab = 0;
+  for (const st of stuecke) {
+    const teil = liste.slice(ab, ab + st.length); ab += st.length;
+    const ni = Math.max(3, Math.round(n * teil.length / liste.length));
+    try { teile.push(await kiKuratierenTeil(teil, wunsch, favoriten, ni)); } catch (e) { if (!teile.length && st === stuecke[stuecke.length - 1]) throw e; }
+  }
+  if (!teile.length) throw new Error(tt('Deine KI hat keine Auswahl getroffen.'));
+  const gesehen = {}; const auswahl = [];
+  teile.flatMap((t) => t.auswahl).sort((a, b) => (b.gewicht || 1) - (a.gewicht || 1))
+    .forEach((a) => { if (!gesehen[a.id] && auswahl.length < n) { gesehen[a.id] = 1; auswahl.push(a); } });
+  const lage = [];
+  teile.flatMap((t) => t.lage).forEach((t) => {
+    const gleich = lage.find((x) => x.thema.toLowerCase() === t.thema.toLowerCase());
+    if (gleich) gleich.ids = [...new Set(gleich.ids.concat(t.ids))].slice(0, 12); else lage.push(t);
+  });
+  lage.sort((a, b) => b.ids.length - a.ids.length);
+  return { lage: lage.slice(0, 6), auswahl, n: liste.length, hinweis: teile.map((t) => t.hinweis).find(Boolean) || '',
+    ueberschrift: teile.map((t) => t.ueberschrift).find(Boolean) || '' };
+}
+async function kiKuratierenTeil(liste, wunsch, favoriten, n) {
+  const klein = KI.klein() || (kiKontext() && kiKontext() < 6000); const kontext = kiKontext();
   const rueck = {};
   const zeilen = liste.map((x, i) => { const nr = 'b' + (i + 1); rueck[nr] = x.id;
-    return nr + ' | ' + String(x.quelle).slice(0, 60) + ' | ' + String(x.titel).slice(0, klein ? 110 : 160) + (!klein && x.text ? ' — ' + String(x.text).slice(0, 220) : ''); });
+    return nr + ' | ' + String(x.quelle).slice(0, 60) + ' | ' + String(x.titel).slice(0, klein ? 110 : 160) + (!klein && x.text ? ' — ' + String(x.text).slice(0, kontext ? 140 : 220) : ''); });
   const system = `Du bist der Kurator in KOMPASS, einer Media-Zentrale, die dem Nutzer gehört. Aus einer Liste ungelesener Beiträge
 wählst du die lesenswertesten aus – weniger ist mehr. Regeln:
 - Wähle höchstens ${n} Beiträge. Bevorzuge Relevanz, Neuigkeitswert, Vielfalt der Themen und Quellen.
@@ -292,7 +357,7 @@ Antworte ausschließlich mit JSON in genau dieser Form:
 {"ueberschrift":"…","hinweis":"","lage":[{"thema":"…","satz":"…","ids":["b1","b7"],"leit":"b1"}],"auswahl":[{"id":"b1","warum":"…","gewicht":2,"auch":["b4"]}]}`;
   const nutzer = (wunsch ? 'Wunsch des Nutzers: ' + wunsch.slice(0, 400) + '\n' : '') + (favoriten.length ? 'Favoriten: ' + favoriten.slice(0, 30).join(', ') + '\n' : '') +
     '\nBeiträge (Nummer | Quelle | Titel — Anriss):\n' + zeilen.join('\n');
-  const text = await kiFrage([{ role: 'system', content: system }, { role: 'user', content: nutzer }], { json: true, max: 2000 });
+  const text = await kiFrage([{ role: 'system', content: system }, { role: 'user', content: nutzer }], { json: true, max: KI_KUR_MAX });
   const j = kiJson(text); if (!j) throw new Error(tt('Die Antwort deiner KI war nicht lesbar – ein größeres Modell hilft.'));
   const zu = (nr) => rueck[String(nr || '').trim()] || null;
   const gesehen = {}; const auswahl = [];
@@ -360,6 +425,8 @@ function renderKiBox() {
     detail = h('div', { class: 'ki-detail' },
       h('input', { id: 'k-ki-url', value: c.url || u.oaUrl, placeholder: 'https://api.mistral.ai/v1  ·  http://localhost:11434/v1', autocomplete: 'off', spellcheck: 'false', onInput: (e) => { u.oaUrl = e.target.value.trim(); } }),
       h('input', { id: 'k-ki-omodell', value: c.modell || u.oaModell, placeholder: tt('Modell, z. B. mistral-small-latest'), autocomplete: 'off', spellcheck: 'false', onInput: (e) => { u.oaModell = e.target.value.trim(); } }),
+      h('label', { for: 'k-ki-kontext', class: 'small' }, tt('Kontext (Token) – leer lassen, außer dein Dienst meldet „zu lang“; dann z. B. 8192')),
+      h('input', { id: 'k-ki-kontext', type: 'number', min: '1024', step: '1024', inputmode: 'numeric', value: c.kontext || '', placeholder: tt('unbegrenzt'), onChange: (e) => { const v = Math.round(+e.target.value || 0); c.kontext = v >= 1024 ? v : 0; kiCfgSpeichern(); } }),
       h('input', { id: 'k-ki-okey', type: 'password', value: u.oaKey, placeholder: KI.keys.openai ? tt('•••• gespeichert') : tt('Schlüssel (bei lokalen Diensten leer lassen)'), autocomplete: 'off', onInput: (e) => { u.oaKey = e.target.value.trim(); } }),
       h('div', { class: 'ki-btns' }, h('button', { type: 'button', class: 'mini primary', onClick: async () => {
         c.url = u.oaUrl || c.url; c.modell = u.oaModell || c.modell; kiCfgSpeichern();

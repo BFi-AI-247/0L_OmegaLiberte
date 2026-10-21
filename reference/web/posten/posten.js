@@ -10,7 +10,7 @@ const POSTEN = { bskyAccess: '', bskyBis: 0, rueckkehr: null };
 
 function postenKonten() { return store.get('posten', {}) || {}; }
 function postenKontenSetzen(k) { store.set('posten', k); render(true); }  // Karten neu zeichnen: Knöpfe erscheinen/verschwinden
-function postenVerbunden(dienst) { const k = postenKonten(); return dienst ? !!k[dienst] : !!(k.mastodon || k.bluesky); }
+function postenVerbunden(dienst) { if (!modulAn('posten')) return false; const k = postenKonten(); return dienst ? !!k[dienst] : !!(k.mastodon || k.bluesky); }
 function postenRedirect() { return location.origin + location.pathname + '?posten=masto'; }
 function postenB64url(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
 class PostenAbgelaufen extends Error {}
@@ -265,6 +265,7 @@ function postenKnoepfe(p) {
 }
 // Reiter „Konten“: je Dienst Verbinden/Trennen fürs Posten (das Lesen der Folgeliste steht darüber in den Einstellungen)
 function postenKonto(dienst) {
+  if (!modulAn('posten')) return null;
   const k = postenKonten(); const F = S.postenForm || (S.postenForm = { masto: (parseMastodon(settings.mastodon) || {}).host || '', bsky: settings.bluesky || '', pw: '' });
   const lauf = async (fn) => { try { await fn(); } catch (e) { flash(e.message || String(e)); } render(); };
   const zeile = (wer, trennen) => h('div', { class: 'add-row' }, h('span', { class: 'row-text' }, h('span', { class: 'row-title', style: 'font-size:14px' }, tt('Posten')), h('span', { class: 'row-sub' }, tt('Verbunden als @') + wer)),

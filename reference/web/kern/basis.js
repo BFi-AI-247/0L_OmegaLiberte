@@ -11,8 +11,10 @@
 'use strict';
 
 /* ---------- Hilfen ---------------------------------------------------- */
-const VERSION = 'v0.34';
-const LS = 'kompass.v0.';
+const VERSION = 'v0.37';
+const LS = 'kompass.v0.' + (INSTANZ.speicher ? INSTANZ.speicher + '.' : '');
+// Modul-Schalter (instanz.js → module): false zieht ein Feature zurück, fehlt = an
+function modulAn(id) { return !(INSTANZ.module && INSTANZ.module[id] === false); }
 const store = {
   get(k, d) { try { const v = localStorage.getItem(LS + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(LS + k, JSON.stringify(v)); } catch (e) { /* voll oder gesperrt */ } },
@@ -116,7 +118,8 @@ const FACT = {
 };
 const MAX_ACCOUNTS = 25;
 const SERVICE_LABEL = { radar: tt('RADAR 724'), mastodon: tt('Mastodon'), bluesky: tt('Bluesky'), youtube: 'YouTube', rss: 'Web/RSS' };
-// Startkatalog: geprüfte Feeds (18./19.10.2026 über api/rss.php abgerufen; Podcasts, Sport, Kultur, Lifestyle aus M001, geprüft mit dem Quellen-Prüfstand)
+// Startkatalog: geprüfte Feeds (18./19.10.2026 über api/rss.php abgerufen; Podcasts, Sport, Kultur, Lifestyle aus M001, geprüft mit dem Quellen-Prüfstand;
+// englische Einträge (5. Feld 'en') aus M016, Prüfstand 21.10.2026)
 const CATALOG = [
   { gruppe: 'Nachrichten', items: [
     ['Tagesschau', 'https://www.tagesschau.de/index~rss2.xml', 'tagesschau.de'],
@@ -126,7 +129,11 @@ const CATALOG = [
     ['DIE ZEIT', 'https://newsfeed.zeit.de/index', 'zeit.de'],
     ['taz', 'https://taz.de/!p4608;rss/', 'taz.de'],
     ['BBC News – World', 'https://feeds.bbci.co.uk/news/world/rss.xml', 'bbc.co.uk'],
-    ['The Guardian – World', 'https://www.theguardian.com/world/rss', 'theguardian.com']] },
+    ['The Guardian – World', 'https://www.theguardian.com/world/rss', 'theguardian.com'],
+    ['Sky News', 'https://feeds.skynews.com/feeds/rss/home.xml', 'news.sky.com', 'rss', 'en'],
+    ['NPR News', 'https://feeds.npr.org/1001/rss.xml', 'npr.org', 'rss', 'en'],
+    ['Al Jazeera English', 'https://www.aljazeera.com/xml/rss/all.xml', 'aljazeera.com', 'rss', 'en'],
+    ['RTÉ News', 'https://www.rte.ie/feeds/rss/?index=/news/', 'rte.ie', 'rss', 'en']] },
   { gruppe: 'Podcasts', items: [
     ['Dlf – Die Nachrichten', 'https://www.deutschlandfunk.de/nachrichten-108.xml', 'deutschlandfunk.de'],
     ['Dlf – Der Tag', 'https://www.deutschlandfunk.de/podcast-104.xml', 'deutschlandfunk.de'],
@@ -139,16 +146,24 @@ const CATALOG = [
     ['Dlf Sport', 'https://www.deutschlandfunk.de/sport-aktuell-podcast-100.xml', 'deutschlandfunk.de'],
     ['Dlf – Essay und Diskurs', 'https://www.deutschlandfunk.de/essay-und-diskurs-102.xml', 'deutschlandfunk.de'],
     ['Dlf – Tatort Kunst', 'https://www.deutschlandfunk.de/tatort-kunst-102.xml', 'deutschlandfunk.de'],
-    ['Ohrenbär (Kinder)', 'https://www.ohrenbaer.de/podcast/podcast.xml/feed=podcast.xml', 'ohrenbaer.de']] },
+    ['Ohrenbär (Kinder)', 'https://www.ohrenbaer.de/podcast/podcast.xml/feed=podcast.xml', 'ohrenbaer.de'],
+    ['Guardian – Today in Focus', 'https://www.theguardian.com/news/series/todayinfocus/rss', 'theguardian.com', 'rss', 'en']] },
   { gruppe: 'Sport', items: [
     ['Sportschau', 'https://www.sportschau.de/index~rss2.xml', 'sportschau.de'],
     ['Sportschau – Bundesliga', 'https://www.sportschau.de/fussball/bundesliga/index~rss2.xml', 'sportschau.de'],
     ['kicker', 'https://newsfeed.kicker.de/news/aktuell', 'kicker.de'],
     ['Bundesliga (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UC6UL29enLNe4mqwTfAyeNuw', 'youtube.com', 'youtube'],
-    ['Sportschau (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCRFsyeKu07-LnHDG44O6uCA', 'youtube.com', 'youtube']] },
+    ['Sportschau (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCRFsyeKu07-LnHDG44O6uCA', 'youtube.com', 'youtube'],
+    ['BBC Sport', 'https://feeds.bbci.co.uk/sport/rss.xml', 'bbc.co.uk', 'rss', 'en'],
+    ['Sky Sports', 'https://www.skysports.com/rss/11661', 'skysports.com', 'rss', 'en'],
+    ['The Guardian – Sport', 'https://www.theguardian.com/us/sport/rss', 'theguardian.com', 'rss', 'en'],
+    ['RTÉ Sport', 'https://www.rte.ie/feeds/rss/?index=/sport/', 'rte.ie', 'rss', 'en']] },
   { gruppe: 'Kultur & Satire', items: [
     ['Deutschlandfunk – Kultur', 'https://www.deutschlandfunk.de/kulturportal-100.rss', 'deutschlandfunk.de'],
-    ['extra 3 (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCjhkuC_Pi85wGjnB0I1ydxw', 'youtube.com', 'youtube']] },
+    ['extra 3 (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCjhkuC_Pi85wGjnB0I1ydxw', 'youtube.com', 'youtube'],
+    ['The Onion', 'https://theonion.com/feed/', 'theonion.com', 'rss', 'en'],
+    ['The Daily Mash', 'https://www.thedailymash.co.uk/feed', 'thedailymash.co.uk', 'rss', 'en'],
+    ['The Shovel', 'https://theshovel.com.au/feed/', 'theshovel.com.au', 'rss', 'en']] },
   { gruppe: 'Lifestyle & Beauty', items: [
     ['Hella & Tom (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCeBKU-99g_weNNPpZ2YMvvQ', 'youtube.com', 'youtube'],
     ['BibisBeautyPalace (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCHfdTAyg5t4mb1G-3rJ6QsQ', 'youtube.com', 'youtube'],
@@ -156,19 +171,36 @@ const CATALOG = [
     ['GLAMOUR Germany (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UC7Jcy9H1paeaC9bqN6uYcHw', 'youtube.com', 'youtube'],
     ['Vogue Germany', 'https://www.vogue.de/feed/rss', 'vogue.de'],
     ['GLAMOUR Germany', 'https://www.glamour.de/feed/rss', 'glamour.de'],
-    ['BRIGITTE', 'https://www.brigitte.de/feed.rss', 'brigitte.de']] },
+    ['BRIGITTE', 'https://www.brigitte.de/feed.rss', 'brigitte.de'],
+    ['Lifehacker', 'https://lifehacker.com/feed/rss', 'lifehacker.com', 'rss', 'en'],
+    ['BBC Good Food', 'https://www.bbcgoodfood.com/feed', 'bbcgoodfood.com', 'rss', 'en'],
+    ['Apartment Therapy', 'https://www.apartmenttherapy.com/main.rss', 'apartmenttherapy.com', 'rss', 'en'],
+    ['The Guardian – Life & Style', 'https://www.theguardian.com/us/lifeandstyle/rss', 'theguardian.com', 'rss', 'en']] },
   { gruppe: 'Tech & Netz', items: [
     ['heise online', 'https://www.heise.de/rss/heise-atom.xml', 'heise.de'],
-    ['netzpolitik.org', 'https://netzpolitik.org/feed/', 'netzpolitik.org']] },
+    ['netzpolitik.org', 'https://netzpolitik.org/feed/', 'netzpolitik.org'],
+    ['Ars Technica', 'https://feeds.arstechnica.com/arstechnica/index', 'arstechnica.com', 'rss', 'en'],
+    ['Engadget', 'https://www.engadget.com/rss.xml', 'engadget.com', 'rss', 'en'],
+    ['The Verge', 'https://www.theverge.com/rss/index.xml', 'theverge.com', 'rss', 'en'],
+    ['TechCrunch', 'https://techcrunch.com/feed/', 'techcrunch.com', 'rss', 'en'],
+    ['WIRED', 'https://www.wired.com/feed/rss', 'wired.com', 'rss', 'en'],
+    ['Hacker News', 'https://news.ycombinator.com/rss', 'news.ycombinator.com', 'rss', 'en']] },
   { gruppe: 'Wissen & Raumfahrt', items: [
     ['Spektrum der Wissenschaft', 'https://www.spektrum.de/alias/rss/spektrum-de-rss-feed/996406', 'spektrum.de'],
     ['ESA – Weltraumforschung', 'https://www.esa.int/rssfeed/Our_Activities/Space_Science', 'esa.int'],
     ['wissenschaft.de – Bild der Wissenschaft', 'https://wissenschaft.de/feed.xml', 'wissenschaft.de'],
     ['MAITHINK X – Mai Thi Nguyen-Kim (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCyHDQ5C6z1NDmJ4g6SerW8g', 'youtube.com', 'youtube'],
-    ['Terra X Lesch & Co (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UC5E9-r42JlymhLPnDv2wHuA', 'youtube.com', 'youtube']] },
+    ['Terra X Lesch & Co (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UC5E9-r42JlymhLPnDv2wHuA', 'youtube.com', 'youtube'],
+    ['ScienceDaily', 'https://www.sciencedaily.com/rss/top/science.xml', 'sciencedaily.com', 'rss', 'en'],
+    ['Phys.org', 'https://phys.org/rss-feed/', 'phys.org', 'rss', 'en'],
+    ['NASA', 'https://www.nasa.gov/feed/', 'nasa.gov', 'rss', 'en'],
+    ['Space.com', 'https://www.space.com/feeds.xml', 'space.com', 'rss', 'en'],
+    ['NASA (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCLA_DiR1FfKNvjuUpBHmylQ', 'youtube.com', 'youtube', 'en']] },
   { gruppe: 'YouTube', items: [
     ['MrWissen2go', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCZHpIFMfoJJ_1QxNGLJTzyA', 'youtube.com', 'youtube'],
-    ['Dinge Erklärt – Kurzgesagt', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCwRH985XgMYXQ6NxXDo8npw', 'youtube.com', 'youtube']] }
+    ['Dinge Erklärt – Kurzgesagt', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCwRH985XgMYXQ6NxXDo8npw', 'youtube.com', 'youtube'],
+    ['BBC News (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UC16niRr50-MSBwiO3YDb3RA', 'youtube.com', 'youtube', 'en'],
+    ['Kurzgesagt – In a Nutshell', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCsXVk37bltHxD1rDPwtNM8Q', 'youtube.com', 'youtube', 'en']] }
 ];
 // Sprache je Katalog-Quelle (5. Feld oder nach Domain, Standard de). Anzeige: zuerst die Quellen in der Sprache der Oberfläche
 const KATALOG_SPRACHE = { 'bbc.co.uk': 'en', 'theguardian.com': 'en' };

@@ -21,7 +21,7 @@
 //   chatBezug()   → { art: 'beitrag'|'thema'|'lage', titel, text, quelle } – Gegenstand für Dialog und Faktencheck rechts
 // Am Element .app steht data-modus="<id des zeichnenden Modus>"; die Klasse ai-mode bedeutet weiterhin „KI-Auswahl eingeschaltet“.
 const MODI = {};
-function modusRegistrieren(def) { MODI[def.id] = def; }
+function modusRegistrieren(def) { if (def.id !== 'social' && !modulAn(def.id)) return; MODI[def.id] = def; }
 function aktiverModus() {
   for (const id of Object.keys(MODI)) { const m = MODI[id]; if (id !== 'social' && m.aktiv && m.aktiv()) return m; }
   return MODI.social;
@@ -61,7 +61,7 @@ function modusGeruest() {
 function modusChatBezug() { const m = aktiverModus(); return (m && typeof m.chatBezug === 'function' && m.chatBezug()) || null; }
 
 // Modus-Leiste: ✦ KI-Auswahl · ☰ Chronologisch · ✎ Schreiben (Reihenfolge fest). Ersetzt den ✦-Schalter im Handy-Kopf,
-// in der Laptop-Seitenspalte und in der KI-Kopfzeile. Schreiben ohne verbundenen Dienst: ausgegraut, Druck → Konten.
+// in der Laptop-Seitenspalte und in der KI-Kopfzeile. Handy-Kopf (wide=false): nur ✦ und ✎ als An/Aus-Schalter. Schreiben ohne verbundenen Dienst: ausgegraut, Druck → Konten.
 function modusAktuell() { return S.schreiben && typeof postenVerbunden === 'function' && postenVerbunden() ? 'schreiben' : S.ai.on ? 'ki' : 'chrono'; }
 function modusWahl(ziel) {
   const jetzt = modusAktuell(); if (ziel === jetzt) return;
@@ -80,8 +80,17 @@ function modusLeiste(wide) {
   const knopf = (id, sym, label) => h('button', { type: 'button', class: 'modus-knopf' + (id === 'schreiben' && !kannSchreiben ? ' aus' : ''), 'data-modus': id,
     'aria-pressed': a === id ? 'true' : 'false', title: label + (id === 'schreiben' && !kannSchreiben ? tt(' – erst Mastodon oder Bluesky verbinden') : ''), 'aria-label': label, onClick: () => modusWahl(id) },
     sym, wide ? h('span', { class: 'modus-text' }, label) : null);
+  if (!wide) {
+    // Handy-Kopf (Issue #2): nur Schalter – ✦ KI an/aus, ✎ Schreiben an/aus; ohne beides = Chronologisch. Kein ☰, damit der Quellen-Auswähler Platz hat.
+    const schalter = (id, sym, label) => h('button', { type: 'button', class: 'modus-knopf' + (id === 'schreiben' && !kannSchreiben ? ' aus' : ''), 'data-modus': id,
+      'aria-pressed': a === id ? 'true' : 'false', title: label + (id === 'schreiben' && !kannSchreiben ? tt(' – erst Mastodon oder Bluesky verbinden') : ''), 'aria-label': label,
+      onClick: () => modusWahl(a === id ? 'chrono' : id) }, sym);
+    return h('div', { class: 'modus-leiste kompakt', role: 'group', 'aria-label': tt('Ansicht') },
+      MODI.ki ? schalter('ki', h('span', { class: 'ai-spark', 'aria-hidden': 'true' }, '✦'), tt('KI-Auswahl an/aus')) : null,
+      MODI.schreiben && modulAn('posten') ? schalter('schreiben', icon('stift', { sm: true }), tt('Schreiben an/aus')) : null);
+  }
   return h('div', { class: 'modus-leiste' + (wide ? ' wide' : ''), role: 'group', 'aria-label': tt('Ansicht') },
-    knopf('ki', h('span', { class: 'ai-spark', 'aria-hidden': 'true' }, '✦'), tt('KI-Auswahl')),
+    MODI.ki ? knopf('ki', h('span', { class: 'ai-spark', 'aria-hidden': 'true' }, '✦'), tt('KI-Auswahl')) : null,
     knopf('chrono', icon('liste', { sm: true }), tt('Chronologisch')),
-    knopf('schreiben', icon('stift', { sm: true }), tt('Schreiben')));
+    MODI.schreiben && modulAn('posten') ? knopf('schreiben', icon('stift', { sm: true }), tt('Schreiben')) : null);
 }
