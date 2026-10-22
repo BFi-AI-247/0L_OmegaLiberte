@@ -20,6 +20,7 @@ A list of sources one person can hand to another — or an AI to a person. Two e
 ```
 - `kind`: `rss` (also Atom, JSON Feed, podcasts), `web` (a website — the importer discovers its feed), `youtube` (channel feed URL **or** `handle` `@name`), `mastodon`, `bluesky`.
 - `url` for feeds and websites (http/https only), `handle` for accounts and YouTube handles. `title`, `site`, `topic` optional.
+- `only_media` (optional, `true`): show only posts from this source that carry their own image or video — e.g. a `#cats` hashtag feed without text-only posts. A link preview image alone does not count. Importers that do not know the field ignore it.
 - Pack-level, optional: `title`, `name` (name of the person's hub, max. 24 characters — the app may append `~OmegaLiberte`), `language` (`de`, `en`, … — the app language to switch to), `wish` (free text for the AI selection, max. 300 characters).
 - Prefer `web` over a guessed feed address: an AI should name the official page and let the app find the feed.
 
@@ -35,6 +36,7 @@ One line, entries separated by `|` (in links write `%7C` — some chat apps end 
 | `name:<text>` | `name` — URL-encoded like `wish` |
 | `wish:<text>` | `wish` — URL-encoded (`%20` for spaces, UTF-8 for umlauts) |
 | `web:<url>` · `rss:<url>` | `{ "kind": "web" / "rss", "url": … }` |
+| `rss!m:<url>` | `{ "kind": "rss", "url": …, "only_media": true }` — older importers skip it as unknown |
 | `yt:@handle` | `{ "kind": "youtube", "handle": … }` |
 | `bsky:<handle>` · `masto:@user@instance` | `{ "kind": "bluesky" / "mastodon", "handle": … }` |
 
