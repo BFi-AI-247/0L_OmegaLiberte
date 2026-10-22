@@ -10,6 +10,8 @@ header('Content-Type: text/javascript; charset=utf-8');
 header('Cache-Control: public, max-age=3600');
 header('X-Content-Type-Options: nosniff');
 
+// #9: Instanz-Ping des Betreibers (nur mit 'zero_ledger_instanz' => true), nach der Antwort an den Browser
+register_shutdown_function(function () { if (function_exists('fastcgi_finish_request')) fastcgi_finish_request(); ol_instanz_ping(); });
 $gc = ol_zaehler();
 if (!preg_match('#^https://[a-z0-9-]+\.goatcounter\.com/count$#', $gc)) { echo "/* kein Zähler */\n"; exit; }
 echo 'window.OL_ZAEHLER=true;(function(){var s=document.createElement("script");s.async=true;s.src="https://gc.zgo.at/count.js";'

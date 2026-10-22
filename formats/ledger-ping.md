@@ -28,5 +28,5 @@ Once when switched on, then at most every 30 days as a sign of life. **Only** ho
 - Store only the latest state per `id`: first `art`, first/last date, `version`, `sprache`, `instanz`. **No IP**, no log of single pings. Delete entries without a sign of life for 12 months.
 - Open to all instances (CORS `*` on this endpoint only), rate limit per IP hash and hour, size limit.
 - Instances are stored separately (latest state per `instanz`: first/last date, `version`), same 12-month expiry.
-- Public sums: `GET <ledger>/api/ping.php?summen` → `{ installationen, neu, bestehend, aktiv_30_tage, version: {…}, sprache: {…}, instanzen, instanzen_aktiv_30_tage, nutzer_je_instanz: {…}, stand }` — `nutzer_je_instanz` counts active user installations (30 days) per instance address.
+- Public sums: `GET <ledger>/api/ping.php?summen` → `{ installationen, neu, bestehend, aktiv_30_tage, version: {…}, sprache: {…}, instanzen, instanzen_aktiv_30_tage, nutzer_je_instanz: {…}, stand }` — `nutzer_je_instanz` counts active user installations (30 days) per instance address; values below 5 are shown as `"<5"`.
 - Reference ledger: <https://digifil.de/kompass/api/ping.php?summen>. Any instance may run its own (`ping_annehmen` in `config.php`).

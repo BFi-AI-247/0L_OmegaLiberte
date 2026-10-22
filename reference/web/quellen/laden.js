@@ -8,7 +8,7 @@ async function loadRadar(key) {
   return (d.eintraege || []).map((e) => ({
     id: 'r:' + (e.link || e.titel), service: 'radar', tags: [key],
     who: RADAR_FEEDS[key] || d.titel || tt('RADAR 724'), whoKey: key,
-    title: e.titel || '', text: e.text || '', link: e.link || '', date: e.datum, media: []
+    title: leerPlatzhalter(e.titel), text: leerPlatzhalter(e.text), link: e.link || '', date: e.datum, media: []
   }));
 }
 
@@ -293,6 +293,8 @@ async function loadFeeds(feeds, beiTeil) {
   return { posts, fehler };
 }
 /* Antwort von rss.php (aktion=feed bzw. ein Eintrag aus aktion=sammel) → Beiträge */
+// #65: Platzhalter einiger Feeds („NONE“, „null“) nicht als Text zeigen – auch für Einträge aus älterem Server-Puffer
+function leerPlatzhalter(t) { t = t || ''; return /^\s*(none|null|undefined|n\/?a|-)\s*$/i.test(t) ? '' : t; }
 function feedPosts(f, d) {
   if (d.status !== 'ok') throw new Error(d.meldung || tt('Feed nicht lesbar'));
   // YouTube: Der Feed-Titel ist der Kanalname – maßgeblich (behebt z. B. „YouTube“ als Name)
@@ -308,7 +310,7 @@ function feedPosts(f, d) {
   return (d.eintraege || []).map((e) => ({ ptEmbed: ptEmbed(e.link) || undefined,
     id: e.video ? 'y:' + e.video : 'w:' + (e.link || e.titel), service: yt ? 'youtube' : 'rss', tags: [yt ? 'youtube' : 'rss', key],
     who: f.title || d.titel, whoKey: key, avatar: f.icon || '', handle: hostOf(f.site || f.url),
-    title: e.titel || '', text: e.text || '', link: e.link || '', date: e.datum,
+    title: leerPlatzhalter(e.titel), text: leerPlatzhalter(e.text), link: e.link || '', date: e.datum,
     media: e.bild && !e.video && !e.medien ? [e.bild] : [], video: e.video || null, short: /youtube\.com\/shorts\//.test(e.link || ''), medien: e.medien || null, thumb: e.bild || '', card: null, urls: e.link ? [urlKey(e.link)] : []
   }));
 }

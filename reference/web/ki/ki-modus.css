@@ -215,3 +215,21 @@
 .app:not(.wide)[data-modus="ki"] .kib-themakopf h1 { max-width: none; flex: 1 1 0; }
 .app:not(.wide)[data-modus="ki"] .kib-themakopf p { display: none; }
 .app:not(.wide)[data-modus="ki"] .kib-themakopf .kib-datum { order: 5; flex-basis: 100%; }
+
+/* #61 Handy: Mosaik als Raster (volle Breite + zwei Spalten), kein Zerreißen von Wörtern, nichts verdeckt */
+.kib-flaeche.handy { overflow-y: auto; overflow-x: hidden; }
+body:has(#vorschau-melden) .kib-flaeche.handy { margin-bottom: 40px; }
+.kib-flaeche.handy .kib-name { overflow-wrap: break-word; word-break: normal; hyphens: auto; -webkit-hyphens: auto; font-size: 17px; line-height: 1.15;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.kib-flaeche.handy .kib-kachel.gross .kib-name { font-size: 22px; }
+.kib-flaeche.handy .kib-kachel.klein { justify-content: flex-start; padding: 12px 12px 10px; }
+.kib-flaeche.handy .kib-zahl2 { font-size: 13px; flex: none; }
+.kib-flaeche.handy .kib-kachel:not(.gross) .kib-gelesen { position: static; align-self: flex-start; margin-top: auto; padding: 3px 8px; }
+.kib-flaeche.handy .kib-kachel.mittel .kib-satz { -webkit-line-clamp: 2; }
+.kib-kachel.weitere { background: var(--surface2); color: var(--ink); border: 1.5px solid var(--line2); justify-content: flex-end; gap: 2px; }
+.kib-kachel.weitere .kib-satz { color: var(--ink3); font-size: 13px; }
+/* #48 (Modul ki-vorlagen): Anbieter-Vorlagen beim eigenen Dienst */
+.ki-vorlagen { display: flex; flex-wrap: wrap; gap: 6px; }
+.ki-vorlage-satz a { color: var(--accent-ink); }
+.ki-erweitert summary { cursor: pointer; padding: 4px 0; }
+.ki-erweitert[open] { display: flex; flex-direction: column; gap: 6px; }

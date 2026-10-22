@@ -4,8 +4,11 @@
 // ping.php – Zero Ledger: freiwillige Installations-Pings (nur nach Einwilligung in der App)
 // ===================================================================
 // POST (JSON, auch als text/plain ohne Vorab-Anfrage):
-//   { id, art: "neu"|"bestehend"|"lebt", version, sprache, instanz }  → { status: "ok" }
-// GET ?summen → { status, installationen, neu, bestehend, aktiv_30_tage, version: {…}, sprache: {…}, stand }
+//   Nutzer (freiwillig, in der App): { id, art: "neu"|"bestehend"|"lebt", version, sprache, instanz }  → { status: "ok" }
+//   Instanz (Betreiber, serverseitig, #9): { art: "instanz", version, instanz }  → { status: "ok" }
+// GET ?summen → { status, installationen, neu, bestehend, aktiv_30_tage, version: {…}, sprache: {…},
+//                 instanzen, instanzen_aktiv_30_tage, nutzer_je_instanz: { "<instanz>": aktive Installationen 30 Tage, unter 5 als "<5" }, stand }
+// Beide Zählungen sind getrennt: Instanz-Pings (instanzen.json) zählen nie als Installation und umgekehrt.
 //
 // Offen für alle Instanzen (CORS *, nur dieser Endpunkt). Gespeichert wird je Installations-Nummer nur der letzte
 // Stand (erste Art, erstes/letztes Datum, Version, Sprache, Instanz) – keine IP, kein Protokoll einzelner Pings.
@@ -41,6 +44,7 @@ if (!ol_ping_an()) aus(['status' => 'aus'], 404);
 $ordner = ol_datenordner() . '/ping';
 if (!is_dir($ordner) && !@mkdir($ordner, 0750, true)) aus(['status' => 'fehler'], 500);
 $datei = $ordner . '/installationen.json';
+$dateiInstanzen = $ordner . '/instanzen.json';  // #9: Instanz-Pings getrennt
 
 function lesen(string $datei): array {
     $t = is_readable($datei) ? (string)file_get_contents($datei) : '';
@@ -62,6 +66,14 @@ if ($methode === 'GET') {
         $v = (string)($e['version'] ?? '?'); $s['version'][$v] = ($s['version'][$v] ?? 0) + 1;
         $l = (string)($e['sprache'] ?? '?'); $s['sprache'][$l] = ($s['sprache'][$l] ?? 0) + 1;
     }
+    // #9: aktive Nutzer-Installationen je Instanz (nur Summen) und die Instanzen selbst, getrennt gezählt
+    $je = [];
+    foreach ($alle as $e) if (($e['zuletzt'] ?? 0) >= $grenze) { $i = (string)($e['instanz'] ?? '?'); $je[$i] = ($je[$i] ?? 0) + 1; }
+    $inst = lesen($dateiInstanzen);
+    $s['instanzen'] = count($inst);
+    $s['instanzen_aktiv_30_tage'] = count(array_filter($inst, fn($e) => ($e['zuletzt'] ?? 0) >= $grenze));
+    ksort($je); foreach ($je as $k => $n) if ($n < 5) $je[$k] = '<5';  // #9: kleine Instanzen nicht genau ausweisen
+    $s['nutzer_je_instanz'] = (object)$je;
     ksort($s['version']); ksort($s['sprache']); $s['version'] = (object)$s['version']; $s['sprache'] = (object)$s['sprache'];
     aus($s);
 }
@@ -84,6 +96,19 @@ $in = json_decode($roh, true);
 if (!is_array($in)) aus(['status' => 'abgelehnt'], 400);
 $id = (string)($in['id'] ?? '');
 $art = (string)($in['art'] ?? '');
+// #9: Instanz-Ping des Betreibers – ohne Nummer, Schlüssel ist die Instanz-Adresse; nur Version und Datum
+if ($art === 'instanz') {
+    $instanz = strtolower((string)($in['instanz'] ?? '')); $version = (string)($in['version'] ?? '');
+    if (strlen($instanz) > 100 || !preg_match('#^[a-z0-9.-]+(:\d{1,5})?(/[a-z0-9._~/-]*)?$#', $instanz) || !preg_match('/^v?\d{1,3}(\.\d{1,3}){0,2}$/', $version)) aus(['status' => 'abgelehnt'], 400);
+    $fh = fopen($dateiInstanzen, 'c+');
+    if (!$fh || !flock($fh, LOCK_EX)) aus(['status' => 'fehler'], 500);
+    $t = stream_get_contents($fh); $inst = $t ? (json_decode($t, true) ?: []) : []; $jetzt = time();
+    if (!isset($inst[$instanz]) && count($inst) >= 20000) { flock($fh, LOCK_UN); fclose($fh); aus(['status' => 'voll'], 507); }
+    $e = $inst[$instanz] ?? ['erst' => $jetzt]; $e['zuletzt'] = $jetzt; $e['version'] = $version; $inst[$instanz] = $e;
+    if (random_int(1, 100) === 1) foreach ($inst as $k => $x) if (($x['zuletzt'] ?? 0) < $jetzt - PING_VERFALL) unset($inst[$k]);
+    ftruncate($fh, 0); rewind($fh); fwrite($fh, json_encode($inst, JSON_UNESCAPED_SLASHES)); fflush($fh); flock($fh, LOCK_UN); fclose($fh);
+    aus(['status' => 'ok']);
+}
 $version = (string)($in['version'] ?? '');
 $sprache = (string)($in['sprache'] ?? '');
 $instanz = strtolower((string)($in['instanz'] ?? ''));

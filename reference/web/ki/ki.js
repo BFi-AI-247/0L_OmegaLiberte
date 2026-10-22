@@ -236,6 +236,22 @@ async function kiFrageRoh(msgs, opt, signal) {
     if (r.status === 429) return new Error(tt('Dein KI-Kontingent ist gerade ausgeschöpft. Bitte später noch einmal.'));
     if (r.status === 402) return new Error(tt('Bei deinem KI-Konto ist kein Guthaben mehr – wähle ein kostenloses Modell.'));
     return new Error(tt('Die KI hat nicht geantwortet (') + r.status + (m ? ': ' + String(m).slice(0, 120) : '') + ').'); };
+  // #48: Claude (Anthropic) spricht ein eigenes Format (/v1/messages, x-api-key) – erkannt an der Adresse
+  if (c.art === 'openai' && modulAn('ki-vorlagen') && kiIstAnthropic(c.url)) {
+    const key = await kiKeyLaden('openai');
+    const sys = msgs.filter((m) => m.role === 'system').map((m) => m.content).join('\n\n');
+    const liste = [];
+    msgs.filter((m) => m.role !== 'system').forEach((m) => { const role = m.role === 'assistant' ? 'assistant' : 'user'; const l = liste[liste.length - 1]; if (l && l.role === role) l.content += '\n\n' + m.content; else liste.push({ role, content: String(m.content || '') }); });
+    if (!liste.length || liste[0].role !== 'user') liste.unshift({ role: 'user', content: '…' });
+    const body = { model: c.modell || KI_ANTHROPIC_STD, max_tokens: max, temperature: opt.json ? 0.2 : 0.3, messages: liste };
+    if (sys) body.system = sys + (opt.json ? '\n\nAntworte ausschließlich mit gültigem JSON.' : '');
+    else if (opt.json) body.system = 'Antworte ausschließlich mit gültigem JSON.';
+    const r = await fetch(c.url.replace(/\/+$/, '') + '/messages', { method: 'POST', signal, body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key || '', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' } });
+    if (!r.ok) throw await fehler(r);
+    const d = await r.json();
+    return ((d && d.content) || []).filter((x) => x.type === 'text').map((x) => x.text || '').join('').trim();
+  }
   if (c.art === 'openrouter' || c.art === 'openai') {
     const url = c.art === 'openrouter' ? 'https://openrouter.ai/api/v1/chat/completions' : c.url.replace(/\/+$/, '') + '/chat/completions';
     const key = c.art === 'openrouter' ? KI.keys.openrouter : await kiKeyLaden('openai');
@@ -413,8 +429,33 @@ async function kiTesten() {
   try {
     const t = await kiFrage([{ role: 'system', content: 'Antworte auf Deutsch in einem kurzen Satz.' }, { role: 'user', content: tt('Sag Hallo und nenne dein Modell.') }], { max: 60 });
     KI.ui.test = '✓ ' + (t || tt('Antwort erhalten.')).slice(0, 160);
-  } catch (e) { KI.ui.test = ''; KI.ui.fehler = e.message; }
+  } catch (e) { KI.ui.test = ''; KI.ui.fehler = modulAn('ki-vorlagen') ? kiFehlerKlar(e) : e.message; }
   render();
+}
+// #48 (Modul ki-vorlagen): Vorlagen je Anbieter für „Eigener Dienst“ – füllen Adresse und empfohlenes Modell vor
+const KI_VORLAGEN = [
+  { id: 'mistral', label: 'Mistral', url: 'https://api.mistral.ai/v1', modell: 'mistral-small-latest', schluessel: 'https://console.mistral.ai/api-keys', satz: () => tt('Schlüssel unter console.mistral.ai → API Keys anlegen (EU-Anbieter).') },
+  { id: 'claude', label: 'Claude (Anthropic)', url: 'https://api.anthropic.com/v1', modell: 'claude-haiku-4-5', schluessel: 'https://console.anthropic.com/settings/keys', satz: () => tt('Schlüssel unter console.anthropic.com → API Keys anlegen.') },
+  { id: 'openai', label: 'OpenAI', url: 'https://api.openai.com/v1', modell: 'gpt-4o-mini', schluessel: 'https://platform.openai.com/api-keys', satz: () => tt('Schlüssel unter platform.openai.com → API keys anlegen.') },
+  { id: 'ollama', label: tt('Ollama (lokal)'), url: 'http://localhost:11434/v1', modell: 'llama3.2', satz: () => tt('Läuft auf deinem Rechner, kein Schlüssel nötig. OLLAMA_ORIGINS={origin} setzen.').replace('{origin}', location.origin) },
+  { id: 'lmstudio', label: tt('LM Studio (lokal)'), url: 'http://localhost:1234/v1', modell: '', satz: () => tt('Läuft auf deinem Rechner, kein Schlüssel nötig. Im Server-Reiter von LM Studio CORS einschalten; Modell = Name des geladenen Modells.') },
+  { id: 'anderer', label: tt('Anderer'), url: '', modell: '', satz: () => tt('Adresse deines Dienstes mit /v1 am Ende, dazu Modell und Schlüssel laut Anbieter.') }
+];
+const KI_ANTHROPIC_STD = 'claude-haiku-4-5';
+function kiIstAnthropic(u) { return /^https:\/\/api\.anthropic\.com\b/i.test(String(u || '')); }
+function kiVorlageAktiv(c) { const u = c.url || ''; return (KI_VORLAGEN.find((v) => v.url && u.replace(/\/+$/, '') === v.url) || (u ? KI_VORLAGEN.find((v) => v.id === 'anderer') : null)); }
+function kiVorlageWaehlen(v) {
+  const c = KI.cfg(); const u = KI.ui;
+  c.url = v.url; c.modell = v.modell; u.oaUrl = v.url; u.oaModell = v.modell; u.vorlage = v.id; KI.ui.fehler = ''; KI.ui.test = '';
+  kiCfgSpeichern(); render();
+}
+// Klare Meldung nach „Speichern und testen“: verbunden / Schlüssel falsch / nicht erreichbar (Netz oder CORS) / Adresse falsch
+function kiFehlerKlar(e) {
+  const m = String((e && e.message) || e || '');
+  if (e && e.name === 'TypeError' || /Failed to fetch|NetworkError|Load failed/i.test(m))
+    return tt('Nicht erreichbar: Adresse prüfen. Bei lokalen Diensten (Ollama, LM Studio) muss der Dienst laufen und Anfragen aus dem Browser erlauben (CORS).');
+  if (/\(404/.test(m)) return tt('Adresse oder Modell stimmt nicht (404). Die Adresse endet meist auf /v1.');
+  return m;
 }
 function renderKiBox() {
   const c = KI.cfg(); const u = KI.ui;
@@ -451,17 +492,26 @@ function renderKiBox() {
         h('input', { id: 'k-ki-gkey', type: 'password', value: u.geminiKey, placeholder: 'AIza…', autocomplete: 'off', onInput: (e) => { u.geminiKey = e.target.value.trim(); } }),
         h('button', { type: 'button', class: 'mini primary', style: 'align-self:flex-start', onClick: async () => { if (!u.geminiKey) return; await kiKeySpeichern('gemini', u.geminiKey); u.geminiKey = ''; render(); kiTesten(); } }, tt('Sicher speichern')));
   } else if (c.art === 'openai') {
+    const vl = modulAn('ki-vorlagen');
+    const aktiv = vl ? (KI_VORLAGEN.find((v) => v.id === u.vorlage) || kiVorlageAktiv(c)) : null;
+    const kontextFeld = [h('label', { for: 'k-ki-kontext', class: 'small' }, tt('Kontext (Token) – leer lassen, außer dein Dienst meldet „zu lang“; dann z. B. 8192')),
+      h('input', { id: 'k-ki-kontext', type: 'number', min: '1024', step: '1024', inputmode: 'numeric', value: c.kontext || '', placeholder: tt('unbegrenzt'), onChange: (e) => { const v = Math.round(+e.target.value || 0); c.kontext = v >= 1024 ? v : 0; kiCfgSpeichern(); } })];
     detail = h('div', { class: 'ki-detail' },
-      h('input', { id: 'k-ki-url', value: c.url || u.oaUrl, placeholder: 'https://api.mistral.ai/v1  ·  http://localhost:11434/v1', autocomplete: 'off', spellcheck: 'false', onInput: (e) => { u.oaUrl = e.target.value.trim(); } }),
+      vl ? h('div', { class: 'ki-vorlagen', role: 'group', 'aria-label': tt('Anbieter') }, KI_VORLAGEN.map((v) => h('button', { type: 'button', class: 'filter-pill', 'aria-pressed': aktiv && aktiv.id === v.id ? 'true' : 'false', onClick: () => kiVorlageWaehlen(v) }, v.label))) : null,
+      vl && aktiv ? h('span', { class: 'small ki-vorlage-satz' }, aktiv.satz(), aktiv.schluessel ? [' ', h('a', Object.assign({ href: aktiv.schluessel }, EXT), tt('Zum Schlüssel'))] : null) : null,
+      vl ? h('label', { for: 'k-ki-url', class: 'small' }, tt('Adresse')) : null,
+      h('input', { id: 'k-ki-url', value: c.url || u.oaUrl, placeholder: vl ? 'https://…/v1' : 'https://api.mistral.ai/v1  ·  http://localhost:11434/v1', autocomplete: 'off', spellcheck: 'false', onInput: (e) => { u.oaUrl = e.target.value.trim(); } }),
+      vl ? h('label', { for: 'k-ki-omodell', class: 'small' }, tt('Modell')) : null,
       h('input', { id: 'k-ki-omodell', value: c.modell || u.oaModell, placeholder: tt('Modell, z. B. mistral-small-latest'), autocomplete: 'off', spellcheck: 'false', onInput: (e) => { u.oaModell = e.target.value.trim(); } }),
-      h('label', { for: 'k-ki-kontext', class: 'small' }, tt('Kontext (Token) – leer lassen, außer dein Dienst meldet „zu lang“; dann z. B. 8192')),
-      h('input', { id: 'k-ki-kontext', type: 'number', min: '1024', step: '1024', inputmode: 'numeric', value: c.kontext || '', placeholder: tt('unbegrenzt'), onChange: (e) => { const v = Math.round(+e.target.value || 0); c.kontext = v >= 1024 ? v : 0; kiCfgSpeichern(); } }),
+      vl ? null : kontextFeld,
       h('input', { id: 'k-ki-okey', type: 'password', value: u.oaKey, placeholder: KI.keys.openai ? tt('•••• gespeichert') : tt('Schlüssel (bei lokalen Diensten leer lassen)'), autocomplete: 'off', onInput: (e) => { u.oaKey = e.target.value.trim(); } }),
       h('div', { class: 'ki-btns' }, h('button', { type: 'button', class: 'mini primary', onClick: async () => {
         c.url = u.oaUrl || c.url; c.modell = u.oaModell || c.modell; kiCfgSpeichern();
         if (u.oaKey) { await kiKeySpeichern('openai', u.oaKey); u.oaKey = ''; }
         render(); kiTesten(); } }, tt('Speichern und testen'))),
-      h('span', { class: 'small' }, tt('Der Dienst muss Anfragen aus dem Browser erlauben (CORS). Ollama: OLLAMA_ORIGINS={origin} setzen.').replace('{origin}', location.origin)));
+      vl ? h('span', { class: 'small' }, tt('Der Schlüssel bleibt verschlüsselt auf diesem Gerät. Im privaten Fenster gilt er nur, bis du das Fenster schließt.'))
+        : h('span', { class: 'small' }, tt('Der Dienst muss Anfragen aus dem Browser erlauben (CORS). Ollama: OLLAMA_ORIGINS={origin} setzen.').replace('{origin}', location.origin)),
+      vl ? h('details', { class: 'ki-erweitert' }, h('summary', { class: 'small' }, tt('Erweitert')), ...kontextFeld) : null);
   } else if (c.art === 'lokal') {
     const geladen = store.get('kiLokalGeladen', '');
     detail = h('div', { class: 'ki-detail' },

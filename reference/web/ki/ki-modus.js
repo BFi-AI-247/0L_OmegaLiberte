@@ -465,12 +465,43 @@ function kibMosaik() {
   const root = h('div', { class: 'kib kib-mosaik' }, kopf, hinweis, flaeche);
   root._legen = () => {
     const W = flaeche.clientWidth; const H = flaeche.clientHeight; if (W < 50 || H < 50) return;
+    if (!isWide()) { kibHandyRaster(flaeche, th, W, H); return; }
     const werte = th.map((x) => x.ps.length).concat([Math.max(1, Math.min(...th.map((x) => x.ps.length)) * 0.8)]);
     // Fläche um einen Abstand größer rechnen, jede Kachel um den Abstand kleiner: innen 4 px Fuge, außen bündig
     const rs = kibKacheln(werte, W + KIB_ABSTAND / 2, H + KIB_ABSTAND / 2);
     flaeche.replaceChildren(...th.map((x, k) => kibKachel(x, rs[k])), kibNeuesKachel(rs[th.length]));
   };
   return root;
+}
+// #61 Handy: kein Treemap mit vielen schmalen Kacheln – größtes Thema volle Breite, darunter zwei Spalten,
+// höchstens KIB_HANDY_MAX Themen; der Rest steckt hinter „Weitere Themen (N)“ (öffnet die Liste). Die Fläche scrollt bei Bedarf.
+const KIB_HANDY_MAX = 7;
+function kibHandyRaster(flaeche, th, W, H) {
+  const sortiert = th.slice().sort((a, b) => b.ps.length - a.ps.length);
+  const mehr = sortiert.length > KIB_HANDY_MAX;
+  const zeig = sortiert.slice(0, mehr ? KIB_HANDY_MAX - 1 : KIB_HANDY_MAX);
+  const f = KIB_ABSTAND / 2; const halb = (W + f) / 2;
+  const ersteH = Math.max(170, Math.round(H * 0.34));
+  const rest = zeig.length - 1 + (mehr ? 1 : 0) + 1; // weitere Themen + „Neues“
+  const reihen = Math.ceil(rest / 2);
+  const rh = Math.max(116, Math.floor((H - ersteH) / Math.max(1, reihen)));
+  const rects = [{ x: 0, y: 0, w: W + f, h: ersteH + f }];
+  for (let k = 0; k < rest; k++) {
+    const r = Math.floor(k / 2); const allein = k === rest - 1 && rest % 2 === 1;
+    rects.push({ x: allein ? 0 : (k % 2) * halb, y: ersteH + f + r * rh, w: allein ? W + f : halb, h: rh });
+  }
+  const kids = zeig.map((x, k) => kibKachel(x, rects[k]));
+  let n = zeig.length;
+  if (mehr) {
+    const anzahl = sortiert.length - zeig.length;
+    kids.push(h('button', { type: 'button', class: 'kib-kachel weitere', 'data-nav': '', 'data-fokus': 'weitere', style: kibLage(rects[n]),
+      onClick: () => { KIB.alsListe = true; kibZeichnen(els.stage); } },
+      h('span', { class: 'kib-name' }, tt('Weitere Themen') + ' (' + anzahl + ')'), h('span', { class: 'kib-satz' }, tt('als Liste ansehen'))));
+    n++;
+  }
+  kids.push(kibNeuesKachel(rects[n]));
+  flaeche.classList.add('handy');
+  flaeche.replaceChildren(...kids);
 }
 function kibLage(rc) {
   const f = KIB_ABSTAND / 2;

@@ -42,6 +42,7 @@ function render(stageToo) {
   }
   const band = wide ? aiBand() : null; els.band.replaceChildren(...(band ? [band] : []));
   app.classList.toggle('ai-mode', !!S.ai.on);
+  app.classList.toggle('chat-gross', modulAn('ki-chat-gross'));  // #26
   if (stageToo) renderStage(true);
   if (S.screen !== 'settings' && S.screen !== 'onboarding') S.form = null;
   renderLayer();

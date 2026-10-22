@@ -39,3 +39,13 @@ function meldenZeichnen() {
     h('button', { type: 'button', class: 'mini primary', onClick: meldenIssue }, tt('Issue öffnen')),
     h('button', { type: 'button', class: 'mini', onClick: meldenKopieren }, tt('Stelle kopieren')))] : []), knopf);
 }
+
+// #54 (Modul vorschau-rahmen): Vorschau auf einen Blick erkennbar – Rahmen ganz außen (hell schwarz, dunkel weiß) und Etikett „VORSCHAU“
+function vorschauRahmen() {
+  const an = INSTANZ.speicher === 'vorschau' && modulAn('vorschau-rahmen');
+  document.documentElement.classList.toggle('ist-vorschau', an);
+  let el = document.getElementById('vorschau-rahmen');
+  if (!an) { if (el) el.remove(); return; }
+  if (!el) { el = h('div', { id: 'vorschau-rahmen', class: 'vorschau-rahmen', 'aria-hidden': 'true' }, h('span', { class: 'vorschau-etikett' }, tt('VORSCHAU'))); document.body.append(el); }
+}
+vorschauRahmen();

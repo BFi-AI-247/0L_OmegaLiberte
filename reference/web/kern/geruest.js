@@ -256,10 +256,27 @@ function renderLayer() {
       chk && (chk.state === 'done' || chk.state === 'fehler') ? h('div', { class: 'note' }, chk.text + (chk.by ? '\n\n— ' + chk.by : '')) : null,
       h('button', { type: 'button', class: 'btn primary', onClick: factCheck }, chk && chk.state === 'done' ? tt('Erneut prüfen lassen') : tt('Meine KI prüfen lassen'))));
   }
-  if (!wide && S.chatOpen && c) {
+  if (!wide && S.chatOpen && c && typeof einFenster === 'function' && einFenster()) {
+    // #26: Handy – ein Chatfenster, eine Eingabe; Faktencheck als Frage, Ampel als Antwortkarte
     const input = h('input', { id: 'k-chat', placeholder: tt('Frag deinen Agenten …'), value: S.draft, autocomplete: 'off',
       onInput: (e) => { S.draft = e.target.value; }, onKeydown: (e) => { if (e.key === 'Enter') chat(S.draft); } });
-    const msgs = h('div', { class: 'msgs' }, S.msgs.map((m) => h('div', { class: 'msg ' + m.who + (m.wait ? ' wait' : '') }, m.text)));
+    const msgs = h('div', { class: 'msgs' }, chatVerlauf(c));
+    const chk = S.checks[c.id];
+    const fact = FACT[chk && chk.state === 'done' ? chk.status : 'grau'];
+    const vorschlag = h('div', { class: 'suggest scrollx' }, icon('chat', { sm: true }),
+      h('button', { type: 'button', class: 'fakt-vorschlag', disabled: !!(chk && chk.state === 'run'), onClick: factCheck }, h('span', { class: 'dot', style: 'background:' + fact.color }), tt('Prüfe diesen Beitrag')),
+      ['Worum geht’s?', tt('Was sagt die Gegenseite?')].map((t) => h('button', { type: 'button', onClick: () => chat(t) }, t)));
+    L.appendChild(h('div', { class: 'sheet ein-fenster' },
+      h('div', { class: 'sheet-head' }, h('div', {}, h('b', {}, tt('KI & Faktencheck')), h('div', { class: 'small' }, (S.entries[c.whoKey] || {}).name || c.who)), faktKnopf(c), closeBtn(tt('Schließen'), () => { S.chatOpen = false; render(); })),
+      msgs,
+      S.msgs.length ? null : vorschlag,
+      h('div', { class: 'composer' }, h('label', { for: 'k-chat', class: 'sr' }, tt('Frage zum Beitrag')), input,
+        h('button', { type: 'button', 'aria-label': tt('Senden'), onClick: () => chat(S.draft) }, icon('send')))));
+    setTimeout(() => { msgs.scrollTop = msgs.scrollHeight; }, 0);
+  } else if (!wide && S.chatOpen && c) {
+    const input = h('input', { id: 'k-chat', placeholder: tt('Frag deinen Agenten …'), value: S.draft, autocomplete: 'off',
+      onInput: (e) => { S.draft = e.target.value; }, onKeydown: (e) => { if (e.key === 'Enter') chat(S.draft); } });
+    const msgs = h('div', { class: 'msgs' }, S.msgs.map((m) => h('div', { class: 'msg ' + m.who + (m.wait ? ' wait' : '') }, typeof msgInhalt === 'function' ? msgInhalt(m) : m.text)));
     const chk = S.checks[c.id];
     const fact = FACT[chk && chk.state === 'done' ? chk.status : 'grau'];
     L.appendChild(h('div', { class: 'sheet' },
@@ -267,7 +284,7 @@ function renderLayer() {
       h('div', { class: 'sheet-fact' },
         h('div', { class: 'sheet-fact-row' }, h('span', { class: 'dot', style: 'background:' + fact.color }), h('b', {}, tt('Faktencheck: ') + (chk && chk.state === 'run' ? tt('läuft …') : fact.label)),
           h('button', { type: 'button', class: 'mini primary', disabled: !!(chk && chk.state === 'run'), onClick: factCheck }, chk && chk.state === 'done' ? tt('Erneut prüfen') : tt('KI prüfen lassen'))),
-        chk && (chk.state === 'done' || chk.state === 'fehler') ? h('div', { class: 'note' }, chk.text + (chk.by ? '\n\n— ' + chk.by : '')) : null),
+        chk && (chk.state === 'done' || chk.state === 'fehler') ? (typeof faktNotiz === 'function' ? faktNotiz(chk) : h('div', { class: 'note' }, chk.text + (chk.by ? '\n\n— ' + chk.by : ''))) : null),
       msgs,
       S.msgs.length ? null : renderSuggest(),
       h('div', { class: 'composer' }, h('label', { for: 'k-chat', class: 'sr' }, tt('Frage zum Beitrag')), input,

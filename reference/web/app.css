@@ -505,3 +505,53 @@ a.mini { display: inline-flex; align-items: center; text-decoration: none; color
 .melden-knopf { opacity: .85; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
 .melden-knopf:hover, .melden-knopf:focus-visible { opacity: 1; }
 .melden-menue { display: flex; gap: 6px; background: var(--surface); border: 1px solid var(--line2); border-radius: 12px; padding: 6px; box-shadow: 0 2px 10px rgba(0,0,0,.2); }
+/* #54 Vorschau-Rahmen (Modul vorschau-rahmen, nur Vorschau-Instanz): Rahmen ganz außen in Textfarbe (hell schwarz, dunkel weiß) + Etikett */
+.vorschau-rahmen { position: fixed; inset: 0; border: 4px solid var(--ink); pointer-events: none; z-index: 95; }
+.vorschau-etikett { position: absolute; top: 0; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg, #fff); font-size: 10px; font-weight: 800; letter-spacing: .12em; padding: 1px 10px 3px; border-radius: 0 0 8px 8px; }
+/* #47 Willkommen Schritt 2: jede Box mit eigener Farbe und seitlicher Klammer, RADAR eingeklappt */
+.card-box.einr-farbe { --einr: var(--accent); border-left: 6px solid var(--einr); background: color-mix(in srgb, var(--einr) 7%, var(--surface)); }
+.card-box.einr-ki { --einr: #7B5CC4; }
+.card-box.einr-themen { --einr: #2E8B57; }
+.card-box.einr-netz { --einr: #2F6FB3; }
+.card-box.einr-radar { --einr: #C0563B; }
+details.einr-radar > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; }
+details.einr-radar > summary::-webkit-details-marker { display: none; }
+details.einr-radar > summary::before { content: '▸'; color: var(--einr); font-size: 14px; }
+details.einr-radar[open] > summary::before { content: '▾'; }
+details.einr-radar > summary h3 { display: inline; }
+/* KI-Chat größer und gegliedert (#26, Modul ki-chat-gross) – Grundschrift 16 px, Faktencheck als Karte mit Balken, Punkte nummeriert, Quellen als Chips */
+.app.chat-gross .msg { font-size: 16px; line-height: 1.55; padding: 12px 16px; }
+.app.chat-gross .msg.du { border-radius: 18px 18px 4px 18px; }
+.app.chat-gross .msg.agent { background: transparent; padding: 4px 0; max-width: 100%; }
+.app.chat-gross .msgs-empty, .app.chat-gross #k-chat { font-size: 16px; }
+.app.chat-gross .composer input { min-height: 50px; border-radius: 14px; }
+.app.chat-gross .composer button { width: 50px; height: 50px; border-radius: 14px; }
+.app.wide.chat-gross .assist-suggest { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 16px 0; }
+.app.wide.chat-gross .assist-suggest button { text-align: left; font-size: 15px; min-height: 44px; padding: 0 16px; border: 1px solid var(--line2); background: var(--surface); }
+.app.wide.chat-gross .assist-fact { margin: 14px 16px 6px; border: 1px solid var(--line2); border-radius: 16px; background: var(--surface2); position: relative; overflow: hidden; padding-top: 22px; }
+.app.wide.chat-gross .assist-fact::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 8px; background: var(--fakt-farbe, var(--f-grau)); }
+.app.wide.chat-gross .assist-head b { font-size: 16px; }
+.antw-gegliedert { display: flex; flex-direction: column; gap: 10px; white-space: normal; }
+.antw-absatz { margin: 0; }
+.antw-punkt { display: flex; gap: 12px; align-items: baseline; }
+.antw-nr { font-weight: 700; color: var(--accent-ink); min-width: 1ch; }
+.antw-quellen { display: flex; flex-wrap: wrap; gap: 6px; }
+.antw-chip { font-size: 13px; color: var(--ink3); padding: 4px 10px; border: 1px solid var(--line2); border-radius: 12px; }
+.fakt-kompakt { display: flex; flex-direction: column; gap: 4px; white-space: normal; }
+.fakt-urteil { font-size: 16px; }
+.fakt-modell { color: var(--muted); }
+.fakt-begruendung summary, .antw-mehr summary { cursor: pointer; color: var(--accent-ink); font-size: 14px; padding: 4px 0; }
+.fakt-begruendung > div { white-space: pre-wrap; margin-top: 4px; max-height: 40vh; overflow-y: auto; }
+/* #26 Ein-Fenster-Chat: Faktencheck als Antwortkarte mit Farbbalken, Ampel-Knopf im Kopf */
+.msg.fakt { align-self: stretch; max-width: 100%; background: transparent; padding: 0; }
+.fakt-karte { position: relative; overflow: hidden; border: 1px solid var(--line2); border-radius: 16px; background: var(--surface2); padding: 18px 14px 10px; }
+.fakt-karte::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 8px; background: var(--fakt-farbe, var(--f-grau)); }
+.fakt-karte .fact-note { max-height: none; background: transparent; padding: 0; margin: 0; border: 0; }
+.fakt-knopf { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; white-space: nowrap; }
+.fakt-vorschlag { display: inline-flex; align-items: center; gap: 8px; }
+.ein-fenster .assist-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.app.wide .ein-fenster .assist-close { margin-left: 0; }
+.sheet.ein-fenster .sheet-head { gap: 8px; }
+.sheet.ein-fenster .sheet-head > div:first-child { flex: 1; min-width: 0; }
+.ein-fenster .assist-head .assist-who { flex: 1; min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ein-fenster .assist-head .fakt-knopf { margin-left: 0; }

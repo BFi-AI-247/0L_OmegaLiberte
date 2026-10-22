@@ -34,7 +34,13 @@ function ol_konfig(): array {
     static $cfg = null;
     if ($cfg === null) {
         $p = ol_konfig_pfad();
-        $c = $p !== '' ? (include $p) : null;
+        $c = null;
+        if ($p !== '') {
+            // Eine fehlerhafte config.php (z. B. fehlendes Komma) darf nicht alle Endpunkte lahmlegen:
+            // dann gelten die Standardwerte, und health.php meldet den Fehler.
+            try { $c = include $p; }
+            catch (\Throwable $e) { $GLOBALS['OL_KONFIG_FEHLER'] = 'config.php: ' . $e->getMessage() . ' (Zeile ' . $e->getLine() . ')'; error_log('KOMPASS ' . $GLOBALS['OL_KONFIG_FEHLER']); }
+        }
         $cfg = is_array($c) ? $c : [];
     }
     return $cfg;
@@ -67,6 +73,32 @@ function ol_user_agent(): string {
 
 function ol_zaehler(): string {
     return (string)(ol_konfig()['goatcounter'] ?? OL_ZAEHLER);
+}
+
+// #9 Zero Ledger – Instanz-Ping des Betreibers (getrennt vom freiwilligen Nutzer-Ping in der App).
+// Nur wenn der Betreiber es in config.php einschaltet: 'zero_ledger_instanz' => true (Ziel: 'zero_ledger', Standard Referenz-Ledger).
+// Gesendet werden nur Instanz-Adresse (Host + Pfad) und App-Version – einmal, danach höchstens alle 30 Tage ein Lebenszeichen.
+// Ausgelöst von api/instanz.php (wird mit jeder Seite geladen); der Abruf läuft nach der Antwort an den Browser.
+const OL_LEDGER = 'https://digifil.de/kompass/api/ping.php';
+function ol_instanz_ping(): void {
+    $c = ol_konfig();
+    if (empty($c['zero_ledger_instanz'])) return;
+    $host = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
+    $pfad = strtolower(preg_replace('#/api/[^/]*$#', '', (string)parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH)));
+    if (!preg_match('/^[a-z0-9.-]+(:\d{1,5})?$/', $host)) return;
+    // Marke je Instanz: Live und Vorschau teilen sich Datenordner und config.php, dürfen sich aber nicht gegenseitig sperren
+    $marke = ol_datenordner() . '/ping-instanz-' . substr(md5($host . rtrim($pfad, '/')), 0, 12) . '.txt';
+    if (is_readable($marke) && filemtime($marke) > time() - 30 * 86400) return;
+    $basis = @file_get_contents(__DIR__ . '/../kern/basis.js', false, null, 0, 4000) ?: '';
+    $version = preg_match("/const VERSION = '(v[\d.]+)'/", $basis, $m) ? $m[1] : 'v0';
+    @mkdir(dirname($marke), 0750, true); @touch($marke);   // vorher: auch bei Fehler höchstens ein Versuch je 30 Tage
+    $ziel = (string)($c['zero_ledger'] ?? OL_LEDGER);
+    if (!preg_match('#^https://#', $ziel) || !function_exists('curl_init')) return;
+    $ch = curl_init($ziel);
+    curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 4, CURLOPT_CONNECTTIMEOUT => 3,
+        CURLOPT_HTTPHEADER => ['Content-Type: text/plain'], CURLOPT_USERAGENT => ol_user_agent(),
+        CURLOPT_POSTFIELDS => json_encode(['art' => 'instanz', 'version' => $version, 'instanz' => substr($host . rtrim($pfad, '/'), 0, 100)])]);
+    curl_exec($ch); curl_close($ch);
 }
 
 // Zero Ledger: Pings annehmen? config.php „ping_annehmen“ (true/false) geht vor OL_PING

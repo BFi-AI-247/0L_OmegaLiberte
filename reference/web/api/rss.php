@@ -211,6 +211,8 @@ function text(string $s, int $max = 600): string {
     $s = preg_replace('#<br\s*/?>|</p>#i', "\n", $s) ?? $s;
     $s = html_entity_decode(strip_tags($s), ENT_QUOTES | ENT_HTML5, 'UTF-8');
     $s = trim(preg_replace("/[ \t\x{00A0}]+/u", ' ', preg_replace("/\n\s*\n+/", "\n\n", $s) ?? $s) ?? $s);
+    // #65: Platzhalter einiger Feeds („NONE“, „null“, „n/a“) sind kein Text
+    if (preg_match('#^(none|null|undefined|n/?a|-)$#i', $s)) return '';
     return mb_strlen($s) > $max ? rtrim(mb_substr($s, 0, $max - 1)) . '…' : $s;
 }
 function ist_feed(string $body): bool {

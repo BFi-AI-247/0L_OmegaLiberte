@@ -10,9 +10,11 @@ header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
 require __DIR__ . '/_instanz.php';
-$cfgFile = ol_konfig_pfad();
-$cfg = is_readable($cfgFile) ? (include $cfgFile) : null;
-$kiBereit = is_array($cfg) && !empty($cfg['mistral_key']);
+$cfg = ol_konfig();
+$kiBereit = !empty($cfg['mistral_key']);
+// config.php vorhanden, aber nicht lesbar (Syntaxfehler)? Nur die Zeile nennen, keine Inhalte.
+$konfig = ol_konfig_pfad() === '' ? 'keine' : (isset($GLOBALS['OL_KONFIG_FEHLER'])
+    ? 'fehlerhaft' . (preg_match('/Zeile (\d+)/', $GLOBALS['OL_KONFIG_FEHLER'], $m) ? ' (Zeile ' . $m[1] . ')' : '') : 'ok');
 
 echo json_encode([
     'status' => 'ok',
@@ -20,4 +22,5 @@ echo json_encode([
     'stufe'  => 'v0',
     'zeit'   => gmdate('c'),
     'ki'     => $kiBereit ? 'bereit' : 'wartet',
+    'konfig' => $konfig,
 ], JSON_UNESCAPED_UNICODE);

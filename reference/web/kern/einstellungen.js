@@ -223,17 +223,23 @@ function renderEinrichtung() {
       return b;
     }));
     const satz = h('textarea', { class: 'paket-text', rows: '3', readonly: '', onFocus: (e) => e.target.select() }); satz.value = START_SATZ();
-    body = [
-      h('p', { style: 'margin:0;color:var(--ink2)' }, tt('Woher sollen deine Beiträge kommen? Wähle, was passt – mehreres geht.')),
-      h('div', { class: 'card-box' }, h('h3', {}, tt('Themen zum Antippen')),
-        h('span', { class: 'small' }, tt('Geprüfte Quellen aus dem Katalog. Später jederzeit änderbar.')), chips),
-      einstRadar(f),
-      h('div', { class: 'card-box' }, h('h3', {}, tt('Mit meiner KI einrichten')),
+    const themen = h('div', { class: 'card-box einr-themen' }, h('h3', {}, tt('Themen zum Antippen')),
+      h('span', { class: 'small' }, tt('Geprüfte Quellen aus dem Katalog. Später jederzeit änderbar.')), chips);
+    let radar = einstRadar(f);
+    // #47: RADAR-Box eingeklappt (aufklappbar), damit KI, Themen und Netz vorne stehen
+    if (radar && modulAn('einrichtung-reihenfolge')) radar = h('details', { class: 'card-box einr-radar' }, h('summary', {}, h('h3', {}, tt('RADAR 724'))), ...[...radar.childNodes].slice(1));
+    const ki = h('div', { class: 'card-box einr-ki' }, h('h3', {}, tt('Mit meiner KI einrichten')),
         h('span', { class: 'small' }, tt('Kopiere diesen Satz in deine KI (ChatGPT, Le Chat, Claude …). Sie stellt dir ein paar Fragen und gibt dir ein Paket.')), satz,
         h('div', { class: 'btn-row' }, h('button', { type: 'button', class: 'mini', onClick: () => paketKopieren(START_SATZ(), tt('Satz')) }, tt('Satz kopieren')),
-          h('button', { type: 'button', class: 'mini primary', onClick: () => { S.paket = { stufe: 'eingeben', text: '' }; render(); } }, tt('Paket einfügen')))),
-      h('div', { class: 'card-box' }, h('h3', {}, tt('Ich bin auf Mastodon oder Bluesky')),
-        h('span', { class: 'small' }, tt('Dann übernimmt KOMPASS, wem du folgst – nur lesend, ohne Passwort.')), einstNetz(f, 'mastodon'), einstNetz(f, 'bluesky')),
+          h('button', { type: 'button', class: 'mini primary', onClick: () => { S.paket = { stufe: 'eingeben', text: '' }; render(); } }, tt('Paket einfügen'))));
+    const netz = h('div', { class: 'card-box einr-netz' }, h('h3', {}, tt('Ich bin auf Mastodon oder Bluesky')),
+      h('span', { class: 'small' }, tt('Dann übernimmt KOMPASS, wem du folgst – nur lesend, ohne Passwort.')), einstNetz(f, 'mastodon'), einstNetz(f, 'bluesky'));
+    // #47 (Modul einrichtung-reihenfolge): 1. KI, 2. Themen, 3. Mastodon & Bluesky, 4. Radar – ausgeschaltet die alte Reihenfolge
+    const bloecke = modulAn('einrichtung-reihenfolge') ? [ki, themen, netz, radar] : [themen, radar, ki, netz];
+    if (modulAn('einrichtung-reihenfolge')) bloecke.forEach((b) => b && b.classList.add('einr-farbe'));
+    body = [
+      h('p', { style: 'margin:0;color:var(--ink2)' }, tt('Woher sollen deine Beiträge kommen? Wähle, was passt – mehreres geht.')),
+      ...bloecke.filter(Boolean),
       knopfReihe(h('button', { type: 'button', class: 'btn primary', onClick: () => weiter(3) }, tt('Weiter')), h('button', { type: 'button', class: 'btn', onClick: () => weiter(1) }, tt('Zurück')))];
   } else {
     const n = einstQuellenZahl(f);
@@ -254,6 +260,7 @@ function einstSprache() {
 function einstDatenschutz() {
   return h('div', { class: 'card-box' }, h('h3', {}, tt('Datenschutz in dieser Stufe')),
     pingMoeglich() ? h('p', { class: 'small', style: 'margin:0 0 6px;line-height:1.5' }, tt('Der freiwillige Installations-Ping meldet deine Installation (ohne Quellen, Konten oder Verlauf) ans Zero Ledger auf {ziel} – höchstens einmal pro Woche, hier jederzeit abschaltbar.').replace('{ziel}', hostOf(INSTANZ.ping))) : null,
+    h('p', { class: 'small', style: 'margin:0 0 6px;line-height:1.5' }, tt('Betreiber einer Instanz können sie außerdem selbst beim Zero Ledger melden (Instanz-Ping): nur Instanz-Adresse und App-Version, höchstens alle 30 Tage – ohne Daten von dir.')),
     h('p', { class: 'small', style: 'margin:0;line-height:1.5' }, DATENSCHUTZ_TEXT()));
 }
 
