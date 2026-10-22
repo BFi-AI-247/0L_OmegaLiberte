@@ -797,5 +797,8 @@ SPRACHE.en = Object.fromEntries(Object.entries({
   "Bluesky-Feed": "Bluesky feed",
   "Bluesky-Liste": "Bluesky list",
   "Bluesky-Starter-Pack": "Bluesky starter pack",
-  "Name, Handle oder Adresse eines Feeds/einer Liste": "Name, handle or address of a feed/list"
+  "Name, Handle oder Adresse eines Feeds/einer Liste": "Name, handle or address of a feed/list",
+  "Bild groß anzeigen": "Show image large",
+  "Bildansicht": "Image viewer",
+  "Bild": "Image"
 }).filter(([, v]) => v));

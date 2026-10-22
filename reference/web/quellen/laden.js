@@ -92,6 +92,8 @@ function mastoPost(st, host, kind) {
     kind, title: '', text, rich, card, urls: linkKeys(rich, card),
     link: s.url || s.uri, date: s.created_at,
     media: (s.media_attachments || []).filter((x) => x.type === 'image' || x.type === 'gifv').slice(0, 4).map((x) => x.preview_url),
+    mediaGross: (s.media_attachments || []).filter((x) => x.type === 'image' || x.type === 'gifv').slice(0, 4).map((x) => (x.type === 'image' && x.url) || x.preview_url),
+    mediaAlt: (s.media_attachments || []).filter((x) => x.type === 'image' || x.type === 'gifv').slice(0, 4).map((x) => x.description || ''),
     note: st.reblog ? 'geteilt von ' + (st.account.display_name || st.account.username) : ''
   };
 }
@@ -154,7 +156,8 @@ function bskyPost(fp, kind) {
   const rkey = String(p.uri).split('/').pop();
   const media = [];
   const em = p.embed || {};
-  (em.images || (em.media && em.media.images) || []).slice(0, 4).forEach((i) => media.push(i.thumb));
+  const mediaGross = []; const mediaAlt = [];
+  (em.images || (em.media && em.media.images) || []).slice(0, 4).forEach((i) => { media.push(i.thumb); mediaGross.push(i.fullsize || i.thumb); mediaAlt.push(i.alt || ''); });
   const text = rec.text || '';
   const ex = em.external || (em.media && em.media.external);
   const card = ex && ex.uri ? { url: ex.uri, title: ex.title || '', desc: ex.description || '', image: ex.thumb || '' } : null;
@@ -163,7 +166,7 @@ function bskyPost(fp, kind) {
     id: 'b:' + p.uri, service: 'bluesky', tags: ['bluesky', 'b:' + a.handle],
     who: a.displayName || a.handle, whoKey: 'b:' + a.handle, avatar: a.avatar, handle: '@' + a.handle,
     kind, title: '', text, rich, card, urls: linkKeys(rich, card, text), link: 'https://bsky.app/profile/' + a.handle + '/post/' + rkey,
-    date: rec.createdAt || p.indexedAt, media
+    date: rec.createdAt || p.indexedAt, media, mediaGross, mediaAlt
   };
 }
 async function loadBluesky(handle) {

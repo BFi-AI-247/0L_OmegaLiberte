@@ -122,7 +122,7 @@ function cardFor(p) {
       v.medien ? mediaBlock(v) : null,
       v.service === 'rss' && !v.medien && !v.video && v.link && (!showText || thinText(v) || /video|sendung|tagesthemen|tagesschau_20/i.test(v.link)) ? watchBlock(v) : null,
       showText ? clampText(p, v) : null,
-      media.length ? h('div', { class: 'card-media' + (media.length === 1 ? ' one' : '') }, media.map((src) => h('img', { src, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }))) : null,
+      media.length ? h('div', { class: 'card-media' + (media.length === 1 ? ' one' : '') }, media.map((src, i) => bildInKarte(v, src, i))) : null,
       linkCard(v.card),
       p.kind === 'neu' ? h('button', { type: 'button', class: 'follow-btn', onClick: () => kfollow(p) }, S.kfollows.some((f) => f.key === p.whoKey) ? tt('In KOMPASS gefolgt ✓') : tt('In KOMPASS folgen')) : null),
     foot);
@@ -132,4 +132,39 @@ function kfollow(p) {
   if (i >= 0) S.kfollows.splice(i, 1);
   else S.kfollows.push({ key: p.whoKey, name: p.who, avatar: p.avatar, service: p.service, handle: p.handle });
   save('kfollows'); flash(i >= 0 ? tt('Nicht mehr gefolgt.') : tt('In KOMPASS gefolgt – erscheint ab dem nächsten Laden im Feed.')); render(true);
+}
+
+// Bildansicht (#38, Modul „bildansicht“): Bild antippen → groß über der App, Antippen zoomt, ✕/Esc/Hintergrund schließt.
+// Lädt die volle Auflösung (Bluesky fullsize, Mastodon url), sonst das Vorschaubild. Liegt außerhalb der Bühne: keine Wischgesten.
+function bildInKarte(v, src, i) {
+  const alt = (v.mediaAlt && v.mediaAlt[i]) || '';
+  if (!modulAn('bildansicht')) return h('img', { src, alt, loading: 'lazy', referrerpolicy: 'no-referrer' });
+  const gross = (v.mediaGross && v.mediaGross[i]) || src;
+  return h('button', { type: 'button', class: 'bild-knopf', 'aria-label': tt('Bild groß anzeigen') + (alt ? ': ' + alt : ''),
+    onClick: (e) => { e.stopPropagation(); bildAnsicht(gross, src, alt); } },
+    h('img', { src, alt, loading: 'lazy', referrerpolicy: 'no-referrer' }));
+}
+function bildAnsicht(src, vorschau, alt) {
+  const alt0 = document.activeElement;
+  const img = h('img', { src: vorschau, alt: alt || tt('Bild'), referrerpolicy: 'no-referrer' });
+  if (src && src !== vorschau) { const voll = new Image(); voll.referrerPolicy = 'no-referrer'; voll.onload = () => { img.src = src; }; voll.src = src; }
+  const flaeche = h('div', { class: 'bild-flaeche' }, img);
+  const zu = h('button', { type: 'button', class: 'bild-zu', 'aria-label': tt('Schließen') }, '✕');
+  const el = h('div', { class: 'bild-ansicht', role: 'dialog', 'aria-modal': 'true', 'aria-label': tt('Bildansicht') }, flaeche, zu,
+    alt ? h('p', { class: 'bild-alt' }, alt) : null);
+  const schliessen = () => { window.removeEventListener('keydown', taste, true); el.remove(); if (alt0 && alt0.focus) alt0.focus(); };
+  const taste = (e) => { e.stopPropagation(); if (e.key === 'Escape') { e.preventDefault(); schliessen(); } else if (e.key === 'Enter' || e.key === ' ' || e.key === '+' || e.key === '-') { e.preventDefault(); zoom(); } };
+  const zoom = (e) => {
+    const an = !el.classList.contains('zoom');
+    if (an) { const breit = Math.max(img.naturalWidth || 0, img.getBoundingClientRect().width * 2.5); img.style.width = Math.round(breit) + 'px'; }
+    else img.style.width = '';
+    el.classList.toggle('zoom', an);
+    if (an && e) { const r = flaeche.getBoundingClientRect(); flaeche.scrollLeft = (flaeche.scrollWidth - r.width) * ((e.clientX - r.left) / r.width); flaeche.scrollTop = (flaeche.scrollHeight - r.height) * ((e.clientY - r.top) / r.height); }
+  };
+  img.addEventListener('click', (e) => { e.stopPropagation(); zoom(e); });
+  flaeche.addEventListener('click', (e) => { if (e.target === flaeche && !el.classList.contains('zoom')) schliessen(); });
+  zu.addEventListener('click', schliessen);
+  window.addEventListener('keydown', taste, true);
+  document.body.appendChild(el); zu.focus();
+  return el;
 }
