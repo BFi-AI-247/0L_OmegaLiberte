@@ -6,7 +6,9 @@
 var SPRACHE = window.SPRACHE || {};
 const SPRACHEN = [['de', 'Deutsch'], ['en', 'English']];
 const LANG = (() => {
-  try { const s = JSON.parse(localStorage.getItem('kompass.v0.settings') || '{}'); if (s.sprache && SPRACHEN.some((x) => x[0] === s.sprache)) return s.sprache; } catch (e) { /* ohne Speicher */ }
+  // Gleicher Schlüssel wie kern/basis.js (LS): Instanzen mit eigenem Speicherbereich (Vorschau) lesen sonst die falsche Einstellung (#41).
+  const ls = 'kompass.v0.' + ((typeof INSTANZ !== 'undefined' && INSTANZ.speicher) ? INSTANZ.speicher + '.' : '');
+  try { const s = JSON.parse(localStorage.getItem(ls + 'settings') || '{}'); if (s.sprache && SPRACHEN.some((x) => x[0] === s.sprache)) return s.sprache; } catch (e) { /* ohne Speicher */ }
   return /^de\b/i.test(navigator.language || '') ? 'de' : 'en';
 })();
 document.documentElement.lang = LANG;

@@ -102,6 +102,34 @@ function paketVorschau(text, woher) {
 }
 
 // Beim Start und bei Hash-Wechsel: #paket=… oder #paket-url=…; danach Hash aus der Adresse entfernen
+// Feste Einstiege (Issue #39, Journey W0): Link …/#einstieg=w0 richtet ein neues Gerät ohne Willkommen ein – für Menschen,
+// die nichts konfigurieren sollen (Link öffnen, lesen). Inhalt kommt nur aus dieser Tabelle, nie aus dem Link.
+// Schon eingerichtete Geräte werden nicht still verändert: sie sehen die übliche Paket-Vorschau.
+const EINSTIEGE = {
+  w0: { modul: 'einstieg-w0', sprache: 'de', radar: ['radar-gifhorn'], gruppe: 'Regional: Gifhorn' }
+};
+function einstiegAusAdresse() {
+  const m = /^#(?:einstieg=)?(w0)$/i.exec(location.hash || ''); if (!m) return false;
+  const id = m[1].toLowerCase(); const E = EINSTIEGE[id];
+  if (!E || !modulAn(E.modul)) return false;
+  history.replaceState(null, '', location.pathname + location.search);
+  const gruppe = CATALOG.find((g) => g.gruppe === E.gruppe);
+  if (settings.onboarded) {
+    if (gruppe) paketVorschau('0l1|lang:' + E.sprache + '|' + gruppe.items.map(([, u]) => 'rss:' + u).join('|'), tt('aus dem Link'));
+    return false;
+  }
+  E.radar.forEach((k) => { if (k in RADAR_FEEDS) settings.radar[k] = true; });
+  if (gruppe) gruppe.items.forEach(([n, u, d, kind]) => {
+    if (!settings.feeds.some((x) => x.url === u)) settings.feeds.push({ id: hashId(u), url: u, title: n, kind: kind === 'youtube' ? 'youtube' : 'rss', icon: '', site: 'https://' + d + '/' });
+  });
+  settings.einstieg = id; settings.onboarded = true;
+  if (E.sprache) settings.sprache = E.sprache;
+  save('settings');
+  if (E.sprache && E.sprache !== LANG) { location.reload(); return true; }
+  S.screen = null;
+  return false;
+}
+
 async function paketAusAdresse() {
   const hs = location.hash;
   const m = /^#paket(-url)?=(.*)$/s.exec(hs); if (!m) return;

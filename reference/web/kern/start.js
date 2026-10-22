@@ -112,8 +112,9 @@ document.addEventListener('visibilitychange', () => {
 });
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+const EINSTIEG_NEULADEN = einstiegAusAdresse();  // #39: fester Einstieg (z. B. #einstieg=w0) vor dem ersten Zeichnen
 render(true);
-if (settings.onboarded) loadAll();
+if (settings.onboarded && !EINSTIEG_NEULADEN) loadAll();
 zentraleTitel(); pingBeimStart();
 paketAusAdresse();
 if (sync.provider) syncNow();
