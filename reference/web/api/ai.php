@@ -28,6 +28,8 @@ const TEXTE = [
     'leer'     => 'Da ist keine Frage angekommen.',
     'fehler'   => 'Da ist gerade etwas schiefgelaufen. Versuch es bitte gleich noch einmal.',
     'herkunft' => 'Diese Anfrage kann ich leider nicht annehmen.',
+    'einladung' => 'Für die KI über diesen Server brauchst du eine Einladung. Sonst verbinde deine eigene KI (Einstellungen → KI).',
+    'einladung_tag' => 'Für heute sind die KI-Anfragen dieser Einladung aufgebraucht. Morgen geht es weiter.',
 ];
 
 function antwort(string $status, string $text, int $code = 200): never {
@@ -79,7 +81,12 @@ function zaehle(string $name, int $max, int $aufraeumenNach): bool {
     return $n <= $max;
 }
 $ip = (string)($_SERVER['REMOTE_ADDR'] ?? '');
-if (!zaehle('h-' . hash('sha256', $ip . '|' . gmdate('YmdH')), (int)($cfg['kompass_fragen_pro_stunde'] ?? 20), 7200)) {
+// #5: Sind Einladungen eingerichtet, gilt nur noch ein gültiger Code – je Code ein Tageslimit statt der Stundenbremse je IP
+$einladung = ol_einladung($cfg);
+if ($einladung === false) antwort('einladung', TEXTE['einladung']);
+if (is_string($einladung)) {
+    if (!zaehle('e-' . substr($einladung, 0, 24) . '-' . gmdate('Ymd'), (int)($cfg['einladung_pro_tag'] ?? 50), 172800)) antwort('limit', TEXTE['einladung_tag']);
+} elseif (!zaehle('h-' . hash('sha256', $ip . '|' . gmdate('YmdH')), (int)($cfg['kompass_fragen_pro_stunde'] ?? 20), 7200)) {
     antwort('limit', TEXTE['limit']);
 }
 if (!zaehle('t-' . gmdate('Ymd'), (int)($cfg['kompass_max_pro_tag'] ?? 300), 172800)) {

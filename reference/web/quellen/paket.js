@@ -28,7 +28,7 @@ function paketLesen(text) {
     let d; try { d = JSON.parse(t); } catch (e) { p.hinweis = tt('Kein gültiges JSON.'); return p; }
     if (!d || typeof d !== 'object' || !/^0l\.source-pack\//.test(String(d.format || ''))) { p.hinweis = tt('Kein Paket im Format 0l.source-pack.'); return p; }
     p.titel = paketSauber(d.title, 80); p.sprache = paketSauber(d.language, 5); p.wunsch = paketSauber(d.wish, 300);
-    (Array.isArray(d.sources) ? d.sources : []).forEach((s) => { if (s && typeof s === 'object') p.quellen.push({ art: PAKET_ARTEN[s.kind] || String(s.kind || ''), url: s.url, handle: s.handle, titel: s.title }); });
+    (Array.isArray(d.sources) ? d.sources : []).forEach((s) => { if (s && typeof s === 'object') p.quellen.push({ art: PAKET_ARTEN[s.kind] || String(s.kind || ''), url: s.url, handle: s.handle, titel: s.title, nurMedien: s.only_media === true }); });
     return p;
   }
   if (/<opml|<outline/i.test(t)) {
@@ -38,8 +38,8 @@ function paketLesen(text) {
   // Kurzform: ganzer Link erlaubt; Trenner |, %7C oder Zeilenumbruch
   const m = /#paket=(.*)$/s.exec(t); if (m) t = m[1]; else t = t.replace(/^paket=/, '');
   t.split(/\||%7C|\r?\n/i).map((x) => x.trim()).filter(Boolean).forEach((e) => {
-    const k = /^([a-z0-9]+):(.*)$/i.exec(e); if (!k) { if (e !== '0l1') p.quellen.push({ art: '?', url: e }); return; }
-    const key = k[1].toLowerCase(); let v = k[2];
+    const k = /^([a-z0-9]+)(!m)?:(.*)$/i.exec(e); if (!k) { if (e !== '0l1') p.quellen.push({ art: '?', url: e }); return; }
+    const key = k[1].toLowerCase(); let v = k[3]; const nurMedien = !!k[2];  // #68: „rss!m:“ = nur Beiträge mit Bild/Video
     if (key === 'lang') p.sprache = paketSauber(paketDecode(v), 5);
     else if (key === 'wish') p.wunsch = paketSauber(paketDecode(v), 300);
     else if (key === 'title') p.titel = paketSauber(paketDecode(v), 80);
@@ -47,8 +47,8 @@ function paketLesen(text) {
     else {
       const art = PAKET_ARTEN[key] || key;
       if (/^https?%3A/i.test(v) || /^%40/.test(v)) v = paketDecode(v);
-      if (art === 'rss' || art === 'web' || (art === 'youtube' && /^https?:/i.test(v))) p.quellen.push({ art, url: v });
-      else p.quellen.push({ art, handle: paketDecode(v) });
+      if (art === 'rss' || art === 'web' || (art === 'youtube' && /^https?:/i.test(v))) p.quellen.push({ art, url: v, nurMedien });
+      else p.quellen.push({ art, handle: paketDecode(v), nurMedien });
     }
   });
   return p;
@@ -61,14 +61,14 @@ function paketPruefen(p) {
   const ytDa = new Set(settings.feeds.filter((f) => f.handle).map((f) => f.handle.toLowerCase()));
   const kontoDa = (k) => S.kfollows.some((f) => f.key === k) || !!S.entries[k] || !!S.alias[k];
   for (const q of p.quellen) {
-    const e = { art: q.art, titel: paketSauber(q.titel, 80), status: 'neu', grund: '' };
+    const e = { art: q.art, titel: paketSauber(q.titel, 80), status: 'neu', grund: '', nurMedien: !!q.nurMedien };
     if (q.art === 'rss' || q.art === 'web' || (q.art === 'youtube' && q.url)) {
       let u = null; try { u = new URL(String(q.url || '').trim()); } catch (er) { /* ungültig */ }
       if (!u || !/^https?:$/.test(u.protocol) || u.username || u.password || String(q.url).length > 800) { e.status = 'ungueltig'; e.grund = tt('nur http(s)-Adressen'); e.wert = paketSauber(q.url, 80); }
       else { e.url = u.href; e.wert = u.href; }
       if (q.art === 'youtube' && e.url && !/(^|\.)youtube\.com$|(^|\.)youtu\.be$/i.test(u.hostname)) { e.status = 'ungueltig'; e.grund = tt('keine YouTube-Adresse'); }
       e.schluessel = (q.art === 'web' ? 'w:' : q.art === 'youtube' ? 'y:' : 'r:') + (e.url || '');
-      if (e.status === 'neu' && q.art === 'rss' && feedDa.has(e.url)) e.status = 'da';
+      if (e.status === 'neu' && (q.art === 'rss' || q.art === 'youtube') && feedDa.has(e.url)) e.status = 'da';
     } else if (q.art === 'youtube') {
       const h = '@' + String(q.handle || '').trim().replace(/^@/, '');
       if (!/^@[\w.\-]{2,60}$/.test(h)) { e.status = 'ungueltig'; e.grund = tt('kein YouTube-@Handle'); }
@@ -152,14 +152,17 @@ async function paketAusAdresse() {
 
 async function paketUebernehmen() {
   const P = S.paket; if (!P || P.stufe !== 'vorschau') return;
-  const neu = P.liste.filter((e) => e.status === 'neu');
+  const neu = P.liste.filter((e) => e.status === 'neu' && !e.aus);  // abgewählte Zeilen (Häkchen) bleiben draußen
   P.stufe = 'laeuft'; P.fertig = 0; P.gesamt = neu.length; P.fehlt = []; render();
   const schritt = () => { P.fertig++; if (S.paket === P) render(); };
   const feedDazu = (feed) => { if (!settings.feeds.some((f) => f.url === feed.url)) settings.feeds.push(Object.assign({ id: hashId(feed.url) }, feed)); };
   const kontoDazu = (f) => { if (!S.kfollows.some((x) => x.key === f.key)) S.kfollows.push(f); };
   await pool(neu, 4, async (e) => {
     try {
-      if (e.art === 'rss') feedDazu({ url: e.url, title: shortTitle(e.titel || hostOf(e.url)), kind: /youtube\.com\/feeds\//.test(e.url) ? 'youtube' : 'rss', icon: '', site: '' });
+      if (e.art === 'rss' && e.nurMedien && modulAn('nur-medien')) S.cfg['f:' + hashId(e.url)] = Object.assign({}, cfgOf('f:' + hashId(e.url)), { nurMedien: true });  // #68
+      if (e.art === 'youtube' && /^https:\/\/www\.youtube\.com\/feeds\/videos\.xml\?channel_id=UC[\w-]{22}$/.test(e.url || '')) {  // #67: Kanal-Feed direkt, ohne Nachschlagen
+        feedDazu({ url: e.url, title: shortTitle(e.titel || 'YouTube'), kind: 'youtube', icon: '', site: '' });
+      } else if (e.art === 'rss') feedDazu({ url: e.url, title: shortTitle(e.titel || mastodonTagTitel(e.url) || hostOf(e.url)), kind: /youtube\.com\/feeds\//.test(e.url) ? 'youtube' : 'rss', icon: '', site: '' });
       else if (e.art === 'web' || e.art === 'youtube') {
         const ziel = e.url || 'https://www.youtube.com/' + e.handle;
         const d = await getJSON('api/rss.php?aktion=finden&url=' + encodeURIComponent(ziel));
@@ -186,7 +189,7 @@ async function paketUebernehmen() {
   if (neueSprache) settings.sprache = neueSprache;
   const warNeu = !settings.onboarded;
   settings.onboarded = true;
-  save('settings', 'kfollows');
+  save('settings', 'kfollows', 'cfg');
   const n = P.gesamt - P.fehlt.length;
   if (neueSprache && spracheSetzen(neueSprache)) els.stage = null;
   S.paket = { stufe: 'fertig', n, fehlt: P.fehlt };
@@ -198,7 +201,8 @@ async function paketUebernehmen() {
 function paketEigenes() {
   const q = [];
   // Bluesky-Feeds/-Listen kennt das Paketformat 0l.source-pack/1 noch nicht (#16) – nicht mit exportieren
-  settings.feeds.filter((f) => f.kind !== 'bluesky').forEach((f) => q.push(f.handle ? { kind: 'youtube', title: f.title, handle: f.handle } : { kind: 'rss', title: f.title, url: f.url }));
+  settings.feeds.filter((f) => f.kind !== 'bluesky').forEach((f) => q.push(f.handle ? { kind: 'youtube', title: f.title, handle: f.handle }
+    : Object.assign({ kind: 'rss', title: f.title, url: f.url }, modulAn('nur-medien') && cfgOf('f:' + f.id).nurMedien ? { only_media: true } : {})));
   S.kfollows.forEach((k) => {
     const m = /^m:(.+)$/.exec(k.key || ''); const b = /^b:(.+)$/.exec(k.key || '');
     if (m) q.push({ kind: 'mastodon', title: k.name, handle: '@' + m[1] });
@@ -208,7 +212,7 @@ function paketEigenes() {
   if (settings.aiWunsch) pack.wish = settings.aiWunsch;
   const url = (u) => String(u).replace(/[|#\s]/g, encodeURIComponent);  // Trenner %7C statt | – manche Chat-Apps beenden Links am |
   const teile = ['0l1', 'lang:' + LANG].concat(settings.aiWunsch ? ['wish:' + encodeURIComponent(settings.aiWunsch)] : [],
-    q.map((s) => s.kind === 'rss' ? 'rss:' + url(s.url) : s.kind === 'youtube' ? 'yt:' + s.handle : s.kind === 'bluesky' ? 'bsky:' + s.handle : 'masto:' + s.handle));
+    q.map((s) => s.kind === 'rss' ? (s.only_media ? 'rss!m:' : 'rss:') + url(s.url) : s.kind === 'youtube' ? 'yt:' + s.handle : s.kind === 'bluesky' ? 'bsky:' + s.handle : 'masto:' + s.handle));
   return { n: q.length, link: location.origin + location.pathname + '#paket=' + teile.join('%7C'), json: JSON.stringify(pack, null, 2) };
 }
 
@@ -254,14 +258,15 @@ function renderPaket() {
   }
   if (P.stufe === 'laeuft') return blatt(tt('Starter-Paket'), kopf(tt('Starter-Paket')), h('p', { class: 'small add-msg' }, tt('Übernehme … ') + P.fertig + ' / ' + P.gesamt));
   // Vorschau
-  const neu = P.liste.filter((e) => e.status === 'neu').length;
+  const neu = P.liste.filter((e) => e.status === 'neu' && !e.aus).length;
   const STATUS = { neu: '', da: tt('schon dabei'), doppelt: tt('doppelt'), ungueltig: tt('übersprungen') };
-  const name = (e) => e.titel || (e.url ? hostOf(e.url) : e.wert) || '?';
-  const zeilen = P.liste.map((e) => h('div', { class: 'add-row' + (e.status === 'neu' ? '' : ' paket-aus') },
+  const name = (e) => e.titel || (e.url ? mastodonTagTitel(e.url) || hostOf(e.url) : e.wert) || '?';
+  const zeilen = P.liste.map((e) => h('div', { class: 'add-row' + (e.status === 'neu' && !e.aus ? '' : ' paket-aus') },
     avatar({ key: e.schluessel || e.wert, name: name(e) }, 30),
     h('span', { class: 'row-text' }, h('span', { class: 'row-title', style: 'font-size:14px' }, name(e)),
       h('span', { class: 'row-sub' }, (PAKET_LABEL[e.art] || e.art) + (e.wert && e.wert !== name(e) ? ' · ' + e.wert : '') + (e.status !== 'neu' ? ' · ' + STATUS[e.status] + (e.grund ? ' (' + e.grund + ')' : '') : '') + (e.art === 'bluesky' || e.art === 'mastodon' ? tt(' · in KOMPASS folgen') : ''))),
-    e.status === 'neu' ? h('span', { class: 'small' }, '✓') : null));
+    e.status === 'neu' ? h('button', { type: 'button', class: 'mini paket-haken', 'aria-pressed': e.aus ? 'false' : 'true', 'aria-label': (e.aus ? tt('Auswählen: ') : tt('Abwählen: ')) + name(e),
+      onClick: () => { e.aus = !e.aus; render(); } }, e.aus ? '○' : '✓') : null));
   const extra = [P.p.wunsch ? tt('Wunsch für die KI-Auswahl: „') + P.p.wunsch + '“' : '', P.sprache && P.sprache !== LANG ? tt('Sprache: ') + (SPRACHEN.find((x) => x[0] === P.sprache) || [])[1] : ''].filter(Boolean);
   return blatt(tt('Starter-Paket – Vorschau'), kopf(P.p.titel || tt('Starter-Paket')),
     h('span', { class: 'small add-hint' }, (P.woher ? P.woher + ' · ' : '') + neu + (neu === 1 ? tt(' neue Quelle') : tt(' neue Quellen')) + (P.liste.length > neu ? ' · ' + (P.liste.length - neu) + tt(' übersprungen') : '') + tt('. Nichts wird ohne dich übernommen.')),

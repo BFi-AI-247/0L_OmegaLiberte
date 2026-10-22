@@ -4,8 +4,15 @@
 
 /* ---------- Feed-Logik -------------------------------------------------- */
 function chronoVisible() {
+  const nm = modulAn('nur-medien');
   return S.posts.filter((p) => (S.filter ? p.tags.includes(S.filter) : true) &&
-    !p.tags.some((t) => t !== S.filter && !cfgOf(t).show));
+    !p.tags.some((t) => t !== S.filter && !cfgOf(t).show) &&
+    !(nm && !hatMedien(p) && p.tags.some((t) => cfgOf(t).nurMedien)));
+}
+// #68 (Modul nur-medien): Beitrag mit eigenem Bild oder Video – ein Link-Vorschaubild (card) allein zählt nicht
+function hatMedien(p) {
+  return !!(p && ((p.media && p.media.length) || p.video || p.videoAnhang || p.ptEmbed || p.service === 'youtube' ||
+    (p.medien && /video|bild|image/i.test(String(p.medien.art || p.medien.typ || '')))));
 }
 function visible() {
   const base = chronoVisible();

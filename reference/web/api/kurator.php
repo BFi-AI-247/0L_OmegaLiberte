@@ -52,7 +52,14 @@ function zaehle(string $name, int $max, int $aufraeumenNach): bool {
     return $n <= $max;
 }
 $ip = (string)($_SERVER['REMOTE_ADDR'] ?? '');
-if (!zaehle('k-' . hash('sha256', $ip . '|' . gmdate('YmdH')), (int)($cfg['kompass_kuratieren_pro_stunde'] ?? 10), 7200)) {
+// #5: Sind Einladungen eingerichtet, gilt nur noch ein gültiger Code – je Code ein Tageslimit statt der Stundenbremse je IP
+$einladung = ol_einladung($cfg);
+if ($einladung === false) nein('einladung', 'Für die KI über diesen Server brauchst du eine Einladung. Sonst verbinde deine eigene KI (Einstellungen → KI).');
+if (is_string($einladung)) {
+    if (!zaehle('e-' . substr($einladung, 0, 24) . '-' . gmdate('Ymd'), (int)($cfg['einladung_pro_tag'] ?? 50), 172800)) {
+        nein('limit', 'Für heute sind die KI-Anfragen dieser Einladung aufgebraucht. Morgen geht es weiter.');
+    }
+} elseif (!zaehle('k-' . hash('sha256', $ip . '|' . gmdate('YmdH')), (int)($cfg['kompass_kuratieren_pro_stunde'] ?? 10), 7200)) {
     nein('limit', 'Für diese Stunde ist die KI-Auswahl aufgebraucht. Die letzte Auswahl bleibt bestehen.');
 }
 if (!zaehle('t-' . gmdate('Ymd'), (int)($cfg['kompass_max_pro_tag'] ?? 300), 172800)) {

@@ -311,6 +311,7 @@ function stapelHalten() {
   return null;
 }
 async function loadAll() {
+  if (typeof pruefDatenAktiv === 'function' && pruefDatenAktiv()) { pruefDatenBauen(); return; }  // #74: Vorschau-Beispieldaten statt Netz
   S.loading = true; S.errors = []; render();
   const base = {}; const posts = []; const people = [];
   ZWISCHEN.lauf = { base, people, posts }; ZWISCHEN.extra = null;

@@ -24,9 +24,10 @@ async function askAgent(frage, verlauf, lauf) {
       return antwort ? { status: 'ok', antwort } : { status: 'fehler', antwort: tt('Deine KI hat leer geantwortet.') };
     } catch (e) { return { status: 'fehler', antwort: e.message || tt('Deine KI ist gerade nicht erreichbar.') }; }
   }
+  if (!kiProbeErlaubt()) return { status: 'aus', antwort: KI_OHNE() };
   try {
     const r = await fetch('api/ai.php', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: kiServerKopf(),
       body: JSON.stringify({ frage, verlauf: verlauf || [], beitrag })
     });
     if (r.status === 404) return { status: 'aus', antwort: tt('Der Dialog ist noch nicht freigeschaltet. Er geht live, sobald {betreiber} den Agenten (ai.php) freigibt.').replace('{betreiber}', INSTANZ.betreiber[LANG] || INSTANZ.betreiber.de) };

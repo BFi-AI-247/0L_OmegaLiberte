@@ -11,10 +11,25 @@
 'use strict';
 
 /* ---------- Hilfen ---------------------------------------------------- */
-const VERSION = 'v0.64';
+const VERSION = 'v0.73';
 const LS = 'kompass.v0.' + (INSTANZ.speicher ? INSTANZ.speicher + '.' : '');
 // Modul-Schalter (instanz.js → module): false zieht ein Feature zurück, fehlt = an
 function modulAn(id) { return !(INSTANZ.module && INSTANZ.module[id] === false); }
+// #5: Öffentliche KI-Probe über das Backend (kurator.php/ai.php) – aus, wenn die Instanz module: { 'ki-probe': false } setzt
+// #5 Einladungscode (Modul ki-einladung): ein persönlicher Link …#einladung=<code> schaltet die KI über das Backend frei
+// (Budget des Betreibers, 50 Anfragen je Code und Tag). Der Code bleibt nur auf diesem Gerät (store kiEinladung, nicht im Abgleich).
+function kiEinladung() { return modulAn('ki-einladung') ? String(store.get('kiEinladung', '') || '') : ''; }
+function kiProbeErlaubt() { return modulAn('ki-probe') || !!kiEinladung(); }
+function kiServerKopf() { const c = kiEinladung(); return Object.assign({ 'Content-Type': 'application/json' }, c ? { 'X-KOMPASS-Einladung': c } : {}); }
+// Aus der Adresse übernehmen und entfernen; ein W0-Einstieg im selben Link bleibt stehen (#einstieg=w0&einladung=…)
+function einladungAusAdresse() {
+  const m = /(?:^#|&)einladung=([A-Za-z0-9_-]{6,64})/.exec(location.hash || ''); if (!m || !modulAn('ki-einladung')) return false;
+  store.set('kiEinladung', m[1]);
+  const rest = (location.hash || '').replace(/^#/, '').split('&').filter((t) => !/^einladung=/.test(t)).join('&');
+  history.replaceState(null, '', location.pathname + location.search + (rest ? '#' + rest : ''));
+  return true;
+}
+const KI_OHNE = () => tt('Verbinde deine eigene KI (Einstellungen → KI) – ohne eigene KI gibt es hier keine KI-Funktion.');
 const store = {
   get(k, d) { try { const v = localStorage.getItem(LS + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(LS + k, JSON.stringify(v)); } catch (e) { /* voll oder gesperrt */ } },
@@ -213,6 +228,12 @@ const CATALOG = [
     ['NASA', 'https://www.nasa.gov/feed/', 'nasa.gov', 'rss', 'en'],
     ['Space.com', 'https://www.space.com/feeds.xml', 'space.com', 'rss', 'en'],
     ['NASA (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCLA_DiR1FfKNvjuUpBHmylQ', 'youtube.com', 'youtube', 'en'],
+    ['Raumfahrer.net', 'https://www.raumfahrer.net/feed/', 'raumfahrer.net'],
+    ['ESA – Space News', 'https://www.esa.int/rssfeed/Our_Activities/Space_News', 'esa.int', 'rss', 'en'],
+    ['Wikipedia – Artikel des Tages', 'https://de.wikipedia.org/w/api.php?action=featuredfeed&feed=featured&feedformat=atom', 'de.wikipedia.org'],
+    ['Wikipedia – Was geschah am …?', 'https://de.wikipedia.org/w/api.php?action=featuredfeed&feed=onthisday&feedformat=rss', 'de.wikipedia.org'],
+    ['Wikipedia – Today\'s featured article', 'https://en.wikipedia.org/w/api.php?action=featuredfeed&feed=featured&feedformat=atom', 'en.wikipedia.org', 'rss', 'en'],
+    ['Wikipedia – On this day', 'https://en.wikipedia.org/w/api.php?action=featuredfeed&feed=onthisday&feedformat=atom', 'en.wikipedia.org', 'rss', 'en'],
     ['GEO', 'https://www.geo.de/feed/rss/geo/', 'geo.de'],
     ['idw – Pressemitteilungen aus der Forschung', 'https://idw-online.de/de/pressreleasesrss', 'idw-online.de'],
     ['Uni Oldenburg – Nachrichten (Hochschule)', 'https://uol.de/aktuelles/rss', 'uol.de'],
@@ -361,6 +382,7 @@ S.nextPauseAt = S.day.n + (settings.pauseAfter || 0);
 store.set('lastOpen', Date.now());
 
 function save(...keys) {
+  if (S.pruefDaten) return;  // #74: Beispieldaten der Vorschau – nichts speichern, nichts abgleichen
   for (const k of keys) store.set(k, k === 'settings' ? settings : S[k]);
   if (typeof noteChange === 'function') noteChange(keys);
 }

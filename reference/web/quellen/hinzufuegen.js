@@ -212,6 +212,7 @@ function renderAdd() {
       h('div', { class: 'add-search' }, h('div', { class: 'search', style: 'flex:1' }, icon('search', { sm: true }), h('label', { for: 'k-add', class: 'sr' }, ph), input),
         A.tab !== 'katalog' ? h('button', { type: 'button', class: 'btn primary', disabled: A.busy, onClick: runAddSearch }, tt('Suchen')) : null),
       h('span', { class: 'small add-hint' }, hint),
+      A.tab === 'youtube' && typeof takeoutBlock === 'function' ? takeoutBlock() : null,  // #67
       h('div', { class: 'add-list' }, body)));
 }
 

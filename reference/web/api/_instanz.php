@@ -106,3 +106,22 @@ function ol_ping_an(): bool {
     $c = ol_konfig();
     return array_key_exists('ping_annehmen', $c) ? (bool)$c['ping_annehmen'] : OL_PING;
 }
+
+// #5 Einladungscodes: Der Betreiber stellt ausgewählten Menschen sein KI-Budget zur Verfügung – ohne Schlüssel weiterzugeben.
+// config.php: 'einladungen' => ['<code>' oder '<sha256 des Codes>', …] (auch als Schlüssel einer Liste mit Notizen),
+// 'einladung_pro_tag' => 50. Die App schickt den Code im Kopf X-KOMPASS-Einladung (nur auf dem Gerät gespeichert).
+// Rückgabe: null = keine Einladungen eingerichtet (bisheriges Verhalten); false = eingerichtet, aber Code fehlt/ungültig;
+// sonst sha256 des Codes (Kennung für den Tageszähler – der Code selbst wird nirgends gespeichert).
+function ol_einladung(array $cfg): string|false|null {
+    $liste = $cfg['einladungen'] ?? null;
+    if (!is_array($liste) || !$liste) return null;
+    $codes = array_is_list($liste) ? $liste : array_keys($liste);
+    $code = trim((string)($_SERVER['HTTP_X_KOMPASS_EINLADUNG'] ?? ''));
+    if ($code === '' || !preg_match('/^[A-Za-z0-9_-]{6,64}$/', $code)) return false;
+    $h = hash('sha256', $code);
+    foreach ($codes as $c) {
+        $c = trim((string)$c);
+        if (hash_equals(strtolower($c), $h) || hash_equals($c, $code)) return $h;   // als sha256 oder im Klartext eingetragen
+    }
+    return false;
+}

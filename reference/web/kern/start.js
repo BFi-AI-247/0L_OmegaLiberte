@@ -48,6 +48,7 @@ function render(stageToo) {
   renderLayer();
   if (typeof startseitePruefen === 'function') startseitePruefen();  // #43
   if (typeof meldenZeichnen === 'function') meldenZeichnen();  // #46: nur Vorschau
+  if (typeof pruefZeichnen === 'function') pruefZeichnen();  // #74: nur Vorschau
   scrolls.forEach(([sel, y]) => { const el = app.querySelector(sel); if (el && y) el.scrollTop = y; });
   if (['k-chat', 'k-search', 'k-esearch', 'k-add', 'k-name', 'k-wunsch', 'k-masto', 'k-bsky', 'k-dav-url', 'k-dav-user', 'k-dav-pass'].includes(active)) {
     const el = document.getElementById(active);
@@ -115,9 +116,12 @@ document.addEventListener('visibilitychange', () => {
 });
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+const EINLADUNG_NEU = einladungAusAdresse();  // #5: …#einladung=<code>
 const EINSTIEG_NEULADEN = einstiegAusAdresse();  // #39: fester Einstieg (z. B. #einstieg=w0) vor dem ersten Zeichnen; Sprache wechselt ohne Neuladen (#44)
-startseiteOeffnen();  // #43: Startseite über der App
+const GOOGLE_ENDE = googleUebergang();  // #66: Google-Drive-Abgleich einmalig trennen, Hinweis unter Speicher
+if (!GOOGLE_ENDE) startseiteOeffnen();  // #43: Startseite über der App
 render(true);
+if (EINLADUNG_NEU) flash(tt('Einladung übernommen – die KI-Funktionen sind auf diesem Gerät frei.'));
 if (settings.onboarded && !EINSTIEG_NEULADEN) loadAll();
 zentraleTitel(); pingBeimStart();
 paketAusAdresse();

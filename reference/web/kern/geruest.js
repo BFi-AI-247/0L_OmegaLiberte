@@ -243,7 +243,14 @@ function renderFoot(wide) {
 
 function closeBtn(label, fn) { return h('button', { type: 'button', class: 'ghost', 'aria-label': label, onClick: fn }, icon('close')); }
 
+// #62: Ebene neu zeichnen (z. B. durch flash() beim Hinzufügen aus dem Katalog) behält die Scrollposition von Listen
+const EBENE_SCROLL = ['.add-list', '.add-sheet', '.screen-body', '.overview-list'];
 function renderLayer() {
+  const L = els.layer; const pos = EBENE_SCROLL.map((sel) => { const el = L.querySelector(sel); return [sel, el ? el.scrollTop : 0]; });
+  renderLayerZeichnen();
+  pos.forEach(([sel, y]) => { const el = y && L.querySelector(sel); if (el) el.scrollTop = y; });
+}
+function renderLayerZeichnen() {
   const L = els.layer; L.textContent = '';
   const c = cur();
   const wide = isWide();

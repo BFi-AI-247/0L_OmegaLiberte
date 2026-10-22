@@ -69,6 +69,7 @@ function modusWahl(ziel) {
     flash(tt('Zum Schreiben verbinde zuerst Mastodon oder Bluesky.'));
     S.screen = 'settings'; S.einstReiter = 'konten'; S.form = null; S.overview = false; render(); return;
   }
+  if (ziel === 'ki' && !KI.bereit() && !kiProbeErlaubt() && !S.pruefDaten) { flash(KI_OHNE()); S.screen = 'settings'; S.einstReiter = 'ki'; S.form = null; S.overview = false; render(); return; }
   if (ziel === 'ki') { S.schreiben = false; setAiMode(true); return; }
   if (ziel === 'chrono') { const warSchreiben = S.schreiben; S.schreiben = false; if (S.ai.on) setAiMode(false); else if (warSchreiben) render(true); return; }
   // Schreiben: KI still aus, Bühne übernimmt
@@ -77,12 +78,13 @@ function modusWahl(ziel) {
 }
 function modusLeiste(wide) {
   const a = modusAktuell(); const kannSchreiben = typeof postenVerbunden === 'function' && postenVerbunden();
-  const knopf = (id, sym, label) => h('button', { type: 'button', class: 'modus-knopf' + (id === 'schreiben' && !kannSchreiben ? ' aus' : ''), 'data-modus': id,
+  const aus = (id) => (id === 'schreiben' && !kannSchreiben) || (id === 'ki' && !KI.bereit() && !kiProbeErlaubt() && !S.pruefDaten);  // #5: ✦ ohne eigene KI ausgegraut
+  const knopf = (id, sym, label) => h('button', { type: 'button', class: 'modus-knopf' + (aus(id) ? ' aus' : ''), 'data-modus': id,
     'aria-pressed': a === id ? 'true' : 'false', title: label + (id === 'schreiben' && !kannSchreiben ? tt(' – erst Mastodon oder Bluesky verbinden') : ''), 'aria-label': label, onClick: () => modusWahl(id) },
     sym, wide ? h('span', { class: 'modus-text' }, label) : null);
   if (!wide) {
     // Handy-Kopf (Issue #2): nur Schalter – ✦ KI an/aus, ✎ Schreiben an/aus; ohne beides = Chronologisch. Kein ☰, damit der Quellen-Auswähler Platz hat.
-    const schalter = (id, sym, label) => h('button', { type: 'button', class: 'modus-knopf' + (id === 'schreiben' && !kannSchreiben ? ' aus' : ''), 'data-modus': id,
+    const schalter = (id, sym, label) => h('button', { type: 'button', class: 'modus-knopf' + (aus(id) ? ' aus' : ''), 'data-modus': id,
       'aria-pressed': a === id ? 'true' : 'false', title: label + (id === 'schreiben' && !kannSchreiben ? tt(' – erst Mastodon oder Bluesky verbinden') : ''), 'aria-label': label,
       onClick: () => modusWahl(a === id ? 'chrono' : id) }, sym);
     return h('div', { class: 'modus-leiste kompakt', role: 'group', 'aria-label': tt('Ansicht') },

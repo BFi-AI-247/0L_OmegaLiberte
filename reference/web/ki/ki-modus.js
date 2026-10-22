@@ -29,7 +29,7 @@ function entryNameOf(p) { return (S.entries[p.whoKey] || {}).name || p.who || ''
 // weiter = { stunden }: weitere Runde – nur Ungelesenes, das noch nicht ausgewählt ist; Ergebnis wird angehängt (kibNachlegen)
 async function curate(weiter) {
   if (!weiter || !weiter.stunden) weiter = null;  // auch als Klick-Handler (Ereignis als Argument)
-  if (S.ai.busy) return;
+  if (S.ai.busy || S.pruefDaten) return;  // #74: Beispieldaten haben eine feste Auswahl
   if (weiter && !S.ai.res) return 'fehler';
   const wunsch = String(settings.aiWunsch || '').trim();
   const lim = Date.now() - (weiter ? weiter.stunden : wunsch ? 96 : 48) * 3600000;
@@ -60,7 +60,8 @@ async function curate(weiter) {
     if (KI.art() !== 'kompass' && KI.bereit()) {
       d = Object.assign({ status: 'ok' }, await kiKuratieren(body.kandidaten, body.wunsch, body.favoriten, body.anzahl));
     } else {
-      const r = await fetch('api/kurator.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (!kiProbeErlaubt()) throw new Error(KI_OHNE());
+      const r = await fetch('api/kurator.php', { method: 'POST', headers: kiServerKopf(), body: JSON.stringify(body) });
       d = await r.json().catch(() => ({}));
       if (d.status === 'limit' || d.status === 'pause') d.antwort = (d.antwort || '') + tt(' Verbinde deine eigene KI in den Einstellungen.');
     }

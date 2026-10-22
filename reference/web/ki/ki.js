@@ -55,7 +55,7 @@ const KI = {
   // Ist die gewählte KI auf diesem Gerät nutzbar? Sonst fällt KOMPASS auf die Probe zurück.
   bereit() {
     const c = this.cfg();
-    if (c.art === 'kompass') return true;
+    if (c.art === 'kompass') return kiProbeErlaubt();
     if (c.art === 'openrouter' || c.art === 'gemini') return !!this.keys[c.art];
     if (c.art === 'openai') return !!c.url;
     if (c.art === 'browser') return typeof self.LanguageModel !== 'undefined';
@@ -64,7 +64,7 @@ const KI = {
   },
   name() {
     const c = this.cfg();
-    if (!this.bereit() || c.art === 'kompass') return tt('Mistral (KOMPASS-Probe)');
+    if (!this.bereit() || c.art === 'kompass') return kiEinladung() ? tt('Mistral (Einladung von {name})').replace('{name}', INSTANZ.betreiber[LANG] || INSTANZ.betreiber.de) : tt('Mistral (KOMPASS-Probe)');
     if (c.art === 'lokal') return (KI_LOKAL_MODELLE.find((m) => m.id === c.modell) || {}).label || tt('Modell auf dem Gerät');
     if (c.art === 'browser') return 'Browser-KI';
     return (c.modell || KI_ARTEN[c.art].label).replace(/:free$/, '') + (c.art === 'openrouter' ? tt(' (OpenRouter)') : '');
@@ -460,7 +460,7 @@ function kiFehlerKlar(e) {
 function renderKiBox() {
   const c = KI.cfg(); const u = KI.ui;
   const hatBrowserKi = typeof self.LanguageModel !== 'undefined';
-  const arten = ['openrouter', 'gemini', 'lokal', 'openai'].concat(hatBrowserKi ? ['browser'] : []).concat(['kompass']);
+  const arten = ['openrouter', 'gemini', 'lokal', 'openai'].concat(hatBrowserKi ? ['browser'] : []).concat(kiProbeErlaubt() ? ['kompass'] : []);
   const row = (a) => h('button', { type: 'button', class: 'toggle-row ki-row', 'aria-pressed': c.art === a ? 'true' : 'false', onClick: () => kiWaehlen(a) },
     h('span', { class: 'row-text' }, h('span', { class: 'row-title', style: 'font-size:15px' }, KI_ARTEN[a].label,
       a === c.art && KI.bereit() && a !== 'kompass' ? h('span', { class: 'ki-ok' }, tt(' · verbunden')) : null),
@@ -564,7 +564,8 @@ async function kiQuellenVorschlaege(thema) {
   if (KI.art() !== 'kompass' && KI.bereit()) {
     roh = kiJson(await kiFrage([{ role: 'system', content: KI_QUELLEN_SYSTEM }, { role: 'user', content: 'Thema/Wunsch des Nutzers: ' + thema }], { json: true, max: 900 }));
   } else {
-    const r = await fetch('api/kurator.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aufgabe: 'quellen', wunsch: thema }) });
+    if (!kiProbeErlaubt()) throw new Error(KI_OHNE());
+    const r = await fetch('api/kurator.php', { method: 'POST', headers: kiServerKopf(), body: JSON.stringify({ aufgabe: 'quellen', wunsch: thema }) });
     const d = await r.json().catch(() => ({}));
     if (d.status !== 'ok') throw new Error((d.antwort || tt('Die KI hat gerade keine Vorschläge geliefert.')) + (d.status === 'limit' ? tt(' Verbinde deine eigene KI in den Einstellungen.') : ''));
     roh = d;

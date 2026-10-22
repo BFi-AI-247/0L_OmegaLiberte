@@ -94,7 +94,8 @@ function mastoPost(st, host, kind) {
     media: (s.media_attachments || []).filter((x) => x.type === 'image' || x.type === 'gifv').slice(0, 4).map((x) => x.preview_url),
     mediaGross: (s.media_attachments || []).filter((x) => x.type === 'image' || x.type === 'gifv').slice(0, 4).map((x) => (x.type === 'image' && x.url) || x.preview_url),
     mediaAlt: (s.media_attachments || []).filter((x) => x.type === 'image' || x.type === 'gifv').slice(0, 4).map((x) => x.description || ''),
-    note: st.reblog ? 'geteilt von ' + (st.account.display_name || st.account.username) : ''
+    note: st.reblog ? 'geteilt von ' + (st.account.display_name || st.account.username) : '',
+    videoAnhang: (s.media_attachments || []).some((x) => x.type === 'video') || undefined  // #68: zählt als Video für „Nur Bilder und Videos“
   };
 }
 // Folgelisten seitenweise (bis 400 bzw. 500 Konten); Beiträge laden zuerst für Favoriten
@@ -166,7 +167,8 @@ function bskyPost(fp, kind) {
     id: 'b:' + p.uri, service: 'bluesky', tags: ['bluesky', 'b:' + a.handle],
     who: a.displayName || a.handle, whoKey: 'b:' + a.handle, avatar: a.avatar, handle: '@' + a.handle,
     kind, title: '', text, rich, card, urls: linkKeys(rich, card, text), link: 'https://bsky.app/profile/' + a.handle + '/post/' + rkey,
-    date: rec.createdAt || p.indexedAt, media, mediaGross, mediaAlt
+    date: rec.createdAt || p.indexedAt, media, mediaGross, mediaAlt,
+    videoAnhang: /embed\.video/.test(String(em.$type || '') + String((em.media && em.media.$type) || '')) || undefined  // #68
   };
 }
 async function loadBluesky(handle) {
@@ -295,6 +297,12 @@ async function loadFeeds(feeds, beiTeil) {
 /* Antwort von rss.php (aktion=feed bzw. ein Eintrag aus aktion=sammel) → Beiträge */
 // #65: Platzhalter einiger Feeds („NONE“, „null“) nicht als Text zeigen – auch für Einträge aus älterem Server-Puffer
 function leerPlatzhalter(t) { t = t || ''; return /^\s*(none|null|undefined|n\/?a|-)\s*$/i.test(t) ? '' : t; }
+// #71: Mastodon-Tag-Zeitleiste (https://<instanz>/tags/<tag>[.rss]) → „#tag (instanz)“, wie in „Quelle hinzufügen“
+function mastodonTagTitel(u) {
+  const m = /^https:\/\/([^/?#]+)\/tags\/([^/?#.]+)(?:\.rss)?\/?$/i.exec(String(u || ''));
+  if (!m) return '';
+  try { return '#' + decodeURIComponent(m[2]) + ' (' + m[1].toLowerCase() + ')'; } catch (e) { return ''; }
+}
 function feedPosts(f, d) {
   if (d.status !== 'ok') throw new Error(d.meldung || tt('Feed nicht lesbar'));
   // YouTube: Der Feed-Titel ist der Kanalname – maßgeblich (behebt z. B. „YouTube“ als Name)
@@ -303,6 +311,11 @@ function feedPosts(f, d) {
     if (S.raw && S.raw.base['f:' + f.id]) S.raw.base['f:' + f.id].name = d.titel;
   }
   if (f.kind === 'youtube' && d.seite && !/channel\//.test(f.site || '') && !/@/.test(f.site || '')) f.site = d.seite;
+  // #71: RSS-Quelle ohne eigenen Namen (nur der Host als Platzhalter, z. B. aus einem Paket) – Mastodon-Tag als „#tag (instanz)“, sonst Feed-Titel
+  if (f.kind !== 'youtube' && (!f.title || f.title === hostOf(f.url))) {
+    const t = mastodonTagTitel(f.url) || (d.titel ? shortTitle(d.titel) : '');
+    if (t && t !== f.title) { f.title = t; S.feedFix = true; if (S.raw && S.raw.base['f:' + f.id]) S.raw.base['f:' + f.id].name = t; }
+  }
   const key = 'f:' + f.id; const yt = f.kind === 'youtube';
   // #20: PeerTube-Feeds (…/feeds/[podcast/]videos.xml) – Einbettung https://<instanz>/videos/embed/<id> (M008)
   const pt = !yt && /\/feeds\/(?:podcast\/)?videos\.xml/.test(f.url || '');

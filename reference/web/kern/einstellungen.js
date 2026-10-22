@@ -39,6 +39,7 @@ function renderCfg(e) {
       row(tt('Im Feed zeigen'), cv.show ? tt('Beiträge erscheinen im Feed') : tt('Stumm – erscheint nur bei direkter Auswahl'), cv.show, set('show')),
       row(tt('Ungelesene zählen'), tt('Zahl am Symbol in der Leiste'), cv.count, set('count')),
       row(tt('Favorit'), tt('Erscheint in der Standardansicht'), !!S.favs[k], () => toggleFav(k)),
+      modulAn('nur-medien') ? row(tt('Nur Bilder und Videos'), tt('Beiträge ohne eigenes Bild oder Video aus dieser Quelle ausblenden'), !!cv.nurMedien, set('nurMedien')) : null,  // #68
       e.members ? h('div', { class: 'members' },
         h('span', { class: 'small' }, tt('Zusammengeführt – Grund: ') + e.why),
         e.members.map((m) => h('div', { class: 'member' }, avatar(m, 28),
@@ -86,6 +87,9 @@ function renderHistory() {
 
 function renderStorage(onboarding) {
   const box = h('div', { class: 'card-box' + (onboarding ? ' accent-box' : '') }, h('h3', {}, onboarding && !sync.provider ? tt('Schon eingerichtet?') : tt('Wo deine Daten liegen')));
+  if (!onboarding && store.get('googleEnde', 0)) box.append(h('div', { class: 'google-ende', role: 'status' },
+    h('p', { class: 'small', style: 'margin:0;line-height:1.5' }, tt('Google Drive wird nicht mehr unterstützt. Deine Daten auf diesem Gerät bleiben unverändert. Wähle WebDAV für den Abgleich oder sichere sie als Datei (unten). Die Dateien im Ordner „KOMPASS“ deines Google Drive gehören dir und bleiben dort – du kannst sie in Google Drive selbst löschen.')),
+    h('button', { type: 'button', class: 'mini', onClick: () => { store.set('googleEnde', 0); render(); } }, tt('Verstanden'))));
   if (sync.provider) {
     const c = CONN[sync.provider];
     const st = SY.busy ? tt('gleicht ab …') : SY.error ? tt('Fehler: ') + SY.error : sync.last ? 'zuletzt abgeglichen ' + ago(new Date(sync.last).toISOString()) : 'noch nicht abgeglichen';
@@ -103,12 +107,13 @@ function renderStorage(onboarding) {
   box.append(h('p', { class: 'small', style: 'margin:0;line-height:1.5' }, onboarding
     ? tt('Dann lade deine Konten, Favoriten und deinen Verlauf aus deinem Speicher – nichts neu einrichten.')
     : tt('Gerade nur auf diesem Gerät. Verbinde deinen Speicher, damit Handy und PC dieselben Konten, Favoriten und denselben Verlauf haben. Die Daten liegen lesbar als JSON im Ordner „KOMPASS“.')));
-  box.append(h('div', { class: 'choices', style: 'grid-template-columns:repeat(' + (onboarding ? 2 : 3) + ',minmax(0,1fr))' },
+  const mitGoogle = modulAn('speicher-google');  // #66: Google Drive passt nicht zum Konzept – Modul aus = kein Google-Knopf
+  box.append(h('div', { class: 'choices', style: 'grid-template-columns:repeat(' + ((onboarding ? 1 : 2) + (mitGoogle ? 1 : 0)) + ',minmax(0,1fr))' },
     onboarding ? null : h('button', { type: 'button', class: 'filter-pill', style: 'align-self:auto', 'aria-pressed': !SY.pick || SY.pick === 'geraet' ? 'true' : 'false', onClick: () => { SY.pick = 'geraet'; render(); } }, tt('Nur auf diesem Gerät')),
-    h('button', { type: 'button', class: 'filter-pill', style: 'align-self:auto', 'aria-pressed': SY.pick === 'gdrive' ? 'true' : 'false', onClick: () => GD.prepare() }, tt('Google Drive')),
+    mitGoogle ? h('button', { type: 'button', class: 'filter-pill', style: 'align-self:auto', 'aria-pressed': SY.pick === 'gdrive' ? 'true' : 'false', onClick: () => GD.prepare() }, tt('Google Drive')) : null,
     h('button', { type: 'button', class: 'filter-pill', style: 'align-self:auto', 'aria-pressed': SY.pick === 'dav' ? 'true' : 'false', onClick: () => { SY.pick = 'dav'; render(); } }, tt('WebDAV (EU)'))));
   if (!onboarding && (!SY.pick || SY.pick === 'geraet')) box.append(h('span', { class: 'small', style: 'line-height:1.4' }, tt('Standard: Alles bleibt in diesem Browser – kein Abgleich, kein fremder Speicher. Sichere ab und zu eine Datei (unten).')));
-  if (SY.pick === 'gdrive') {
+  if (SY.pick === 'gdrive' && mitGoogle) {
     if (SY.gState === 'bereit') box.append(h('button', { type: 'button', class: 'btn primary', onClick: () => GD.start() }, tt('Mit Google anmelden')),
       h('span', { class: 'small', style: 'line-height:1.4' }, tt('KOMPASS bekommt nur Zugriff auf die eigenen Dateien im Ordner „KOMPASS“ (Berechtigung drive.file), nicht auf deine übrigen Dateien.')));
     else box.append(h('span', { class: 'small' }, SY.gState === 'fehlt' ? tt('Google ist im KOMPASS-Backend noch nicht eingerichtet (Client-ID und Schlüssel fehlen in config.php).')
@@ -146,7 +151,8 @@ function spracheWechseln(code) {
   if (spracheSetzen(code)) { els.stage = null; render(true); }
 }
 const EINST_REITER = ttFest(() => [['allgemein', tt('Allgemein')], ['quellen', tt('Quellen')], ['konten', tt('Konten')], ['ki', tt('KI')], ['speicher', tt('Speicher')]]);
-const DATENSCHUTZ_TEXT = () => tt('Einstellungen, Verlauf, Likes, Lesezeichen und Favoriten liegen im Speicher dieses Browsers – und, wenn verbunden, lesbar als JSON im Ordner „KOMPASS“ deines Google Drive bzw. WebDAV-Speichers (Übertragung per HTTPS; Google direkt vom Gerät, WebDAV über das KOMPASS-Backend durchgeleitet, ohne Speicherung). Mastodon und Bluesky werden direkt von deinem Gerät abgefragt. RADAR läuft über das KOMPASS-Backend auf {host} (ohne Nutzerdaten). Fragen an den Agenten, Faktenchecks und die KI-Auswahl gehen direkt von deinem Gerät an die KI, die du verbindest – oder, ohne eigene KI, als Probe über das Backend an Mistral (EU), ohne Speicherung. KI-Schlüssel liegen verschlüsselt nur auf diesem Gerät.').replace('{host}', location.host) + (window.OL_ZAEHLER ? ' ' + tt('Aufrufe der Seite zählt GoatCounter ohne Cookies und ohne Nutzerprofil.') : '');
+const DATENSCHUTZ_TEXT = () => (modulAn('speicher-google') ? tt('Einstellungen, Verlauf, Likes, Lesezeichen und Favoriten liegen im Speicher dieses Browsers – und, wenn verbunden, lesbar als JSON im Ordner „KOMPASS“ deines Google Drive bzw. WebDAV-Speichers (Übertragung per HTTPS; Google direkt vom Gerät, WebDAV über das KOMPASS-Backend durchgeleitet, ohne Speicherung). ')
+  : tt('Einstellungen, Verlauf, Likes, Lesezeichen und Favoriten liegen im Speicher dieses Browsers – und, wenn verbunden, lesbar als JSON im Ordner „KOMPASS“ deines WebDAV-Speichers (Übertragung per HTTPS über das KOMPASS-Backend durchgeleitet, ohne Speicherung). ')) + tt('Mastodon und Bluesky werden direkt von deinem Gerät abgefragt. RADAR läuft über das KOMPASS-Backend auf {host} (ohne Nutzerdaten). Fragen an den Agenten, Faktenchecks und die KI-Auswahl gehen direkt von deinem Gerät an die KI, die du verbindest – oder, ohne eigene KI, als Probe über das Backend an Mistral (EU), ohne Speicherung. KI-Schlüssel liegen verschlüsselt nur auf diesem Gerät.').replace('{host}', location.host).replace(kiProbeErlaubt() ? '\u0000' : tt(' – oder, ohne eigene KI, als Probe über das Backend an Mistral (EU), ohne Speicherung'), '') + (window.OL_ZAEHLER ? ' ' + tt('Aufrufe der Seite zählt GoatCounter ohne Cookies und ohne Nutzerprofil.') : '');
 const START_SATZ = () => tt('Lies https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/prompts/sources.md und stell mit mir die Quellen für meine Zentrale zusammen. Meine Adresse: ') + location.origin + location.pathname;
 function einstForm() {
   if (!S.form) S.form = { mastodon: settings.mastodon, bluesky: settings.bluesky, radar: Object.assign({}, settings.radar), pauseAfter: settings.pauseAfter,
@@ -389,4 +395,13 @@ function renderPause() {
         h('span', { class: 'small' }, tt('Weiter – nächste Rückfrage nach … Beiträgen')),
         h('div', { class: 'choices' }, [10, 20, 50].map((n) => h('button', { type: 'button', class: 'btn', onClick: () => close(n), 'aria-label': tt('Nächste Rückfrage nach ') + n + tt(' Beiträgen') }, String(n))))
       ]));
+}
+
+// #66 Übergang: Wer bisher mit Google Drive abgeglichen hat, wird einmalig getrennt (lokale Daten bleiben) und sieht den Hinweis unter Speicher
+function googleUebergang() {
+  if (modulAn('speicher-google') || sync.provider !== 'gdrive') return false;
+  try { GD.disconnect(); } catch (e) { /* Abmelden beim Google-Dienst ist nur ein Versuch */ }
+  sync.provider = null; storeSync(); store.set('googleEnde', 1);
+  S.screen = 'settings'; S.einstReiter = 'speicher';
+  return true;
 }
