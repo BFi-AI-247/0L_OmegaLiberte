@@ -125,7 +125,7 @@ function einstiegAusAdresse() {
   settings.einstieg = id; settings.onboarded = true;
   if (E.sprache) settings.sprache = E.sprache;
   save('settings');
-  if (E.sprache && E.sprache !== LANG) { location.reload(); return true; }
+  if (E.sprache) spracheSetzen(E.sprache);
   S.screen = null;
   return false;
 }
@@ -189,7 +189,7 @@ async function paketUebernehmen() {
   settings.onboarded = true;
   save('settings', 'kfollows');
   const n = P.gesamt - P.fehlt.length;
-  if (neueSprache) { location.reload(); return; }
+  if (neueSprache && spracheSetzen(neueSprache)) els.stage = null;
   S.paket = { stufe: 'fertig', n, fehlt: P.fehlt };
   if (warNeu || S.screen === 'onboarding') S.screen = null;
   render(); loadAll();

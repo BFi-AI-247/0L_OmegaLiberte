@@ -126,7 +126,7 @@ function renderTop() {
   }
   return top;
 }
-const OVERVIEW_TITLES = { fav: tt('Deine Favoriten'), dienst: tt('Alle Dienste'), kontakt: tt('Alle Kontakte'), creator: tt('Alle Creator') };
+const OVERVIEW_TITLES = ttFest(() => ({ fav: tt('Deine Favoriten'), dienst: tt('Alle Dienste'), kontakt: tt('Alle Kontakte'), creator: tt('Alle Creator') }));
 function emptyHint() {
   return h('p', { class: 'small', style: 'padding:16px;text-align:center' }, S.loading ? tt('Lade Quellen …') : S.mode === 'fav'
     ? tt('Noch keine Favoriten. Wechsle zu Dienst, Kontakt oder Creator und markiere Einträge mit dem Stern.') : tt('Noch nichts verbunden – Quellen in den Einstellungen hinzufügen.'));
@@ -181,7 +181,8 @@ function actButtons(c) {
     h('button', { type: 'button', class: 'icon-btn', 'aria-label': tt('Teilen'), title: tt('Teilen'), disabled: !id, onClick: () => sharePost(c) }, icon('share')),
     h('button', { type: 'button', class: 'icon-btn mark', 'data-id': id || null, 'aria-label': tt('Merken'), title: tt('Merken (m)'), 'aria-pressed': id && S.marked[id] ? 'true' : 'false', disabled: !id, onClick: () => toggleMark(id) }, icon('mark', { filled: id && S.marked[id] }))];
 }
-const KEYS_HINT = tt('Tasten: ↓ j Leertaste weiter · ↑ k zurück · s mischen · n Neues · m merken · l gefällt · f prüfen · / fragen');
+let KEYS_HINT = tt('Tasten: ↓ j Leertaste weiter · ↑ k zurück · s mischen · n Neues · m merken · l gefällt · f prüfen · / fragen');
+beiSprachwechsel(() => { KEYS_HINT = tt('Tasten: ↓ j Leertaste weiter · ↑ k zurück · s mischen · n Neues · m merken · l gefällt · f prüfen · / fragen'); });
 function navButtons() {
   return [
     h('button', { type: 'button', 'aria-label': tt('Zurück zum vorherigen Beitrag'), title: tt('Zurück (↑ / k)'), onClick: back }, icon('up')),

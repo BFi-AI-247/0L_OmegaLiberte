@@ -20,18 +20,18 @@
 // ===================================================================
 'use strict';
 
-const KI_ARTEN = {
+const KI_ARTEN = ttFest(() => ({
   kompass: { label: tt('KOMPASS-Probe'), sub: tt('Mistral über unseren Server – knappes Kontingent zum Ausprobieren') },
   openrouter: { label: 'OpenRouter', sub: tt('Mit deinem OpenRouter-Konto anmelden – viele Modelle, auch kostenlose') },
   gemini: { label: tt('Google Gemini'), sub: tt('Dein Schlüssel aus Google AI Studio (mit Gratis-Kontingent)') },
   openai: { label: tt('Eigener Dienst'), sub: tt('OpenAI-kompatibel: OpenAI, Mistral, Ollama, LM Studio …') },
   browser: { label: tt('Im Browser eingebaut'), sub: tt('Die KI deines Browsers (Chrome) – ohne Konto, auf dem Gerät') },
   lokal: { label: tt('Auf diesem Gerät'), sub: tt('Kostenloses Modell einmal laden – danach ganz ohne Internet-KI') }
-};
-const KI_LOKAL_MODELLE = [
+}));
+const KI_LOKAL_MODELLE = ttFest(() => [
   { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', label: tt('Qwen 2.5 · 1,5 B'), groesse: 'ca. 1 GB' },
   { id: 'Qwen2.5-3B-Instruct-q4f16_1-MLC', label: tt('Qwen 2.5 · 3 B'), groesse: 'ca. 2 GB' }
-];
+]);
 const KI_WEBLLM = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.86/+esm';
 const KI_GEMINI_STD = 'gemini-2.5-flash';
 

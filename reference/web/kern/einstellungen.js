@@ -139,7 +139,13 @@ function renderStorage(onboarding) {
 }
 
 // Einstellungen in Reitern (Allgemein · Quellen · Konten · KI · Speicher); Willkommen als geführter Ablauf in drei Schritten
-const EINST_REITER = [['allgemein', tt('Allgemein')], ['quellen', tt('Quellen')], ['konten', tt('Konten')], ['ki', tt('KI')], ['speicher', tt('Speicher')]];
+// Sprachwahl ohne Neuladen (#44): Einstellung speichern, Sprache umschalten, Gerüst und Bühne neu aufbauen
+function spracheWechseln(code) {
+  if (code === LANG) return;
+  settings.sprache = code; save('settings');
+  if (spracheSetzen(code)) { els.stage = null; render(true); }
+}
+const EINST_REITER = ttFest(() => [['allgemein', tt('Allgemein')], ['quellen', tt('Quellen')], ['konten', tt('Konten')], ['ki', tt('KI')], ['speicher', tt('Speicher')]]);
 const DATENSCHUTZ_TEXT = () => tt('Einstellungen, Verlauf, Likes, Lesezeichen und Favoriten liegen im Speicher dieses Browsers – und, wenn verbunden, lesbar als JSON im Ordner „KOMPASS“ deines Google Drive bzw. WebDAV-Speichers (Übertragung per HTTPS; Google direkt vom Gerät, WebDAV über das KOMPASS-Backend durchgeleitet, ohne Speicherung). Mastodon und Bluesky werden direkt von deinem Gerät abgefragt. RADAR läuft über das KOMPASS-Backend auf {host} (ohne Nutzerdaten). Fragen an den Agenten, Faktenchecks und die KI-Auswahl gehen direkt von deinem Gerät an die KI, die du verbindest – oder, ohne eigene KI, als Probe über das Backend an Mistral (EU), ohne Speicherung. KI-Schlüssel liegen verschlüsselt nur auf diesem Gerät.').replace('{host}', location.host) + (window.OL_ZAEHLER ? ' ' + tt('Aufrufe der Seite zählt GoatCounter ohne Cookies und ohne Nutzerprofil.') : '');
 const START_SATZ = () => tt('Lies https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/prompts/sources.md und stell mit mir die Quellen für meine Zentrale zusammen. Meine Adresse: ') + location.origin + location.pathname;
 function einstForm() {
@@ -244,7 +250,7 @@ function renderEinrichtung() {
   return h('div', { class: 'screen einrichtung' }, kopf, h('div', { class: 'screen-body' }, ...body));
 }
 function einstSprache() {
-  return h('div', { class: 'card-box' }, h('h3', {}, tt('Sprache')), einstWahl(SPRACHEN, LANG, (code) => { if (code === LANG) return; settings.sprache = code; save('settings'); location.reload(); }));
+  return h('div', { class: 'card-box' }, h('h3', {}, tt('Sprache')), einstWahl(SPRACHEN, LANG, spracheWechseln));
 }
 function einstDatenschutz() {
   return h('div', { class: 'card-box' }, h('h3', {}, tt('Datenschutz in dieser Stufe')),

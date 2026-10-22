@@ -3,7 +3,7 @@
 // Teil von KOMPASS. Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
 
 /* ---------- Quelle hinzufügen: Mastodon, Bluesky, YouTube, Website, Katalog ---------- */
-const ADD_TABS = [['ki', tt('✦ KI-Vorschläge')], ['katalog', tt('Katalog')], ['mastodon', tt('Mastodon')], ['bluesky', tt('Bluesky')], ['youtube', 'YouTube'], ['web', tt('Website')]];
+const ADD_TABS = ttFest(() => [['ki', tt('✦ KI-Vorschläge')], ['katalog', tt('Katalog')], ['mastodon', tt('Mastodon')], ['bluesky', tt('Bluesky')], ['youtube', 'YouTube'], ['web', tt('Website')]]);
 function openAdd(tab, q) {
   S.add = { tab: tab || (q ? 'bluesky' : 'katalog'), q: q || '', res: [], busy: false, err: '', done: false };
   S.overview = false; S.cfgKey = null; render();
@@ -20,6 +20,8 @@ async function runAddSearch() {
     // Eindeutige Links (ARD Sounds, Reddit, HN, Tumblr, Micro.blog) gehen immer über die Feed-Suche, egal welcher Reiter offen ist
     const direkt = tab !== 'ki' && (/\b(ardsounds|ardaudiothek)\.de\//i.test(q) || !!quelleErkennen(q));
     if (direkt) tab = 'web';
+    // Issue #19: Folgen-Links von ARD Sounds löst rss.php zur Sendung auf (Modul ard-folgen)
+    if (direkt && /urn:ard:episode:/i.test(q) && !modulAn('ard-folgen')) throw new Error(tt('Bitte den Link der Sendung einfügen, nicht den einer einzelnen Folge.'));
     // Issue #16: Bluesky-Feed, -Liste oder Starter-Pack als Adresse – in jedem Reiter
     const bq = tab !== 'ki' && modulAn('bsky-quellen') && bskyQuelleErkennen(q);
     if (bq) {
@@ -75,7 +77,7 @@ async function searchMastodon(q) {
   throw new Error(tt('Diese Instanz erlaubt die Suche nur angemeldet. Tipp: vollständige Adresse eingeben, z. B. @name@instanz.'));
 }
 function isAdded(r) {
-  if (r.kind === 'feed') return settings.feeds.some((f) => f.url === r.url);
+  if (r.kind === 'feed') return settings.feeds.some((f) => f.url === r.url || (f.katalog && f.katalog === r.url));
   return S.kfollows.some((f) => f.key === r.key) || !!S.entries[r.key] || !!S.alias[r.key];
 }
 async function addPerson(r) {
@@ -89,6 +91,13 @@ async function addPerson(r) {
     S.raw.posts.push(...posts); build();
   }
   flash(tt('In KOMPASS gefolgt: ') + r.name); render();
+}
+// Katalog-Eintrag Bluesky: Adresse erst jetzt auflösen (Handle → DID, Starter-Pack → Liste), dann wie ein Feed hinzufügen
+async function bskyKatalogHinzufuegen(r) {
+  try {
+    const q = await bskyQuelleAufloesen(r.url);
+    await addFeed(Object.assign({}, q.feed, { title: r.name, katalog: r.url }));
+  } catch (e) { flash(/Starter-Pack/.test(e.message) ? e.message : bskyFehler(e)); }
 }
 async function addFeed(feed) {
   if (settings.feeds.some((f) => f.url === feed.url)) return;
@@ -149,7 +158,7 @@ function renderAdd() {
     h('span', { class: 'row-text' }, h('span', { class: 'row-title' }, r.name), h('span', { class: 'row-sub', title: r.sub }, r.sub)), act);
   const btn = (r) => {
     const done = isAdded(r);
-    const onAdd = () => (r.kind === 'feed' ? addFeed(r.feed) : addPerson(r));
+    const onAdd = () => (r.bskyKatalog ? bskyKatalogHinzufuegen(r) : r.kind === 'feed' ? addFeed(r.feed) : addPerson(r));
     return h('button', { type: 'button', class: 'mini' + (done ? '' : ' primary'), disabled: done && r.kind === 'feed', onClick: done && r.kind !== 'feed' ? () => addPerson(r) : onAdd },
       done ? (r.kind === 'feed' ? tt('✓ Dabei') : tt('Zeigen')) : r.kind === 'feed' ? tt('Hinzufügen') : tt('Folgen'));
   };
@@ -166,6 +175,13 @@ function renderAdd() {
         return row(r, btn(r));
       })];
     });
+    // Issue #16: Bluesky-Listen und -Starter-Packs (M009) als eigene Gruppe am Ende
+    const bsky = modulAn('bsky-quellen') ? KATALOG_BSKY.filter(([n, , th]) => !ql || (n + ' ' + th + ' bluesky').toLowerCase().includes(ql)) : [];
+    if (bsky.length) body.push([h('div', { class: 'side-label small' }, tt('Bluesky: Listen & Starter-Packs')), bsky.map(([n, u, th]) => {
+      const art = /\/starter-pack\//.test(u) ? 'starter' : 'liste';
+      const r = { kind: 'feed', url: u, name: n, service: 'bluesky', bskyKatalog: true, sub: BSKY_ART_LABEL()[art] + ' · ' + tt(th) };
+      return row(r, btn(r));
+    })]);
   } else if (A.busy) body = h('p', { class: 'small add-msg' }, tt('Suche …'));
   else if (A.err) body = h('p', { class: 'small add-msg' }, A.err);
   else if (A.res.length) body = [A.res.map((r) => row(r, btn(r))),

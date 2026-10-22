@@ -112,7 +112,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
-const EINSTIEG_NEULADEN = einstiegAusAdresse();  // #39: fester Einstieg (z. B. #einstieg=w0) vor dem ersten Zeichnen
+const EINSTIEG_NEULADEN = einstiegAusAdresse();  // #39: fester Einstieg (z. B. #einstieg=w0) vor dem ersten Zeichnen; Sprache wechselt ohne Neuladen (#44)
 render(true);
 if (settings.onboarded && !EINSTIEG_NEULADEN) loadAll();
 zentraleTitel(); pingBeimStart();

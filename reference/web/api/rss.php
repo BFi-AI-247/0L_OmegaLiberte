@@ -461,6 +461,30 @@ function ard_urn(string $u): ?string {
     if (!preg_match('~(^|\.)(ardsounds|ardaudiothek)\.de$~', $h)) return null;
     return preg_match('~urn:ard:show:([0-9a-f]{6,40})~i', rawurldecode($u), $m) ? 'urn:ard:show:' . strtolower($m[1]) : null;
 }
+// Folgen-Link (…/episode/urn:ard:episode:<id>) → Sendung (#19): item(id) { programSet { id coreId } } (M014, tisba/ardsounds).
+// Die Sendung wird dann wie ein Sendungs-Link abonniert. coreId kann die nackte Kennung oder schon die URN sein.
+function ard_folge(string $u): ?string {
+    $h = strtolower((string)parse_url($u, PHP_URL_HOST));
+    if (!preg_match('~(^|\.)(ardsounds|ardaudiothek)\.de$~', $h)) return null;
+    return preg_match('~urn:ard:episode:([0-9a-f]{6,40})~i', rawurldecode($u), $m) ? 'urn:ard:episode:' . strtolower($m[1]) : null;
+}
+function ard_folge_zu_sendung(string $folge): ?string {
+    $ch = curl_init(ARD_API);
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true, CURLOPT_POSTFIELDS => json_encode(['query' => '{ item(id: "' . $folge . '") { programSet { id coreId } } }']),
+        CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 10, CURLOPT_CONNECTTIMEOUT => 5, CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_ENCODING => '', CURLOPT_PROTOCOLS => CURLPROTO_HTTPS, CURLOPT_USERAGENT => UA,
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Accept: application/json'],
+    ]);
+    $body = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE); curl_close($ch);
+    $j = is_string($body) ? json_decode($body, true) : null;
+    $ps = ($code === 200 && is_array($j)) ? ($j['data']['item']['programSet'] ?? null) : null;
+    if (!is_array($ps)) return null;
+    foreach ([(string)($ps['coreId'] ?? ''), (string)($ps['id'] ?? '')] as $k) {
+        if (preg_match('~^(?:urn:ard:show:)?([0-9a-f]{6,40})$~i', $k, $m)) return 'urn:ard:show:' . strtolower($m[1]);
+    }
+    return null;
+}
 function ard_bild($img): string {
     $u = is_array($img) ? (string)($img['url1X1'] ?? $img['url'] ?? '') : '';
     return str_replace('{width}', '640', $u);
@@ -675,6 +699,11 @@ if ($istYt && preg_match('#(?:^|&)list=([\w-]{10,})#', (string)($p['query'] ?? '
     $gefunden[] = ['url' => $ytFeed('playlist_id=' . $m[1]), 'titel' => 'Playlist', 'art' => 'youtube'];
 }
 
+if (!ard_urn($url) && ($folge = ard_folge($url))) {
+    $urn = ard_folge_zu_sendung($folge);
+    if (!$urn) raus(200, ['status' => 'leer', 'meldung' => 'Zu dieser Folge habe ich bei ARD Sounds keine Sendung gefunden.', 'name' => '']);
+    $url = 'https://www.ardsounds.de/show/' . $urn;
+}
 if ($urn = ard_urn($url)) {
     $kanon = 'https://www.ardsounds.de/show/' . $urn;
     $d = ard_feed($kanon, $urn);

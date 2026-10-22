@@ -11,7 +11,7 @@
 'use strict';
 
 /* ---------- Hilfen ---------------------------------------------------- */
-const VERSION = 'v0.45';
+const VERSION = 'v0.48';
 const LS = 'kompass.v0.' + (INSTANZ.speicher ? INSTANZ.speicher + '.' : '');
 // Modul-Schalter (instanz.js → module): false zieht ein Feature zurück, fehlt = an
 function modulAn(id) { return !(INSTANZ.module && INSTANZ.module[id] === false); }
@@ -102,22 +102,23 @@ async function pool(items, n, fn) {
 }
 
 /* ---------- Zustand --------------------------------------------------- */
-const RADAR_FEEDS = {
+const RADAR_FEEDS = ttFest(() => { const r = {
   'radar': tt('RADAR 724'),
   'radar-gifhorn': tt('Wiesenzeitung Gifhorn'),
   'radar-borkum': tt('Wattpost Borkum'),
   'radar-idstein': tt('Idsteiner Hexenpost')
 };
-for (const k of Object.keys(RADAR_FEEDS)) if (!INSTANZ.radar.includes(k)) delete RADAR_FEEDS[k];  // nur die Dienste dieser Instanz
-const FACT = {
+for (const k of Object.keys(r)) if (!INSTANZ.radar.includes(k)) delete r[k];  // nur die Dienste dieser Instanz
+return r; });
+const FACT = ttFest(() => ({
   grau: { label: tt('ungeprüft'), color: 'var(--f-grau)' },
   gruen: { label: tt('bestätigt'), color: 'var(--f-gruen)' },
   rot: { label: tt('irreführend / falsch'), color: 'var(--f-rot)' },
   satire: { label: tt('Satire / Humor'), color: 'var(--f-satire)' },
   offen: { label: tt('fraglich / nicht prüfbar'), color: 'var(--f-grau)' }
-};
+}));
 const MAX_ACCOUNTS = 25;
-const SERVICE_LABEL = { radar: tt('RADAR 724'), mastodon: tt('Mastodon'), bluesky: tt('Bluesky'), youtube: 'YouTube', rss: 'Web/RSS' };
+const SERVICE_LABEL = ttFest(() => ({ radar: tt('RADAR 724'), mastodon: tt('Mastodon'), bluesky: tt('Bluesky'), youtube: 'YouTube', rss: 'Web/RSS' }));
 // Startkatalog: geprüfte Feeds (18./19.10.2026 über api/rss.php abgerufen; Podcasts, Sport, Kultur, Lifestyle aus M001, geprüft mit dem Quellen-Prüfstand;
 // englische Einträge (5. Feld 'en') aus M016, Prüfstand 21.10.2026; RADAR-Quellen aus M018, Prüfstand 21.10.2026 (#13) –
 // Unternehmens- und Behördenquellen tragen den Absender im Namen (Sorgfaltsregel RADAR))
@@ -239,6 +240,22 @@ const CATALOG = [
     ['Dinge Erklärt – Kurzgesagt', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCwRH985XgMYXQ6NxXDo8npw', 'youtube.com', 'youtube'],
     ['BBC News (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UC16niRr50-MSBwiO3YDb3RA', 'youtube.com', 'youtube', 'en'],
     ['Kurzgesagt – In a Nutshell', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCsXVk37bltHxD1rDPwtNM8Q', 'youtube.com', 'youtube', 'en']] }
+];
+// Bluesky-Listen und -Starter-Packs (M009, nur „sicher“ markierte; Issue #16). Eigene Tabelle, nicht im Willkommen:
+// die Adresse wird erst beim Hinzufügen zur at://-Adresse aufgelöst (quellen/laden.js bskyQuelleAufloesen). Modul bsky-quellen.
+const KATALOG_BSKY = [
+  ['Deutsche Medienlandschaft', 'https://bsky.app/starter-pack/hoppeditza.bsky.social/3lh2xqejfy62a', 'Nachrichten'],
+  ['Deutschsprachige Medien', 'https://bsky.app/starter-pack/tibor.net/3lbdiinjnya2z', 'Nachrichten'],
+  ['Journalisten', 'https://bsky.app/profile/tibor.net/lists/3kaphizvhza2u', 'Nachrichten'],
+  ['Die Krautreporter-Redaktion', 'https://bsky.app/starter-pack/krautreporter.bsky.social/3lgamvtkp3a2q', 'Nachrichten'],
+  ['Recherchekooperation NDR, WDR, SZ', 'https://bsky.app/starter-pack/did:plc:5zs2wvlkigmvgbqlwmmy5rml/3lbbxr4srav2a', 'Recherche'],
+  ['Deutsche Bundesbehörden', 'https://bsky.app/starter-pack/behoerden.bsky.social/3lk6a4e6kb22j', 'Verwaltung'],
+  ['Katastrophen- und Zivilschutz', 'https://bsky.app/profile/hoppeditza.bsky.social/lists/3lglxlvnpzo2q', 'Gesellschaft'],
+  ['Grüne Unternehmen und NGOs', 'https://bsky.app/starter-pack/greenjobs.de/3lbztqm5nix2u', 'Klima & Umwelt'],
+  ['Grüne Organisationen', 'https://bsky.app/profile/greenjobs.de/lists/3kdk7r34wf52v', 'Klima & Umwelt'],
+  ['Momentum Institut (AT)', 'https://bsky.app/starter-pack/momentum-institut.at/3lmu46qbxje2c', 'Wirtschaft'],
+  ['Österreichs Politik', 'https://bsky.app/profile/thomasmohr.bsky.social/lists/3lcdb3j5njb2c', 'Politik (AT)'],
+  ['Politik in Bremen', 'https://bsky.app/starter-pack/abgeordnete.bsky.social/3lkkvn7chuv24', 'Politik (Bremen)']
 ];
 // Sprache je Katalog-Quelle (5. Feld oder nach Domain, Standard de). Anzeige: zuerst die Quellen in der Sprache der Oberfläche
 const KATALOG_SPRACHE = { 'bbc.co.uk': 'en', 'theguardian.com': 'en' };

@@ -800,5 +800,14 @@ SPRACHE.en = Object.fromEntries(Object.entries({
   "Name, Handle oder Adresse eines Feeds/einer Liste": "Name, handle or address of a feed/list",
   "Bild groß anzeigen": "Show image large",
   "Bildansicht": "Image viewer",
-  "Bild": "Image"
+  "Bild": "Image",
+  "Bluesky: Listen & Starter-Packs": "Bluesky: lists & starter packs",
+  "Recherche": "Investigations",
+  "Verwaltung": "Government",
+  "Gesellschaft": "Society",
+  "Klima & Umwelt": "Climate & environment",
+  "Wirtschaft": "Economy",
+  "Politik (AT)": "Politics (Austria)",
+  "Politik (Bremen)": "Politics (Bremen)",
+  "Bitte den Link der Sendung einfügen, nicht den einer einzelnen Folge.": "Please paste the link of the show, not of a single episode."
 }).filter(([, v]) => v));
