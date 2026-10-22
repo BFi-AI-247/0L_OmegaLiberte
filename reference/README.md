@@ -1,7 +1,7 @@
-# Kompass~OmegaLiberte — the reference app
+# OmegaLiberte — the reference app
 
-A complete, working OmegaLiberte instance: one web app (no build step, plain JavaScript) plus a few small PHP relays.
-It is the same code that runs at <https://digifil.de/kompass/>, exported **instance-neutral**: no fixed server paths, no fixed domain, no analytics account, no keys.
+A complete, working OmegaLiberte hub: one web app (no build step, plain JavaScript) plus a few small PHP relays.
+Give it your own name and run it for yourself, your family or your community. It is exported **instance-neutral** from KOMPASS, the first public instance (<https://digifil.de/kompass/>): no fixed server paths, no fixed domain, no analytics account, no keys.
 
 ```
 reference/
@@ -42,13 +42,13 @@ Add sources with **+ Quelle hinzufügen** → *Katalog* (or paste a website, You
 
 That's it. No database, no config, no account. Everything you set up lives in your browser (localStorage).
 
-**XAMPP / MAMP / WAMP instead:** copy the *contents* of `reference/web/` to `htdocs/kompass/` and open <http://localhost/kompass/>.
+**XAMPP / MAMP / WAMP instead:** copy the *contents* of `reference/web/` to e.g. `htdocs/hub/` and open <http://localhost/hub/>.
 Put an optional `config.php` into `htdocs/` **only if** your local server is not reachable from the network — better: set `OMEGALIBERTE_CONFIG` (see §4).
 
 ## 2. Put it on your own PHP web space
 Any shared hosting with PHP 8.1+ (curl, mbstring) works (no cron, no database, no shell needed).
 
-1. Upload the **contents** of `reference/web/` into a folder, e.g. `public_html/kompass/` → `https://your.domain/kompass/`.
+1. Upload the **contents** of `reference/web/` into a folder, e.g. `public_html/hub/` → `https://your.domain/hub/`.
 2. Use **HTTPS** — the service worker (install as app), Google sign-in and secure key storage need it.
 3. Optional: create `config.php` (§4) **outside** the public folder.
 4. Open the address on your phone → browser menu → *Add to home screen*.
@@ -101,7 +101,7 @@ Copy [config.example.php](config.example.php) and fill in what you need:
 The [test bench](../pruefstand/) uses this app's `api/rss.php` to verify lists and source packs — run it locally or as a GitHub Action in your fork.
 
 ## How this folder is made
-`reference/` is generated from the KOMPASS repository by `tools/export-reference.py` (KOMPASS repo). The script copies `web/`, replaces the instance-specific parts (`web/instanz.js`, the *Instanz* block in `web/api/_instanz.php`, title and manifest), adds the `SPDX-License-Identifier: AGPL-3.0-only` header to every code file, and refuses to finish if it finds key patterns or leftovers. Please do not hand-edit `reference/web/` in this repo — improvements go to KOMPASS (or into your fork, with a [logbook](../logbook/) entry).
+`reference/` is generated from the KOMPASS instance by its export script (`tools/export-reference.py`, see [EXPORT.txt](EXPORT.txt) for the version). The script copies `web/`, replaces the instance-specific parts (`web/instanz.js`, the *Instanz* block in `web/api/_instanz.php`, title and manifest), adds the `SPDX-License-Identifier: AGPL-3.0-only` header to every code file, and refuses to finish if it finds key patterns or leftovers. Please do not hand-edit `reference/web/` in this repo — improvements go to KOMPASS (or into your fork, with a [logbook](../logbook/) entry).
 
 What is instance-specific lives in two files: `web/instanz.js` (name, short brand, operator, RADAR services) and the *Instanz* block of `web/api/_instanz.php` (config location, data folder, allowed origins, feed user agent, counter). The export replaces only those, plus title and manifest — change them there for your own instance.
 
