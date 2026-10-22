@@ -17,13 +17,13 @@ It is not a product with an owner. The valuable part is the **recipe**: principl
 | **3 · Build with us** | change it, improve it, take it somewhere new | Fork the repo, change what you like, and write a [logbook](logbook/) entry explaining *why* ([CONTRIBUTING.md](CONTRIBUTING.md)). Tell us on Mastodon with **#OmegaLiberte** — we read along and adopt what fits. |
 
 ## What makes you free
-- **Your data stays yours.** Settings and history live on your device; sync only to storage you own (Google Drive, WebDAV/Nextcloud). Servers only pass things through.
+- **Your data stays yours.** Settings and history live on your device; sync only to storage you own (WebDAV, e.g. Nextcloud). Servers only pass things through.
 - **Your AI, your choice.** Connect the AI you trust — a cloud model, your own key, or a free model running on your device. Keys never leave your device.
 - **Your pace.** One post at a time, an end, a pause. No engagement tricks.
 - **Your copy.** Fork it, change it, run it under your own name. No permission needed.
 
 ## Storage without a gatekeeper
-Your settings, history, likes and bookmarks live in your browser first. If you want them on several devices, connect **storage you already own** — a folder in your Google Drive or any WebDAV/Nextcloud space. The files are plain, readable JSON in a folder called `KOMPASS`; you can open, back up or delete them yourself. There is no account with us and no copy on our server: Google is reached directly from your device, WebDAV only passes through the instance's relay without being stored. Switching storage or leaving means taking your files with you.
+Your settings, history, likes and bookmarks live in your browser first. To use them on several devices, connect **storage you already own**: any WebDAV space, for example Nextcloud. The files are plain JSON in a folder called `KOMPASS`; you can open, back up or delete them yourself. There is no account with us and no copy on our server: the instance only passes your data through to your storage. Switching storage or leaving means taking your files with you.
 
 ## How it evolves
 See [CONTRIBUTING.md](CONTRIBUTING.md): copy → improve → write a logbook entry explaining *why* → others (and their AIs) adopt what fits them. Shared [formats](formats/) keep different versions compatible; the [test bench](pruefstand/) keeps adoption safe.
