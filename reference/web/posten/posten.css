@@ -32,3 +32,10 @@
 .schreiben-acts { display: inline-flex; gap: 6px; flex: none; align-items: center; }
 .schreiben-h3 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .schreiben-h3 h3 { margin: 0; }
+
+/* Antworten an Karten (#23, posten/antworten.js) – eingeklappt bis zum Druck, ruhig, ohne Zahlen */
+.antw-knopf { align-self: flex-start; }
+.antw-info { margin: 0; color: var(--muted); }
+.antw-liste { display: flex; flex-direction: column; gap: 8px; border-left: 3px solid var(--line2); padding-left: 12px; }
+.antw { font-size: 14px; line-height: 1.45; color: var(--ink2); overflow-wrap: anywhere; }
+.antw-link { text-decoration: none; color: var(--accent-ink); }

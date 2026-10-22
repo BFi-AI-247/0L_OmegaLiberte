@@ -270,11 +270,12 @@ function postenKonto(dienst) {
   const lauf = async (fn) => { try { await fn(); } catch (e) { flash(e.message || String(e)); } render(); };
   const zeile = (wer, trennen) => h('div', { class: 'add-row' }, h('span', { class: 'row-text' }, h('span', { class: 'row-title', style: 'font-size:14px' }, tt('Posten')), h('span', { class: 'row-sub' }, tt('Verbunden als @') + wer)),
     h('button', { type: 'button', class: 'mini', onClick: trennen }, tt('Trennen')));
-  if (dienst === 'mastodon') return k.mastodon ? zeile(k.mastodon.acct, () => postenTrennen('mastodon')) : h('div', { class: 'field' }, h('label', { for: 'k-posten-masto' }, tt('Zum Posten verbinden – dein Server')),
+  const mitIch = (z, d) => { const b = typeof ichAlsCreator === 'function' ? ichAlsCreator(d) : null; return b ? h('div', {}, z, h('div', { class: 'btn-row', style: 'margin-top:6px' }, b)) : z; };  // #23
+  if (dienst === 'mastodon') return k.mastodon ? mitIch(zeile(k.mastodon.acct, () => postenTrennen('mastodon')), 'mastodon') : h('div', { class: 'field' }, h('label', { for: 'k-posten-masto' }, tt('Zum Posten verbinden – dein Server')),
     h('div', { class: 'btn-row' }, h('input', { id: 'k-posten-masto', value: F.masto, placeholder: 'mastodon.social', autocomplete: 'off', spellcheck: 'false', onInput: (e) => { F.masto = e.target.value; } }),
       h('button', { type: 'button', class: 'mini primary', onClick: () => lauf(() => postenMastoStart(F.masto)) }, tt('Mit Mastodon verbinden'))),
     h('span', { class: 'small' }, tt('Mastodon verbindet dich ohne Passwort: KOMPASS öffnet die Anmeldung deines Servers, du bestätigst dort mit „Autorisieren“ und kehrst zurück.')));
-  return k.bluesky ? zeile(k.bluesky.handle, () => postenTrennen('bluesky')) : h('div', { class: 'field' }, h('label', { for: 'k-posten-bsky' }, tt('Zum Posten verbinden')),
+  return k.bluesky ? mitIch(zeile(k.bluesky.handle, () => postenTrennen('bluesky')), 'bluesky') : h('div', { class: 'field' }, h('label', { for: 'k-posten-bsky' }, tt('Zum Posten verbinden')),
     h('input', { id: 'k-posten-bsky', value: F.bsky, placeholder: 'name.bsky.social', autocomplete: 'off', spellcheck: 'false', onInput: (e) => { F.bsky = e.target.value; } }),
     h('input', { id: 'k-posten-pw', type: 'password', value: F.pw, placeholder: tt('App-Passwort (xxxx-xxxx-xxxx-xxxx)'), autocomplete: 'off', onInput: (e) => { F.pw = e.target.value; } }),
     h('span', { class: 'small' }, tt('Bluesky braucht ein App-Passwort (nicht dein Hauptpasswort). Lege es in Bluesky unter Einstellungen → Datenschutz und Sicherheit → App-Passwörter an und füge es hier ein.'), ' ',

@@ -50,8 +50,33 @@ function watchBlock(v) {
 }
 function mediaBlock(v, autoplay) {
   const m = v.medien;
-  if (m.art === 'audio') return h('audio', { class: 'feed-audio', controls: true, preload: autoplay ? 'auto' : 'none', autoplay: !!autoplay, src: m.url });
-  return h('video', { class: 'feed-video', controls: true, preload: autoplay ? 'auto' : 'none', autoplay: !!autoplay, playsinline: true, poster: v.thumb || null, src: m.url });
+  // #57: der laufende Player bleibt dasselbe Element, auch wenn die Karte neu gezeichnet wird (Abgleich beim Bildschirm-Aus, Neuladen)
+  if (modulAn('hintergrund-audio') && HG.el && HG.el.dataset.src === m.url) return HG.el;
+  const el = m.art === 'audio' ? h('audio', { class: 'feed-audio', controls: true, preload: autoplay ? 'auto' : 'none', autoplay: !!autoplay, src: m.url })
+    : h('video', { class: 'feed-video', controls: true, preload: autoplay ? 'auto' : 'none', autoplay: !!autoplay, playsinline: true, poster: v.thumb || null, src: m.url });
+  if (modulAn('hintergrund-audio')) { el.dataset.src = m.url; el.addEventListener('play', () => { HG.el = el; hgSitzung(v, el); }); }
+  return el;
+}
+// #57 (Modul hintergrund-audio): Podcasts laufen bei Bildschirm-Aus und App-Wechsel weiter – Media Session für Sperrbildschirm und Auto
+const HG = { el: null };
+function hgSitzung(v, el) {
+  if (!('mediaSession' in navigator)) return;
+  const ms = navigator.mediaSession;
+  try {
+    const bild = v.thumb || (v.card && v.card.image) || '';
+    ms.metadata = new MediaMetadata({ title: v.title || String(v.text || '').slice(0, 80) || tt('Podcast'), artist: v.who || hostOf(v.link || '') || '', album: INSTANZ.marke || 'KOMPASS',
+      artwork: bild ? [{ src: bild, sizes: '512x512' }] : [] });
+  } catch (e) { /* ältere Browser */ }
+  const setze = (a, f) => { try { ms.setActionHandler(a, f); } catch (e) { /* Aktion nicht unterstützt */ } };
+  setze('play', () => el.play());
+  setze('pause', () => el.pause());
+  setze('seekbackward', (d) => { el.currentTime = Math.max(0, el.currentTime - ((d && d.seekOffset) || 15)); });
+  setze('seekforward', (d) => { el.currentTime = Math.min(el.duration || Infinity, el.currentTime + ((d && d.seekOffset) || 30)); });
+  if (!el._hgZustand) {
+    el._hgZustand = true;
+    el.addEventListener('pause', () => { try { ms.playbackState = 'paused'; } catch (e) { /* egal */ } });
+    el.addEventListener('playing', () => { try { ms.playbackState = 'playing'; } catch (e) { /* egal */ } });
+  }
 }
 // #20 PeerTube eingebettet (Modul peertube): Vorschaubild mit ▶, erst der Druck lädt den Player der Instanz
 function peertubeBlock(v, p) {
@@ -132,6 +157,7 @@ function cardFor(p) {
       showText ? clampText(p, v) : null,
       media.length ? h('div', { class: 'card-media' + (media.length === 1 ? ' one' : '') }, media.map((src, i) => bildInKarte(v, src, i))) : null,
       linkCard(v.card),
+      kartenZusatz(p, 'unten'),  // #23: z. B. „Antworten ansehen“
       p.kind === 'neu' ? h('button', { type: 'button', class: 'follow-btn', onClick: () => kfollow(p) }, S.kfollows.some((f) => f.key === p.whoKey) ? tt('In KOMPASS gefolgt ✓') : tt('In KOMPASS folgen')) : null),
     foot);
 }

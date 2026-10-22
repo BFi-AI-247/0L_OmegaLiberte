@@ -815,6 +815,14 @@ SPRACHE.en = Object.fromEntries(Object.entries({
   "Hier ist es anders: Social Media und Nachrichten an einem Ort – jeder Beitrag führt dich zur Quelle, und deine Daten bleiben bei dir.": "This is different: social media and news in one place – every post leads you to its source, and your data stays with you.",
   "Du willst Hilfe von einer KI? Bring deine eigene mit.": "Want help from AI? Bring your own.",
   "Ich will es ausprobieren": "I want to try",
+  "Für diesen Beitrag finde ich keinen Gesprächsverlauf.": "I cannot find a conversation for this post.",
+  "Antworten gerade nicht erreichbar.": "Replies are not reachable right now.",
+  "Antworten ansehen": "Show replies",
+  "Lade Antworten …": "Loading replies …",
+  "Noch keine Antworten.": "No replies yet.",
+  "Antwort öffnen": "Open reply",
+  "Du bist in der Creator-Liste ✓": "You are in the creator list ✓",
+  "Mich als Creator hinzufügen": "Add me as a creator",
   "Version": "Version",
   "Beitrag": "Post",
   "Laptop": "Laptop",
@@ -837,5 +845,6 @@ SPRACHE.en = Object.fromEntries(Object.entries({
   "Hashtag-Zeitleiste auf ": "Hashtag timeline on ",
   " (deine Instanz)": " (your instance)",
   "Regional: Wolfsburg & Braunschweig": "Regional: Wolfsburg & Braunschweig",
-  "PeerTube (Fediverse-Video)": "PeerTube (fediverse video)"
+  "PeerTube (Fediverse-Video)": "PeerTube (fediverse video)",
+  "Podcast": "Podcast",
 }).filter(([, v]) => v));
