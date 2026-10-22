@@ -22,6 +22,9 @@ It is not a product with an owner. The valuable part is the **recipe**: principl
 - **Your pace.** One post at a time, an end, a pause. No engagement tricks.
 - **Your copy.** Fork it, change it, run it under your own name. No permission needed.
 
+## Storage without a gatekeeper
+Your settings, history, likes and bookmarks live in your browser first. If you want them on several devices, connect **storage you already own** — a folder in your Google Drive or any WebDAV/Nextcloud space. The files are plain, readable JSON in a folder called `KOMPASS`; you can open, back up or delete them yourself. There is no account with us and no copy on our server: Google is reached directly from your device, WebDAV only passes through the instance's relay without being stored. Switching storage or leaving means taking your files with you.
+
 ## How it evolves
 See [CONTRIBUTING.md](CONTRIBUTING.md): copy → improve → write a logbook entry explaining *why* → others (and their AIs) adopt what fits them. Shared [formats](formats/) keep different versions compatible; the [test bench](pruefstand/) keeps adoption safe.
 
