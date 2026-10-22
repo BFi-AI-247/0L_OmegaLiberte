@@ -11,7 +11,7 @@
 'use strict';
 
 /* ---------- Hilfen ---------------------------------------------------- */
-const VERSION = 'v0.55';
+const VERSION = 'v0.56';
 const LS = 'kompass.v0.' + (INSTANZ.speicher ? INSTANZ.speicher + '.' : '');
 // Modul-Schalter (instanz.js → module): false zieht ein Feature zurück, fehlt = an
 function modulAn(id) { return !(INSTANZ.module && INSTANZ.module[id] === false); }
@@ -272,6 +272,18 @@ if (modulAn('yt-auswahl')) {
       ['Mrwhosetheboss', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCMiJRAwDNSNzuYeN2uWa0pA', 'youtube.com', 'youtube', 'en']] });
   }
 }
+// #20: PeerTube-Kanäle aus M008 (Prüfstand 10/10) als eigene Gruppe – Fediverse-Video ohne Plattform (Modul peertube)
+if (modulAn('peertube')) CATALOG.push({ gruppe: 'PeerTube (Fediverse-Video)', items: [
+    ['heise c’t 3003', 'https://peertube.heise.de/feeds/podcast/videos.xml?videoChannelId=4', 'peertube.heise.de'],
+    ['heise c’t uplink', 'https://peertube.heise.de/feeds/podcast/videos.xml?videoChannelId=1129', 'peertube.heise.de'],
+    ['heise show', 'https://peertube.heise.de/feeds/podcast/videos.xml?videoChannelId=1132', 'peertube.heise.de'],
+    ['Digitalcourage – Medienecho', 'https://digitalcourage.video/feeds/podcast/videos.xml?videoChannelId=11', 'digitalcourage.video'],
+    ['Digitalcourage – Freie Software und Bildung', 'https://digitalcourage.video/feeds/podcast/videos.xml?videoChannelId=1469', 'digitalcourage.video'],
+    ['LfDI BW – Datenfreiheit', 'https://tube.xn--baw-joa.social/feeds/podcast/videos.xml?videoChannelId=23', 'tube.xn--baw-joa.social'],
+    ['Zeitzeugeninterviews (LFB BW)', 'https://pt01.lehrerfortbildung-bw.de/feeds/podcast/videos.xml?videoChannelId=42', 'pt01.lehrerfortbildung-bw.de'],
+    ['KH Berlin – Projekte Mode-Design', 'https://tube.kh-berlin.de/feeds/videos.xml?videoChannelName=projekte_modedesign', 'tube.kh-berlin.de'],
+    ['KH Berlin – Videokunst', 'https://tube.kh-berlin.de/feeds/videos.xml?videoChannelName=vk_kanal', 'tube.kh-berlin.de'],
+    ['Virtuelle PH', 'https://tube.virtuelle-ph.at/feeds/podcast/videos.xml?videoChannelId=2', 'tube.virtuelle-ph.at']] });
 // Bluesky-Listen und -Starter-Packs (M009, nur „sicher“ markierte; Issue #16). Eigene Tabelle, nicht im Willkommen:
 // die Adresse wird erst beim Hinzufügen zur at://-Adresse aufgelöst (quellen/laden.js bskyQuelleAufloesen). Modul bsky-quellen.
 const KATALOG_BSKY = [

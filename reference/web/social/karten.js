@@ -53,6 +53,14 @@ function mediaBlock(v, autoplay) {
   if (m.art === 'audio') return h('audio', { class: 'feed-audio', controls: true, preload: autoplay ? 'auto' : 'none', autoplay: !!autoplay, src: m.url });
   return h('video', { class: 'feed-video', controls: true, preload: autoplay ? 'auto' : 'none', autoplay: !!autoplay, playsinline: true, poster: v.thumb || null, src: m.url });
 }
+// #20 PeerTube eingebettet (Modul peertube): Vorschaubild mit ▶, erst der Druck lädt den Player der Instanz
+function peertubeBlock(v, p) {
+  if (S.playing === p.id) return h('div', { class: 'video' }, h('iframe', { src: v.ptEmbed + '?autoplay=1&warningTitle=0&title=0', title: v.title || tt('Video'),
+    allow: 'autoplay; fullscreen; picture-in-picture', allowfullscreen: true, referrerpolicy: 'strict-origin-when-cross-origin' }));
+  return h('button', { type: 'button', class: 'video video-thumb', 'aria-label': tt('Video abspielen: ') + (v.title || ''), onClick: () => { S.playing = p.id; render(true); } },
+    v.thumb ? h('img', { src: v.thumb, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }) : null,
+    h('span', { class: 'play' }, h('span', { class: 'play-tri' })));
+}
 function videoBlock(v, p) {
   if (S.playing === p.id) {
     return h('div', { class: 'video' + (v.short ? ' short' : '') }, h('iframe', { src: 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(v.video) + '?autoplay=1&rel=0&modestbranding=1&playsinline=1',
@@ -119,7 +127,7 @@ function cardFor(p) {
     h('div', { class: 'card-body' },
       p.title && !titled ? h('h1', {}, p.title) : null,
       v.video ? videoBlock(v, p) : null,
-      v.medien ? mediaBlock(v) : null,
+      v.ptEmbed && modulAn('peertube') ? peertubeBlock(v, p) : v.medien ? mediaBlock(v) : null,
       v.service === 'rss' && !v.medien && !v.video && v.link && (!showText || thinText(v) || /video|sendung|tagesthemen|tagesschau_20/i.test(v.link)) ? watchBlock(v) : null,
       showText ? clampText(p, v) : null,
       media.length ? h('div', { class: 'card-media' + (media.length === 1 ? ' one' : '') }, media.map((src, i) => bildInKarte(v, src, i))) : null,

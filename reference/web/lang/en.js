@@ -836,5 +836,6 @@ SPRACHE.en = Object.fromEntries(Object.entries({
   "Stelle kopieren": "Copy location",
   "Hashtag-Zeitleiste auf ": "Hashtag timeline on ",
   " (deine Instanz)": " (your instance)",
-  "Regional: Wolfsburg & Braunschweig": "Regional: Wolfsburg & Braunschweig"
+  "Regional: Wolfsburg & Braunschweig": "Regional: Wolfsburg & Braunschweig",
+  "PeerTube (Fediverse-Video)": "PeerTube (fediverse video)"
 }).filter(([, v]) => v));

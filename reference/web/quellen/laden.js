@@ -302,7 +302,10 @@ function feedPosts(f, d) {
   }
   if (f.kind === 'youtube' && d.seite && !/channel\//.test(f.site || '') && !/@/.test(f.site || '')) f.site = d.seite;
   const key = 'f:' + f.id; const yt = f.kind === 'youtube';
-  return (d.eintraege || []).map((e) => ({
+  // #20: PeerTube-Feeds (…/feeds/[podcast/]videos.xml) – Einbettung https://<instanz>/videos/embed/<id> (M008)
+  const pt = !yt && /\/feeds\/(?:podcast\/)?videos\.xml/.test(f.url || '');
+  const ptEmbed = (link) => { const m = pt && /^https:\/\/([^/]+)\/(?:w|videos\/watch)\/([A-Za-z0-9-]{8,40})(?:[?#].*)?$/.exec(link || ''); return m ? 'https://' + m[1] + '/videos/embed/' + m[2] : ''; };
+  return (d.eintraege || []).map((e) => ({ ptEmbed: ptEmbed(e.link) || undefined,
     id: e.video ? 'y:' + e.video : 'w:' + (e.link || e.titel), service: yt ? 'youtube' : 'rss', tags: [yt ? 'youtube' : 'rss', key],
     who: f.title || d.titel, whoKey: key, avatar: f.icon || '', handle: hostOf(f.site || f.url),
     title: e.titel || '', text: e.text || '', link: e.link || '', date: e.datum,
