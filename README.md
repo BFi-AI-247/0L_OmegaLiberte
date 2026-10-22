@@ -8,13 +8,13 @@ OmegaLiberte (0L) is an open recipe for a calm, personal media hub: your sources
 
 It is not a product with an owner. The valuable part is the **recipe**: principles, a few shared formats, and the instructions for the AI. Anyone — with or without an AI — can use it, run it, rebuild it, change it. Instances learn from each other through public **logbooks**, without central coordination.
 
-## Three ways in
+## Choose your way
 
-| You want to … | Do this |
-|---|---|
-| **use it** | Open the reference instance **Kompass~OmegaLiberte**: <https://digifil.de/kompass/> — install it as an app, add your sources, done. |
-| **set it up with your AI** | Paste this into your AI (ChatGPT, Claude, Le Chat, …): *“Read https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/prompts/setup.md and help me start with OmegaLiberte.”* — a few questions about your interests, then a link that loads your sources after a preview. Want your own hub on your web space or computer? The same AI follows [prompts/host.md](prompts/host.md). |
-| **build and run your own** | Read [RECIPE.md](RECIPE.md). Runs on any web space with PHP — or fully local (`php -S localhost:8000 -t reference/web`, or XAMPP). |
+| | You want to … | Do this |
+|---|---|---|
+| **1 · Just use it** | read your sources in one calm place — with your AI or without | Open **Kompass~OmegaLiberte**: <https://digifil.de/kompass/> and install it as an app. With your AI: paste *“Read https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/prompts/setup.md and help me start with OmegaLiberte.”* into ChatGPT, Claude, Le Chat … — a few questions, then one link that loads your sources. |
+| **2 · Run your own instance** | your own hub on your web space or your own computer | Any web space with PHP: copy [reference/web](reference/) and follow [RECIPE.md](RECIPE.md) — or let your AI guide you with [prompts/host.md](prompts/host.md). On your computer: `php -S localhost:8000 -t reference/web`; on Windows the script [tools/windows-setup.ps1](tools/windows-setup.ps1) does everything (see [reference/README.md](reference/README.md)). |
+| **3 · Build with us** | change it, improve it, take it somewhere new | Fork the repo, change what you like, and write a [logbook](logbook/) entry explaining *why* ([CONTRIBUTING.md](CONTRIBUTING.md)). Tell us on Mastodon with **#OmegaLiberte** — we read along and adopt what fits. |
 
 ## What makes you free
 - **Your data stays yours.** Settings and history live on your device; sync only to storage you own (Google Drive, WebDAV/Nextcloud). Servers only pass things through.
