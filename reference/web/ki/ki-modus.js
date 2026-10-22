@@ -204,7 +204,7 @@ const KIB = { gewicht: {}, zu: {}, auch: {}, zeile: {}, liste: [], thema: -1, fo
   weiter: null, nach: null, nachLeer: false, nachFehler: '' };
 const KIB_FARBEN = ['#2A3550', '#272246', '#22402F', '#3A2A22', '#1C3340', '#3A2132', '#33283F', '#203A3A'];
 const KIB_RAND = 28; const KIB_ABSTAND = 6; // Andeutung oben/unten im 2×2, Abstand der Kacheln
-// #25 (Modul ki-handy): auch am Handy die eigene Bühne – Themen-Mosaik → direkt der erste Beitrag des Themas (keine zweite Ebene, Björn 22.10.)
+// #25 (Modul ki-handy): auch am Handy die eigene Bühne – Themen-Mosaik → direkt der erste Beitrag des Themas (keine zweite Ebene, #25)
 function kibAn() { return aiActive() && (isWide() || modulAn('ki-handy')); }
 function themaId(i) { return 'ai:thema:' + (S.ai.res ? S.ai.res.at : 0) + ':' + i; }
 function themaIndex(id) {
