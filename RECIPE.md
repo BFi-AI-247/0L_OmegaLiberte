@@ -19,7 +19,7 @@ This document is written for **humans and AIs alike**. An AI reading it should b
 | Merging | One creator across services becomes one entry; the same post on several services becomes one post with versions | – (local) |
 | Reading modes | *Social*: chronological, filterable. *AI selection*: the AI picks and groups unread items into topics | [curation](formats/curation.md) |
 | AI assist | Dialog about a post, fact check with verdict | [fact-check](formats/fact-check.md) |
-| Sync | Readable JSON in the person's Google Drive or WebDAV | – (local) |
+| Sync | Readable JSON in the person's WebDAV storage (e.g. their own Nextcloud, EU providers) | – (local) |
 | Logbook | Public record of changes and reasons | [logbook-entry](formats/logbook-entry.md) |
 
 ## 3. Ways to run it

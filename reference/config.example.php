@@ -12,11 +12,6 @@ return [
     'kompass_kuratieren_pro_stunde' => 10,   // KI-Auswahl je IP-Hash und Stunde
     'kompass_max_pro_tag'           => 300,  // alle KI-Anfragen zusammen je Tag
 
-    // Google Drive als Speicher (optional): OAuth-Client vom Typ „Webanwendung“ in der Google Cloud Console,
-    // JavaScript-Ursprung = deine Adresse. Ohne diese Werte bleibt WebDAV (Nextcloud u. a.) als Speicher.
-    'google_client_id'     => '',
-    'google_client_secret' => '',
-
     // Weitere erlaubte Herkunft für die POST-Endpunkte. Die eigene Seite ist immer erlaubt.
     'allowed_origins' => [ /* 'https://example.org' */ ],
 

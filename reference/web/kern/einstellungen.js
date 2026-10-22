@@ -107,18 +107,10 @@ function renderStorage(onboarding) {
   box.append(h('p', { class: 'small', style: 'margin:0;line-height:1.5' }, onboarding
     ? tt('Dann lade deine Konten, Favoriten und deinen Verlauf aus deinem Speicher – nichts neu einrichten.')
     : tt('Gerade nur auf diesem Gerät. Verbinde deinen Speicher, damit Handy und PC dieselben Konten, Favoriten und denselben Verlauf haben. Die Daten liegen lesbar als JSON im Ordner „KOMPASS“.')));
-  const mitGoogle = modulAn('speicher-google');  // #66: Google Drive passt nicht zum Konzept – Modul aus = kein Google-Knopf
-  box.append(h('div', { class: 'choices', style: 'grid-template-columns:repeat(' + ((onboarding ? 1 : 2) + (mitGoogle ? 1 : 0)) + ',minmax(0,1fr))' },
+  box.append(h('div', { class: 'choices', style: 'grid-template-columns:repeat(' + (onboarding ? 1 : 2) + ',minmax(0,1fr))' },
     onboarding ? null : h('button', { type: 'button', class: 'filter-pill', style: 'align-self:auto', 'aria-pressed': !SY.pick || SY.pick === 'geraet' ? 'true' : 'false', onClick: () => { SY.pick = 'geraet'; render(); } }, tt('Nur auf diesem Gerät')),
-    mitGoogle ? h('button', { type: 'button', class: 'filter-pill', style: 'align-self:auto', 'aria-pressed': SY.pick === 'gdrive' ? 'true' : 'false', onClick: () => GD.prepare() }, tt('Google Drive')) : null,
     h('button', { type: 'button', class: 'filter-pill', style: 'align-self:auto', 'aria-pressed': SY.pick === 'dav' ? 'true' : 'false', onClick: () => { SY.pick = 'dav'; render(); } }, tt('WebDAV (EU)'))));
   if (!onboarding && (!SY.pick || SY.pick === 'geraet')) box.append(h('span', { class: 'small', style: 'line-height:1.4' }, tt('Standard: Alles bleibt in diesem Browser – kein Abgleich, kein fremder Speicher. Sichere ab und zu eine Datei (unten).')));
-  if (SY.pick === 'gdrive' && mitGoogle) {
-    if (SY.gState === 'bereit') box.append(h('button', { type: 'button', class: 'btn primary', onClick: () => GD.start() }, tt('Mit Google anmelden')),
-      h('span', { class: 'small', style: 'line-height:1.4' }, tt('KOMPASS bekommt nur Zugriff auf die eigenen Dateien im Ordner „KOMPASS“ (Berechtigung drive.file), nicht auf deine übrigen Dateien.')));
-    else box.append(h('span', { class: 'small' }, SY.gState === 'fehlt' ? tt('Google ist im KOMPASS-Backend noch nicht eingerichtet (Client-ID und Schlüssel fehlen in config.php).')
-      : SY.gState === 'fehler' ? tt('Google-Anmeldung konnte nicht vorbereitet werden – Verbindung prüfen.') : tt('Bereite Google-Anmeldung vor …')));
-  }
   if (SY.pick === 'dav') {
     const inp = (id, label, key, type, ph) => h('div', { class: 'field' }, h('label', { for: id }, label),
       h('input', { id, type, value: SY.dav[key], placeholder: ph, autocomplete: type === 'password' ? 'current-password' : 'off', autocapitalize: 'off', spellcheck: 'false',
@@ -151,8 +143,7 @@ function spracheWechseln(code) {
   if (spracheSetzen(code)) { els.stage = null; render(true); }
 }
 const EINST_REITER = ttFest(() => [['allgemein', tt('Allgemein')], ['quellen', tt('Quellen')], ['konten', tt('Konten')], ['ki', tt('KI')], ['speicher', tt('Speicher')]]);
-const DATENSCHUTZ_TEXT = () => (modulAn('speicher-google') ? tt('Einstellungen, Verlauf, Likes, Lesezeichen und Favoriten liegen im Speicher dieses Browsers – und, wenn verbunden, lesbar als JSON im Ordner „KOMPASS“ deines Google Drive bzw. WebDAV-Speichers (Übertragung per HTTPS; Google direkt vom Gerät, WebDAV über das KOMPASS-Backend durchgeleitet, ohne Speicherung). ')
-  : tt('Einstellungen, Verlauf, Likes, Lesezeichen und Favoriten liegen im Speicher dieses Browsers – und, wenn verbunden, lesbar als JSON im Ordner „KOMPASS“ deines WebDAV-Speichers (Übertragung per HTTPS über das KOMPASS-Backend durchgeleitet, ohne Speicherung). ')) + tt('Mastodon und Bluesky werden direkt von deinem Gerät abgefragt. RADAR läuft über das KOMPASS-Backend auf {host} (ohne Nutzerdaten). Fragen an den Agenten, Faktenchecks und die KI-Auswahl gehen direkt von deinem Gerät an die KI, die du verbindest – oder, ohne eigene KI, als Probe über das Backend an Mistral (EU), ohne Speicherung. KI-Schlüssel liegen verschlüsselt nur auf diesem Gerät.').replace('{host}', location.host).replace(kiProbeErlaubt() ? '\u0000' : tt(' – oder, ohne eigene KI, als Probe über das Backend an Mistral (EU), ohne Speicherung'), '') + (window.OL_ZAEHLER ? ' ' + tt('Aufrufe der Seite zählt GoatCounter ohne Cookies und ohne Nutzerprofil.') : '');
+const DATENSCHUTZ_TEXT = () => (tt('Einstellungen, Verlauf, Likes, Lesezeichen und Favoriten liegen im Speicher dieses Browsers – und, wenn verbunden, lesbar als JSON im Ordner „KOMPASS“ deines WebDAV-Speichers (Übertragung per HTTPS über das KOMPASS-Backend durchgeleitet, ohne Speicherung). ')) + tt('Mastodon und Bluesky werden direkt von deinem Gerät abgefragt. RADAR läuft über das KOMPASS-Backend auf {host} (ohne Nutzerdaten). Fragen an den Agenten, Faktenchecks und die KI-Auswahl gehen direkt von deinem Gerät an die KI, die du verbindest – oder, ohne eigene KI, als Probe über das Backend an Mistral (EU), ohne Speicherung. KI-Schlüssel liegen verschlüsselt nur auf diesem Gerät.').replace('{host}', location.host).replace(kiProbeErlaubt() ? '\u0000' : tt(' – oder, ohne eigene KI, als Probe über das Backend an Mistral (EU), ohne Speicherung'), '') + (window.OL_ZAEHLER ? ' ' + tt('Aufrufe der Seite zählt GoatCounter ohne Cookies und ohne Nutzerprofil.') : '');
 const START_SATZ = () => tt('Lies https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/prompts/sources.md und stell mit mir die Quellen für meine Zentrale zusammen. Meine Adresse: ') + location.origin + location.pathname;
 function einstForm() {
   if (!S.form) S.form = { mastodon: settings.mastodon, bluesky: settings.bluesky, radar: Object.assign({}, settings.radar), pauseAfter: settings.pauseAfter,
@@ -399,8 +390,11 @@ function renderPause() {
 
 // #66 Übergang: Wer bisher mit Google Drive abgeglichen hat, wird einmalig getrennt (lokale Daten bleiben) und sieht den Hinweis unter Speicher
 function googleUebergang() {
-  if (modulAn('speicher-google') || sync.provider !== 'gdrive') return false;
-  try { GD.disconnect(); } catch (e) { /* Abmelden beim Google-Dienst ist nur ein Versuch */ }
+  if (sync.provider !== 'gdrive') return false;
+  // Zugang bei Google widerrufen – direkt vom Gerät (Google erlaubt das ohne Backend); scheitert es, bleibt nur der Hinweis
+  const t = sync.gdrive && (sync.gdrive.refresh || sync.gdrive.access);
+  if (t) fetch('https://oauth2.googleapis.com/revoke', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'token=' + encodeURIComponent(t), credentials: 'omit', referrerPolicy: 'no-referrer' }).catch(() => {});
+  sync.gdrive = {};
   sync.provider = null; storeSync(); store.set('googleEnde', 1);
   S.screen = 'settings'; S.einstReiter = 'speicher';
   return true;

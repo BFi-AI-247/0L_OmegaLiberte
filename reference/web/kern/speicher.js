@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Kern – Abgleich mit Google Drive und WebDAV. Besitzer: Bau-Kern.
+// Kern – Abgleich mit WebDAV (Google Drive entfernt, #66). Besitzer: Bau-Kern.
 // Teil von KOMPASS. Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
 
-/* ---------- Speicher: Abgleich über Google Drive oder WebDAV -----------------
+/* ---------- Speicher: Abgleich über WebDAV (EU-Dienste, eigene Nextcloud) -----------------
    Zwei lesbare JSON-Dateien im Ordner „KOMPASS“ des Nutzers. Bewusst ohne Verschlüsselung
    (Björn, 18.10.2026): Übertragung per HTTPS, der Nutzer kann alles lesen und prüfen.
    Abgleich: Teile mit Zeitstempel – der neuere gewinnt; Verlauf, Gesehen, Faktenchecks und
@@ -173,123 +173,6 @@ async function syncNow(manual) {
   if (SY.again) { SY.again = false; syncNow(); }
 }
 
-/* Google Drive: Berechtigung drive.file – KOMPASS sieht nur die eigenen Dateien im Ordner KOMPASS */
-const GD = {
-  api: 'https://www.googleapis.com/drive/v3/',
-  up: 'https://www.googleapis.com/upload/drive/v3/files',
-  label() { return tt('Google Drive') + (sync.gdrive.konto ? ' (' + sync.gdrive.konto + ')' : ''); },
-  openUrl() { return sync.gdrive.folder ? 'https://drive.google.com/drive/folders/' + sync.gdrive.folder : 'https://drive.google.com/'; },
-  async token(force) {
-    const g = sync.gdrive;
-    if (!force && g.access && g.exp > Date.now() + 60000) return g.access;
-    if (!g.refresh) throw new Error(tt('Google-Anmeldung fehlt – bitte neu verbinden.'));
-    const r = await fetch('api/gdrive.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'refresh', refresh_token: g.refresh }) });
-    const d = await r.json().catch(() => ({}));
-    if (d.status !== 'ok') throw new Error(d.antwort || tt('Google-Anmeldung fehlgeschlagen.'));
-    g.access = d.access_token; g.exp = Date.now() + (d.expires_in || 3600) * 1000; storeSync();
-    return g.access;
-  },
-  async call(url, opts, retry) {
-    const t = await this.token(retry);
-    const o = Object.assign({}, opts || {});
-    o.headers = Object.assign({ Authorization: tt('Bearer ') + t }, (opts && opts.headers) || {});
-    const r = await fetch(url.startsWith('http') ? url : this.api + url, o);
-    if (r.status === 401 && !retry) return this.call(url, opts, true);
-    if (r.status === 404) return r;
-    if (!r.ok) {
-      const d = await r.json().catch(() => ({}));
-      const er = (d && d.error) || {}; const reason = ((er.errors || [])[0] || {}).reason || (er.details && er.details[0] && er.details[0].reason) || '';
-      const msg = String(er.message || '');
-      let hint = '';
-      if (/accessNotConfigured|SERVICE_DISABLED/.test(reason) || /has not been used|is disabled/i.test(msg)) hint = tt('Die Google Drive API ist im Google-Cloud-Projekt nicht aktiviert (APIs & Dienste → Bibliothek → Google Drive API → Aktivieren, danach ein paar Minuten warten).');
-      else if (/insufficient|ACCESS_TOKEN_SCOPE_INSUFFICIENT/i.test(reason + msg)) hint = tt('Die Drive-Berechtigung fehlt – Speicher trennen und neu verbinden, dabei den Drive-Zugriff bestätigen.');
-      else if (msg) hint = msg.slice(0, 220);
-      throw new Error(tt('Google Drive antwortet mit ') + r.status + (hint ? ': ' + hint : '.'));
-    }
-    return r;
-  },
-  async folder() {
-    if (sync.gdrive.folder) return sync.gdrive.folder;
-    const q = "name='KOMPASS' and mimeType='application/vnd.google-apps.folder' and trashed=false";
-    const d = await (await this.call('files?fields=files(id)&q=' + encodeURIComponent(q))).json();
-    let id = d.files && d.files[0] && d.files[0].id;
-    if (!id) {
-      const r = await this.call('files?fields=id', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'KOMPASS', mimeType: 'application/vnd.google-apps.folder', description: tt('Daten der App KOMPASS ({ort})').replace('{ort}', location.host + location.pathname.replace(/\/[^/]*$/, '')) }) });
-      id = (await r.json()).id;
-    }
-    sync.gdrive.folder = id; storeSync(); return id;
-  },
-  async fileId(name) {
-    const f = sync.gdrive.files || (sync.gdrive.files = {});
-    if (f[name]) return f[name];
-    const folder = await this.folder();
-    const q = "name='" + name + "' and '" + folder + "' in parents and trashed=false";
-    const d = await (await this.call('files?fields=files(id)&q=' + encodeURIComponent(q))).json();
-    const id = d.files && d.files[0] && d.files[0].id;
-    if (id) { f[name] = id; storeSync(); }
-    return id || null;
-  },
-  async read(name) {
-    const id = await this.fileId(name); if (!id) return null;
-    const r = await this.call('files/' + id + '?alt=media');
-    if (r.status === 404) { delete sync.gdrive.files[name]; storeSync(); return null; }
-    return r.json();
-  },
-  async write(name, obj) {
-    const body = JSON.stringify(obj, null, 2);
-    const id = await this.fileId(name);
-    if (id) {
-      const r = await this.call(this.up + '/' + id + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': tt('application/json; charset=utf-8') }, body });
-      if (r.status !== 404) return;
-      delete sync.gdrive.files[name];
-    }
-    const meta = { name, parents: [await this.folder()], mimeType: 'application/json' };
-    const b = 'kompass' + Math.random().toString(36).slice(2);
-    const multi = '--' + b + tt('\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n') + JSON.stringify(meta) + '\r\n--' + b +
-      tt('\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n') + body + '\r\n--' + b + '--';
-    const r = await this.call(this.up + '?uploadType=multipart&fields=id', { method: 'POST', headers: { 'Content-Type': tt('multipart/related; boundary=') + b }, body: multi });
-    sync.gdrive.files[name] = (await r.json()).id; storeSync();
-  },
-  async prepare() {
-    SY.pick = 'gdrive'; SY.gState = 'lade'; render();
-    try {
-      const info = await getJSON('api/gdrive.php');
-      if (!info.bereit) { SY.gState = 'fehlt'; render(); return; }
-      SY.clientId = info.client_id;
-      await loadScript('https://accounts.google.com/gsi/client');
-      SY.gState = 'bereit';
-    } catch (e) { SY.gState = 'fehler'; }
-    render();
-  },
-  // Muss direkt im Klick laufen (sonst blockiert der Browser das Anmeldefenster)
-  start() {
-    const client = window.google.accounts.oauth2.initCodeClient({
-      client_id: SY.clientId, scope: 'https://www.googleapis.com/auth/drive.file', ux_mode: 'popup',
-      callback: (r) => this.finish(r),
-      error_callback: (e) => flash(e && e.type === 'popup_closed' ? tt('Anmeldung abgebrochen.') : tt('Google-Anmeldung fehlgeschlagen.'))
-    });
-    client.requestCode();
-  },
-  async finish(r) {
-    if (!r || !r.code) { flash(tt('Google-Anmeldung abgebrochen.')); return; }
-    try {
-      const res = await fetch('api/gdrive.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'code', code: r.code }) });
-      const d = await res.json().catch(() => ({}));
-      if (d.status !== 'ok') throw new Error(d.antwort || tt('Anmeldung fehlgeschlagen.'));
-      if (!/drive\.file/.test(d.scope || 'drive.file')) throw new Error(tt('Die Drive-Berechtigung wurde nicht erteilt.'));
-      sync.gdrive = { access: d.access_token, exp: Date.now() + (d.expires_in || 3600) * 1000, refresh: d.refresh_token || null, files: {} };
-      try { const a = await (await this.call('about?fields=user(emailAddress)')).json(); sync.gdrive.konto = a.user && a.user.emailAddress; } catch (e) { /* egal */ }
-      await activate('gdrive');
-    } catch (e) { flash(e.message); }
-  },
-  async disconnect() {
-    const t = sync.gdrive.refresh || sync.gdrive.access;
-    if (t) fetch('api/gdrive.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'abmelden', token: t }) }).catch(() => {});
-    sync.gdrive = {};
-  }
-};
-
 /* WebDAV (europäische Speicher: Nextcloud, Strato HiDrive, MagentaCLOUD …) über api/dav.php */
 const DAV = {
   label() { try { return tt('WebDAV (') + new URL(sync.dav.url).host + ')'; } catch (e) { return 'WebDAV'; } },
@@ -326,7 +209,7 @@ const DAV = {
   },
   async disconnect() { sync.dav = { url: sync.dav.url, user: sync.dav.user }; }
 };
-const CONN = { gdrive: GD, dav: DAV };
+const CONN = { dav: DAV };
 Object.keys(PART_FILE).forEach((p) => { if (!UNION[p]) SY.json[p] = JSON.stringify(partGet(p)); });
 
 function loadScript(src) {

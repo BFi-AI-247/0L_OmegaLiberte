@@ -49,7 +49,7 @@ Put an optional `config.php` into `htdocs/` **only if** your local server is not
 Any shared hosting with PHP 8.1+ (curl, mbstring) works (no cron, no database, no shell needed).
 
 1. Upload the **contents** of `reference/web/` into a folder, e.g. `public_html/hub/` → `https://your.domain/hub/`.
-2. Use **HTTPS** — the service worker (install as app), Google sign-in and secure key storage need it.
+2. Use **HTTPS** — the service worker (install as app) and secure key storage need it.
 3. Optional: create `config.php` (§4) **outside** the public folder.
 4. Open the address on your phone → browser menu → *Add to home screen*.
 
@@ -83,7 +83,6 @@ Copy [config.example.php](config.example.php) and fill in what you need:
 |---|---|---|
 | `mistral_key` | server trial AI for dialog (`ai.php`) and AI selection (`kurator.php`) | none → people bring their own AI |
 | `kompass_fragen_pro_stunde`, `kompass_kuratieren_pro_stunde`, `kompass_max_pro_tag` | limits for the server trial | 20 / 10 / 300 |
-| `google_client_id`, `google_client_secret` | Google Drive as personal storage (OAuth client “web application”, JavaScript origin = your address) | none → WebDAV only |
 | `allowed_origins` | extra origins allowed to call the POST relays | only your own site |
 | `data_dir` | folder for feed cache and counters, **outside** the public folder (also: env `OMEGALIBERTE_DATA`) | the server's temp folder |
 | `goatcounter` | page view counting without cookies, e.g. `https://NAME.goatcounter.com/count` | off — nothing is loaded |
