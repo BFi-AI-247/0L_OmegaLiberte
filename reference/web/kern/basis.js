@@ -11,7 +11,7 @@
 'use strict';
 
 /* ---------- Hilfen ---------------------------------------------------- */
-const VERSION = 'v0.48';
+const VERSION = 'v0.50';
 const LS = 'kompass.v0.' + (INSTANZ.speicher ? INSTANZ.speicher + '.' : '');
 // Modul-Schalter (instanz.js → module): false zieht ein Feature zurück, fehlt = an
 function modulAn(id) { return !(INSTANZ.module && INSTANZ.module[id] === false); }
@@ -241,6 +241,30 @@ const CATALOG = [
     ['BBC News (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UC16niRr50-MSBwiO3YDb3RA', 'youtube.com', 'youtube', 'en'],
     ['Kurzgesagt – In a Nutshell', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCsXVk37bltHxD1rDPwtNM8Q', 'youtube.com', 'youtube', 'en']] }
 ];
+// Issue #45 (Modul yt-auswahl): YouTube als zwei Auswahlen – „KOMPASS-Empfehlungen“ (bisherige Kanäle, klar als unsere
+// Empfehlung benannt) und „Top-YouTuber“ (reichweitenstärkste Kanäle, Prüfstand 22.10.2026, 12/12). Ausgeschaltet: wie bisher eine Gruppe „YouTube“.
+if (modulAn('yt-auswahl')) {
+  const i = CATALOG.findIndex((g) => g.gruppe === 'YouTube');
+  if (i >= 0) {
+    const g = CATALOG[i]; g.gruppe = 'YouTube: KOMPASS-Empfehlungen';
+    g.items.splice(2, 0,
+      ['Hella & Tom', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCeBKU-99g_weNNPpZ2YMvvQ', 'youtube.com', 'youtube'],
+      ['Gamazda', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCKscaP2HvovgMjkpY6KwfJQ', 'youtube.com', 'youtube'],
+      ['MAITHINK X – Mai Thi Nguyen-Kim', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCyHDQ5C6z1NDmJ4g6SerW8g', 'youtube.com', 'youtube'],
+      ['Terra X Lesch & Co', 'https://www.youtube.com/feeds/videos.xml?channel_id=UC5E9-r42JlymhLPnDv2wHuA', 'youtube.com', 'youtube'],
+      ['extra 3', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCjhkuC_Pi85wGjnB0I1ydxw', 'youtube.com', 'youtube']);
+    CATALOG.splice(i + 1, 0, { gruppe: 'YouTube: Top-YouTuber', alle: true, items: [  // alle: international, auch für deutsche Oberfläche
+      ['Gronkh', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCYJ61XIK64sp6ZFFS8sctxw', 'youtube.com', 'youtube'],
+      ['Simplicissimus', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCKGMHVipEvuZudhHD05FOYA', 'youtube.com', 'youtube'],
+      ['MrBeast', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCX6OQ3DkcsbYNE6H8uQQuVA', 'youtube.com', 'youtube', 'en'],
+      ['PewDiePie', 'https://www.youtube.com/feeds/videos.xml?channel_id=UC-lHJZR3Gqxm24_Vd_AJ5Yw', 'youtube.com', 'youtube', 'en'],
+      ['Mark Rober', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCY1kMZp36IQSyNx_9h4mpCg', 'youtube.com', 'youtube', 'en'],
+      ['Veritasium', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCHnyfMqiRRG1u-2MsSQLbXA', 'youtube.com', 'youtube', 'en'],
+      ['Marques Brownlee', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCBJycsmduvYEL83R_U4JriQ', 'youtube.com', 'youtube', 'en'],
+      ['Dude Perfect', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCRijo3ddMTht_IHyNSNXpNQ', 'youtube.com', 'youtube', 'en'],
+      ['Mrwhosetheboss', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCMiJRAwDNSNzuYeN2uWa0pA', 'youtube.com', 'youtube', 'en']] });
+  }
+}
 // Bluesky-Listen und -Starter-Packs (M009, nur „sicher“ markierte; Issue #16). Eigene Tabelle, nicht im Willkommen:
 // die Adresse wird erst beim Hinzufügen zur at://-Adresse aufgelöst (quellen/laden.js bskyQuelleAufloesen). Modul bsky-quellen.
 const KATALOG_BSKY = [
@@ -262,7 +286,7 @@ const KATALOG_SPRACHE = { 'bbc.co.uk': 'en', 'theguardian.com': 'en' };
 function katalogSprache(item) { return item[4] || KATALOG_SPRACHE[item[2]] || 'de'; }
 function katalogItems(g) { return g.items.slice().sort((a, b) => (katalogSprache(b) === LANG) - (katalogSprache(a) === LANG)); }
 // Für ein angetipptes Thema: nur die Quellen in der eigenen Sprache, solange es welche gibt
-function katalogFuerMich(g) { const eig = g.items.filter((x) => katalogSprache(x) === LANG); return eig.length ? eig : g.items; }
+function katalogFuerMich(g) { if (g.alle) return g.items; const eig = g.items.filter((x) => katalogSprache(x) === LANG); return eig.length ? eig : g.items; }
 function hashId(s) { let h = 5381; for (const ch of String(s)) h = ((h * 33) ^ ch.charCodeAt(0)) >>> 0; return h.toString(36); }
 function shortTitle(t) { const s = String(t || '').trim(); if (s.length <= 32) return s; const k = s.split(/\s[-|–]\s/)[0]; return (k.length >= 3 ? k : s).slice(0, 60); }
 const wideMQ = window.matchMedia('(min-width: 1024px)');

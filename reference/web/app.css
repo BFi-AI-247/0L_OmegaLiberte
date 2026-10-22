@@ -480,3 +480,21 @@ a.mini { display: inline-flex; align-items: center; text-decoration: none; color
 .bild-zu { position: absolute; top: max(12px, env(safe-area-inset-top)); right: 12px; width: 44px; height: 44px; border-radius: 999px; border: 0; background: rgba(255, 255, 255, .18); color: #fff; font-size: 20px; }
 .bild-zu:focus-visible { outline: 3px solid #fff; }
 .bild-alt { margin: 0; padding: 10px 16px max(12px, env(safe-area-inset-bottom)); color: #eee; font-size: 14px; max-height: 30vh; overflow: auto; }
+
+/* Startseite (#43, kern/startseite.js): Zeilen nacheinander, Erststart mit Knöpfen, zweite Seite „Mehr erfahren“ */
+.startseite { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 24px 16px;
+  background: var(--bg); color: var(--ink); --start-flamme: #E8A33D; transition: opacity .4s ease; overflow-y: auto; }
+.startseite.weg { opacity: 0; pointer-events: none; }
+.start-mitte { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px; max-width: 30rem; margin: auto; }
+.start-logo { color: var(--accent-ink); animation: start-ein .6s ease both; }
+.start-zeilen { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.start-z { font-size: clamp(40px, 13vw, 72px); font-weight: 800; letter-spacing: .04em; line-height: 1.05; animation: start-ein .7s ease both; animation-delay: calc(var(--i) * .45s + .2s); }
+.start-marke { margin-top: 14px; font-size: clamp(18px, 5.4vw, 26px); font-weight: 600; letter-spacing: .02em; color: var(--ink2); }
+.start-tilde { color: var(--accent-ink); }
+.start-knoepfe { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 8px; animation: start-ein .6s ease both; animation-delay: calc(var(--i, 0) * .45s + .2s); }
+.start-knoepfe .btn { min-width: 9rem; }
+.start-mehr p { margin: 0; font-size: 17px; line-height: 1.5; color: var(--ink2); }
+.start-mehr .start-gross { font-size: 30px; font-weight: 800; color: var(--ink); }
+.start-mehr .start-klein { font-size: 15px; color: var(--muted); margin-top: -12px; }
+@keyframes start-ein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .start-z, .start-logo, .start-knoepfe { animation: none; } .startseite { transition: none; } }

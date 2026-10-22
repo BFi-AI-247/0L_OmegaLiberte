@@ -809,5 +809,15 @@ SPRACHE.en = Object.fromEntries(Object.entries({
   "Wirtschaft": "Economy",
   "Politik (AT)": "Politics (Austria)",
   "Politik (Bremen)": "Politics (Bremen)",
-  "Bitte den Link der Sendung einfügen, nicht den einer einzelnen Folge.": "Please paste the link of the show, not of a single episode."
+  "Bitte den Link der Sendung einfügen, nicht den einer einzelnen Folge.": "Please paste the link of the show, not of a single episode.",
+  "YouTube: KOMPASS-Empfehlungen": "YouTube: KOMPASS recommendations",
+  "YouTube: Top-YouTuber": "YouTube: top creators",
+  "Start": "Start",
+  "Mehr erfahren": "Know more",
+  "„Link in Bio“": "“Link in bio”",
+  "Schon mal gelesen?": "Seen that before?",
+  "E-Mails kommen überall an. Dein Messenger hält dich fest. Und Plattformen verstecken Links, damit du bleibst.": "Email reaches everyone. Your messenger locks you in. And platforms hide links so you stay.",
+  "Hier ist es anders: Social Media und Nachrichten an einem Ort – jeder Beitrag führt dich zur Quelle, und deine Daten bleiben bei dir.": "This is different: social media and news in one place – every post leads you to its source, and your data stays with you.",
+  "Du willst Hilfe von einer KI? Bring deine eigene mit.": "Want help from AI? Bring your own.",
+  "Ich will es ausprobieren": "I want to try"
 }).filter(([, v]) => v));
