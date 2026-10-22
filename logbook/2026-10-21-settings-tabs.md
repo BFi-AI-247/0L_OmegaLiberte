@@ -11,7 +11,7 @@ Settings are split into five tabs — **General, Sources, Accounts, AI, Storage*
 One long settings page mixed rarely used switches with the things people look for every day (sources, storage). Older readers got lost while scrolling; a tab names the place before you search it.
 
 ## Effect (ideally measurable)
-- Every tab fits on a phone screen (412 px) without searching; the UI test bench opens all five tabs in light and dark.
+- The UI test bench walks the three-step welcome and opens the settings on phone (412 px) and laptop, light and dark.
 - Other parts of the app can jump straight into a tab (e.g. "connect an account first" opens *Accounts*).
 
 ## How to adopt
