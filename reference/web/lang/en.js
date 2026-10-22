@@ -847,4 +847,6 @@ SPRACHE.en = Object.fromEntries(Object.entries({
   "Regional: Wolfsburg & Braunschweig": "Regional: Wolfsburg & Braunschweig",
   "PeerTube (Fediverse-Video)": "PeerTube (fediverse video)",
   "Podcast": "Podcast",
+  " Bericht": " report",
+  " Berichte": " reports",
 }).filter(([, v]) => v));

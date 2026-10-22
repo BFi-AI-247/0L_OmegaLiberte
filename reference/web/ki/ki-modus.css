@@ -203,3 +203,15 @@
 .kib-auchtitel { font-size: 13px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 /* Issue #28: Stand und Abbrechen bei Dialog/Faktencheck */
 .ki-lauf { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* #25 Handy: eigene KI-Bühne (Modul ki-handy) – schmaler Rand, Titel über Datum, Leiste über der Karte */
+.app:not(.wide)[data-modus="ki"] .kib { inset: 10px 12px 12px; gap: 10px; }
+.app:not(.wide)[data-modus="ki"] .kib-titel { flex-wrap: wrap; gap: 2px 10px; align-items: center; }
+.app:not(.wide)[data-modus="ki"] .kib-titel h1 { flex: 1 1 100%; font-size: 22px; }
+.app:not(.wide)[data-modus="ki"] .kib-leiste { top: 8px; left: 12px; right: 12px; height: 36px; gap: 8px; }
+.app:not(.wide)[data-modus="ki"] .kib-leiste .kib-taste { display: none; }
+.app:not(.wide)[data-modus="ki"] .stage[data-ebene="karte"] .card, .app:not(.wide)[data-modus="ki"] .stage[data-ebene="karte"] .empty { top: 52px; }
+.app:not(.wide)[data-modus="ki"] .kib-themakopf { flex-wrap: wrap; height: auto; row-gap: 4px; }
+.app:not(.wide)[data-modus="ki"] .kib-themakopf h1 { max-width: none; flex: 1 1 0; }
+.app:not(.wide)[data-modus="ki"] .kib-themakopf p { display: none; }
+.app:not(.wide)[data-modus="ki"] .kib-themakopf .kib-datum { order: 5; flex-basis: 100%; }

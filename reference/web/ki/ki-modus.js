@@ -204,7 +204,8 @@ const KIB = { gewicht: {}, zu: {}, auch: {}, zeile: {}, liste: [], thema: -1, fo
   weiter: null, nach: null, nachLeer: false, nachFehler: '' };
 const KIB_FARBEN = ['#2A3550', '#272246', '#22402F', '#3A2A22', '#1C3340', '#3A2132', '#33283F', '#203A3A'];
 const KIB_RAND = 28; const KIB_ABSTAND = 6; // Andeutung oben/unten im 2×2, Abstand der Kacheln
-function kibAn() { return aiActive() && isWide(); }
+// #25 (Modul ki-handy): auch am Handy die eigene Bühne – Themen-Mosaik → direkt der erste Beitrag des Themas (keine zweite Ebene, Björn 22.10.)
+function kibAn() { return aiActive() && (isWide() || modulAn('ki-handy')); }
 function themaId(i) { return 'ai:thema:' + (S.ai.res ? S.ai.res.at : 0) + ':' + i; }
 function themaIndex(id) {
   const m = /^ai:thema:(\d+):(\d+)$/.exec(String(id || ''));
@@ -330,7 +331,7 @@ function kibKacheln(werte, W, H) {
 // Thema mit nur einer Karte: gleich in den Beitrag (ein Klick weniger); Esc führt dann direkt zum Mosaik
 function kibOeffneThema(i) {
   const ps = S.ai.res && S.ai.res.lage[i] ? kibHaupt(S.ai.res.lage[i]) : [];
-  if (ps.length === 1) { kibOeffnePost(i, ps, ps[0].id); return; }
+  if (ps.length === 1 || (!isWide() && ps.length)) { kibOeffnePost(i, ps, ps[0].id); return; }  // #25: am Handy keine zweite Ebene
   KIB.fokus = null; show(themaId(i), 'up');
 }
 function kibOeffnePost(i, ps, id) { KIB.thema = i; KIB.liste = ps.map((p) => p.id); KIB.fokus = 'post:' + id; show(id, 'up'); }
@@ -416,7 +417,7 @@ function kibZurueck() {
   if (e === 'karte') {
     const c = cur(); kibListe();
     const ti = KIB.thema;
-    if (ti >= 0 && KIB.liste.length === 1) kibZumMosaik(ti);
+    if (ti >= 0 && (KIB.liste.length === 1 || !isWide())) kibZumMosaik(ti);
     else if (ti >= 0) { const k = kibPos(KIB.liste, c.id); kibZeigeZeile(ti, Math.floor(k / 2)); KIB.fokus = 'post:' + (KIB.liste[k] || c.id); show(themaId(ti), 'down'); }
     else { KIB.fokus = null; show(lageId(), 'down'); }
   } else if (e === 'thema') { KIB.fokus = 'thema:' + themaIndex(cur().id); show(lageId(), 'down'); }
@@ -475,13 +476,18 @@ function kibLage(rc) {
   const f = KIB_ABSTAND / 2;
   return 'left:' + rc.x + 'px;top:' + rc.y + 'px;width:' + Math.max(0, rc.w - f) + 'px;height:' + Math.max(0, rc.h - f) + 'px;';
 }
+// #58: Zahl an der Kachel = was beim Antippen kommt (eine Karte je Geschichte); zusammengefasste Berichte stehen als „+N“ dabei
+function kibZahl(t, ps) {
+  const n = kibHaupt(t).length || ps.length; const mehr = ps.length - n;
+  return n + (n === 1 ? tt(' Beitrag') : tt(' Beiträge')) + (mehr > 0 ? ' · +' + mehr + (mehr === 1 ? tt(' Bericht') : tt(' Berichte')) : '');
+}
 function kibKachel(x, rc) {
   const { t, i, ps } = x;
   // Leitbild: der Leitbeitrag der KI, wenn er ein Bild hat, sonst der erste Beitrag mit Bild
   const leit = ps.find((p) => p.id === t.leit && kibBild(p)) || ps.find((p) => kibBild(p));
   const art = rc.w >= 320 && rc.h >= 250 && leit ? 'gross' : rc.w >= 190 && rc.h >= 150 ? 'mittel' : 'klein';
   const alle = ps.every(kibGesehen);
-  const zahl = ps.length + (ps.length === 1 ? tt(' Beitrag') : tt(' Beiträge'));
+  const zahl = kibZahl(t, ps);
   const label = t.thema + ', ' + zahl + (alle ? ', gelesen' : '') + '. ' + t.satz;
   const kids = art === 'gross' ? [
     h('img', { class: 'kib-bild', src: kibBild(leit), alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }),
@@ -503,7 +509,7 @@ function kibNeuesKachel(rc) {
 function kibAlsListe(th) {
   return h('div', { class: 'kib-liste' }, th.map(({ t, i, ps }) => h('section', { class: 'kib-liste-thema', style: '--kib-farbe:' + kibFarbe(i) },
     h('button', { type: 'button', class: 'kib-liste-kopf', 'data-nav': '', 'data-fokus': 'thema:' + i, onClick: () => kibOeffneThema(i) },
-      h('h2', {}, t.thema), h('span', {}, t.satz), h('span', { class: 'kib-datum' }, ps.length + (ps.length === 1 ? tt(' Beitrag') : tt(' Beiträge')))),
+      h('h2', {}, t.thema), h('span', {}, t.satz), h('span', { class: 'kib-datum' }, kibZahl(t, ps))),
     h('ul', {}, ps.map((p) => h('li', {}, h('button', { type: 'button', 'data-nav': '', 'data-fokus': 'post:' + p.id, onClick: () => kibOeffnePost(i, ps, p.id) },
       h('span', { class: 'kib-datum' }, entryNameOf(p) + ' · ' + ago(p.date) + (kibGesehen(p) ? tt(' · ✓ gelesen') : '')), h('span', {}, p.title || String(p.text || '').slice(0, 140)))))))));
 }
@@ -605,8 +611,9 @@ function kibFokus(el) {
   if (ziel) ziel.focus({ preventScroll: true });
 }
 function kibBuehne(el, animate) {
-  if (!isWide()) { el.querySelectorAll('.kib, .kib-leiste').forEach((x) => x.remove()); MODI.social.buehne(el, animate); return; }
+  if (!kibAn()) { el.querySelectorAll('.kib, .kib-leiste').forEach((x) => x.remove()); MODI.social.buehne(el, animate); return; }
   if (!el._kibRad) { el._kibRad = true; el.addEventListener('wheel', kibRad, { passive: true }); }
+  if (!el._kibWisch) { el._kibWisch = true; kibWischen(el); }
   el.dataset.ebene = kibEbene();
   if (kibEbene() !== 'karte') { kibZeichnen(el); return; }
   KIB.ebene = 'karte';
@@ -616,8 +623,8 @@ function kibBuehne(el, animate) {
   if (ti >= 0) kibVorPruefen(ti);
   const leiste = h('div', { class: 'kib-leiste' },
     kibMini(ti, tt('Zum Mosaik'), () => kibZumMosaik(ti)),
-    h('button', { type: 'button', class: 'kib-knopf', onClick: kibZurueck }, '← ' + (t && l.length > 1 ? t.thema : 'KI-Auswahl'), h('span', { class: 'kib-taste' }, tt('Esc'))),
-    l.length > 1 ? h('span', { class: 'kib-datum' }, (k + 1) + ' von ' + l.length + tt(' · ↑ ↓ oder Leertaste: nächster Beitrag')) : null);
+    h('button', { type: 'button', class: 'kib-knopf', onClick: kibZurueck }, '← ' + (t && l.length > 1 && isWide() ? t.thema : tt('KI-Auswahl')), h('span', { class: 'kib-taste' }, tt('Esc'))),
+    l.length > 1 ? h('span', { class: 'kib-datum' }, (k + 1) + ' von ' + l.length + (isWide() ? tt(' · ↑ ↓ oder Leertaste: nächster Beitrag') : tt(' · wischen: nächster Beitrag'))) : null);
   const alt = el.querySelector('.kib-leiste'); if (alt) alt.replaceWith(leiste); else el.prepend(leiste);
   MODI.social.buehne(el, animate);
 }
@@ -687,6 +694,24 @@ function kibRad(e) {
   const d = e.deltaY > 0 ? 1 : -1;
   if (eb === 'karte') kibSchritt(d); else kibBlaettern(d);
 }
+// #53: Wischen in der Karte am Handy blättert durch die Beiträge des Themas (hoch/runter und links/rechts) – wie Tasten und Mausrad
+function kibWischen(el) {
+  let x0 = null; let y0 = null; let sc = null; let st0 = 0;
+  el.addEventListener('touchstart', (e) => { const t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; sc = e.target.closest && e.target.closest('.card-body'); st0 = sc ? sc.scrollTop : 0; }, { passive: true });
+  el.addEventListener('touchend', (e) => {
+    if (y0 == null) return;
+    const t = e.changedTouches[0]; const dx = t.clientX - x0; const dy = t.clientY - y0; x0 = y0 = null;
+    if (!kibAn() || isWide() || kibEbene() !== 'karte') return;
+    const quer = Math.abs(dx) > Math.abs(dy) * 1.3;
+    const d = quer ? dx : dy;
+    if (Math.abs(d) < 50) return;
+    if (!quer && sc) {
+      const unten = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 2; const oben = sc.scrollTop <= 0 && st0 <= 0;
+      if ((dy < 0 && !unten) || (dy > 0 && !oben)) return;
+    }
+    kibSchritt(d < 0 ? 1 : -1);
+  }, { passive: true });
+}
 let kibGroesse = 0;
 if (window.ResizeObserver) new ResizeObserver(() => {
   clearTimeout(kibGroesse);
@@ -742,7 +767,7 @@ modusRegistrieren({
   // Gerüst (nur Laptop): ohne Quellen-Spalte, Chat rechts fest offen, Tasten und Mausrad gehören den Ebenen
   seitenspalte: () => !kibAn(),
   rechts: () => (kibAn() ? { breite: 440, offen: true } : null),
-  gesten: () => !kibAn(),
+  gesten: () => !kibAn(),  // #53: Handy-Karte wischt über kibWischen (Beiträge des Themas), nicht über den Kern
   taste: kibTaste,
   chatBezug: kibChatBezug,
   // Lage-Karte nur in der KI-Auswahl (Handy); im Social-Modus nie eine KI-Karte
