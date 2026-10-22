@@ -1,27 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Kern – eigener Name der Zentrale und freiwilliger Installations-Ping ins Zero Ledger. Nach basis.js geladen.
-// Name: settings.name (leer = Instanz-Name), settings.olAnhang (Standard an) hängt „~OmegaLiberte“ an.
+// Kern – Name der Zentrale (aus der Instanz-Konfiguration) und freiwilliger Installations-Ping ins Zero Ledger. Nach basis.js geladen.
+// Name: kommt nur aus INSTANZ (instanz.js, Betreiber); Nutzer wählen ihn nicht (#8). Ein früher gesetztes settings.name wird still ignoriert.
 // Ping: nur nach Einwilligung; Zustand nur auf diesem Gerät (store 'ping', nicht im Abgleich – eine Installation, nicht eine Person).
-const OL_ANHANG = '~OmegaLiberte';
-const NAME_MAX = 24;
 const PING_INTERVALL = 7 * 86400000;
 
-function eigenerName() { return String(settings.name || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, NAME_MAX); }
-// Kopf, Seitenspalte, KI-Bühne: ohne eigenen Namen die Marke der Instanz (unverändert)
-function zentraleMarke() { const n = eigenerName(); return n ? n + (settings.olAnhang !== false ? OL_ANHANG : '') : INSTANZ.marke; }
-// Willkommen, Tab-Titel: ohne eigenen Namen der Instanz-Name
-function zentraleName() { return eigenerName() ? zentraleMarke() : INSTANZ.name; }
+// Kopf, Seitenspalte, KI-Bühne: Marke der Instanz
+function zentraleMarke() { return INSTANZ.marke; }
+// Willkommen, Tab-Titel: Name der Instanz
+function zentraleName() { return INSTANZ.name; }
 // Versionszeile in den Einstellungen
-function zentraleVersion() { const n = eigenerName() || 'Kompass'; return n + (settings.olAnhang !== false ? OL_ANHANG : '') + ' · ' + VERSION; }
-// Tab-Titel und Name auf dem iPhone-Startbildschirm (Safari liest ihn beim „Zum Home-Bildschirm“); das Manifest bleibt beim Instanz-Namen
-const TITEL0 = document.title;
-function zentraleTitel() {
-  if (!eigenerName()) { document.title = TITEL0; const m0 = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if (m0) m0.remove(); return; }
-  document.title = zentraleName();
-  let m = document.querySelector('meta[name="apple-mobile-web-app-title"]');
-  if (!m) { m = document.createElement('meta'); m.name = 'apple-mobile-web-app-title'; document.head.appendChild(m); }
-  m.content = zentraleName();
-}
+function zentraleVersion() { return INSTANZ.name + ' · ' + VERSION; }
+// Tab-Titel steht in index.html; ein früher gesetzter eigener Titel (iPhone-Startbildschirm) wird entfernt
+function zentraleTitel() { const m0 = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if (m0) m0.remove(); }
 
 // ---------- Zero Ledger ----------
 function pingMoeglich() { return !!INSTANZ.ping; }
@@ -57,16 +47,6 @@ function pingBeimStart() {
 }
 
 // Bausteine für Einstellungen und Willkommen
-function zentraleNameFeld(f) {
-  const inp = h('input', { id: 'k-name', value: f.name || '', maxlength: String(NAME_MAX), placeholder: INSTANZ.marke, autocomplete: 'off', spellcheck: 'false',
-    onInput: (e) => { f.name = e.target.value; } });
-  const sw = h('button', { type: 'button', class: 'toggle-row', 'aria-pressed': f.olAnhang !== false ? 'true' : 'false',
-    onClick: (e) => { f.olAnhang = f.olAnhang === false; e.currentTarget.setAttribute('aria-pressed', f.olAnhang ? 'true' : 'false'); } },
-    h('span', { class: 'row-text' }, h('span', { style: 'font-size:15px' }, tt('„~OmegaLiberte“ anhängen')), h('span', { class: 'small' }, tt('Kennung deiner Zentrale, Standard ist an.'))),
-    h('span', { class: 'switch' }));
-  return h('div', { class: 'card-box' }, h('label', { for: 'k-name' }, h('h3', {}, tt('Name deiner Zentrale'))), h('div', { class: 'field' }, inp),
-    h('span', { class: 'small' }, tt('Gib deiner Zentrale einen Namen. Ohne Eintrag heißt sie „{marke}“.').replace('{marke}', INSTANZ.marke)), sw);
-}
 function zentralePingBox(f) {
   if (!pingMoeglich()) return null;
   const mehr = h('details', { class: 'small ping-mehr' }, h('summary', {}, tt('Was genau?')),

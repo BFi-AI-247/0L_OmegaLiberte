@@ -24,7 +24,7 @@ function render(stageToo) {
     bindSwipe(els.stage);
     stageToo = true;
   }
-  const scrolls = ['.side-list', '.overview-list', '.screen-body'].map((sel) => { const el = app.querySelector(sel); return [sel, el ? el.scrollTop : 0]; });
+  const scrolls = ['.side-list', '.overview-list', '.screen-body', '.add-list', '.add-sheet'].map((sel) => { const el = app.querySelector(sel); return [sel, el ? el.scrollTop : 0]; });  // #50: Katalog behält Position beim Hinzufügen
   const active = document.activeElement && document.activeElement.id;
   const g = modusGeruest();
   app.dataset.modus = g.id;
@@ -46,6 +46,7 @@ function render(stageToo) {
   if (S.screen !== 'settings' && S.screen !== 'onboarding') S.form = null;
   renderLayer();
   if (typeof startseitePruefen === 'function') startseitePruefen();  // #43
+  if (typeof meldenZeichnen === 'function') meldenZeichnen();  // #46: nur Vorschau
   scrolls.forEach(([sel, y]) => { const el = app.querySelector(sel); if (el && y) el.scrollTop = y; });
   if (['k-chat', 'k-search', 'k-esearch', 'k-add', 'k-name', 'k-wunsch', 'k-masto', 'k-bsky', 'k-dav-url', 'k-dav-user', 'k-dav-pass'].includes(active)) {
     const el = document.getElementById(active);

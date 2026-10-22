@@ -27,7 +27,7 @@ function paketLesen(text) {
   if (/^[{[]/.test(t)) {
     let d; try { d = JSON.parse(t); } catch (e) { p.hinweis = tt('Kein gültiges JSON.'); return p; }
     if (!d || typeof d !== 'object' || !/^0l\.source-pack\//.test(String(d.format || ''))) { p.hinweis = tt('Kein Paket im Format 0l.source-pack.'); return p; }
-    p.titel = paketSauber(d.title, 80); p.name = paketSauber(d.name, NAME_MAX); p.sprache = paketSauber(d.language, 5); p.wunsch = paketSauber(d.wish, 300);
+    p.titel = paketSauber(d.title, 80); p.sprache = paketSauber(d.language, 5); p.wunsch = paketSauber(d.wish, 300);
     (Array.isArray(d.sources) ? d.sources : []).forEach((s) => { if (s && typeof s === 'object') p.quellen.push({ art: PAKET_ARTEN[s.kind] || String(s.kind || ''), url: s.url, handle: s.handle, titel: s.title }); });
     return p;
   }
@@ -43,7 +43,7 @@ function paketLesen(text) {
     if (key === 'lang') p.sprache = paketSauber(paketDecode(v), 5);
     else if (key === 'wish') p.wunsch = paketSauber(paketDecode(v), 300);
     else if (key === 'title') p.titel = paketSauber(paketDecode(v), 80);
-    else if (key === 'name') p.name = paketSauber(paketDecode(v), NAME_MAX);
+    else if (key === 'name') { /* früherer Zentralen-Name (bis v0.41): wird ignoriert, #8 */ }
     else {
       const art = PAKET_ARTEN[key] || key;
       if (/^https?%3A/i.test(v) || /^%40/.test(v)) v = paketDecode(v);
@@ -97,7 +97,7 @@ function paketVorschau(text, woher) {
   const p = paketLesen(text);
   const liste = paketPruefen(p);
   S.paket = { stufe: 'vorschau', p, liste, woher: woher || '', sprache: SPRACHEN.some((x) => x[0] === p.sprache) ? p.sprache : '' };
-  if (!liste.length && !p.wunsch && !p.name && !S.paket.sprache) S.paket.leer = p.hinweis || tt('In diesem Paket habe ich keine Quellen gefunden.');
+  if (!liste.length && !p.wunsch && !S.paket.sprache) S.paket.leer = p.hinweis || tt('In diesem Paket habe ich keine Quellen gefunden.');
   render();
 }
 
@@ -182,7 +182,6 @@ async function paketUebernehmen() {
     schritt();
   });
   if (P.p.wunsch) settings.aiWunsch = P.p.wunsch;
-  if (P.p.name) { settings.name = P.p.name; zentraleTitel(); }
   const neueSprache = P.sprache && P.sprache !== LANG ? P.sprache : '';
   if (neueSprache) settings.sprache = neueSprache;
   const warNeu = !settings.onboarded;
@@ -207,9 +206,8 @@ function paketEigenes() {
   });
   const pack = { format: '0l.source-pack/1', title: tt('Quellen aus ') + INSTANZ.name, language: LANG, sources: q };
   if (settings.aiWunsch) pack.wish = settings.aiWunsch;
-  if (eigenerName()) pack.name = eigenerName();
   const url = (u) => String(u).replace(/[|#\s]/g, encodeURIComponent);  // Trenner %7C statt | – manche Chat-Apps beenden Links am |
-  const teile = ['0l1', 'lang:' + LANG].concat(eigenerName() ? ['name:' + encodeURIComponent(eigenerName())] : [], settings.aiWunsch ? ['wish:' + encodeURIComponent(settings.aiWunsch)] : [],
+  const teile = ['0l1', 'lang:' + LANG].concat(settings.aiWunsch ? ['wish:' + encodeURIComponent(settings.aiWunsch)] : [],
     q.map((s) => s.kind === 'rss' ? 'rss:' + url(s.url) : s.kind === 'youtube' ? 'yt:' + s.handle : s.kind === 'bluesky' ? 'bsky:' + s.handle : 'masto:' + s.handle));
   return { n: q.length, link: location.origin + location.pathname + '#paket=' + teile.join('%7C'), json: JSON.stringify(pack, null, 2) };
 }
@@ -264,13 +262,13 @@ function renderPaket() {
     h('span', { class: 'row-text' }, h('span', { class: 'row-title', style: 'font-size:14px' }, name(e)),
       h('span', { class: 'row-sub' }, (PAKET_LABEL[e.art] || e.art) + (e.wert && e.wert !== name(e) ? ' · ' + e.wert : '') + (e.status !== 'neu' ? ' · ' + STATUS[e.status] + (e.grund ? ' (' + e.grund + ')' : '') : '') + (e.art === 'bluesky' || e.art === 'mastodon' ? tt(' · in KOMPASS folgen') : ''))),
     e.status === 'neu' ? h('span', { class: 'small' }, '✓') : null));
-  const extra = [P.p.name ? tt('Name deiner Zentrale: ') + P.p.name + (settings.olAnhang !== false ? OL_ANHANG : '') : '', P.p.wunsch ? tt('Wunsch für die KI-Auswahl: „') + P.p.wunsch + '“' : '', P.sprache && P.sprache !== LANG ? tt('Sprache: ') + (SPRACHEN.find((x) => x[0] === P.sprache) || [])[1] : ''].filter(Boolean);
+  const extra = [P.p.wunsch ? tt('Wunsch für die KI-Auswahl: „') + P.p.wunsch + '“' : '', P.sprache && P.sprache !== LANG ? tt('Sprache: ') + (SPRACHEN.find((x) => x[0] === P.sprache) || [])[1] : ''].filter(Boolean);
   return blatt(tt('Starter-Paket – Vorschau'), kopf(P.p.titel || tt('Starter-Paket')),
     h('span', { class: 'small add-hint' }, (P.woher ? P.woher + ' · ' : '') + neu + (neu === 1 ? tt(' neue Quelle') : tt(' neue Quellen')) + (P.liste.length > neu ? ' · ' + (P.liste.length - neu) + tt(' übersprungen') : '') + tt('. Nichts wird ohne dich übernommen.')),
     extra.length ? h('p', { class: 'small', style: 'margin:0 0 4px' }, extra.join(' · ')) : null,
     P.leer ? h('p', { class: 'small add-msg' }, P.leer) : h('div', { class: 'add-list' }, zeilen),
     h('div', { class: 'btn-row' },
-      h('button', { type: 'button', class: 'btn primary', disabled: !(neu || P.p.wunsch || P.p.name || (P.sprache && P.sprache !== LANG)), onClick: paketUebernehmen }, tt('Übernehmen')),
+      h('button', { type: 'button', class: 'btn primary', disabled: !(neu || P.p.wunsch || (P.sprache && P.sprache !== LANG)), onClick: paketUebernehmen }, tt('Übernehmen')),
       h('button', { type: 'button', class: 'btn', onClick: close }, tt('Abbrechen'))));
 }
 

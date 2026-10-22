@@ -150,7 +150,7 @@ const DATENSCHUTZ_TEXT = () => tt('Einstellungen, Verlauf, Likes, Lesezeichen un
 const START_SATZ = () => tt('Lies https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/prompts/sources.md und stell mit mir die Quellen für meine Zentrale zusammen. Meine Adresse: ') + location.origin + location.pathname;
 function einstForm() {
   if (!S.form) S.form = { mastodon: settings.mastodon, bluesky: settings.bluesky, radar: Object.assign({}, settings.radar), pauseAfter: settings.pauseAfter,
-    name: settings.name || '', olAnhang: settings.olAnhang !== false, ping: pingAn(), thema: settings.thema || 'system', aiWunsch: settings.aiWunsch || '', pakete: {}, schritt: 1 };
+    ping: pingAn(), thema: settings.thema || 'system', aiWunsch: settings.aiWunsch || '', pakete: {}, schritt: 1 };
   return S.form;
 }
 function einstFeld(f, id, label, hint, ph, key) {
@@ -182,7 +182,6 @@ function einstNetz(f, dienst) {
 }
 function einstUebernehmen(f, onboarding) {
   settings.mastodon = f.mastodon; settings.bluesky = f.bluesky; settings.radar = f.radar; settings.pauseAfter = f.pauseAfter; settings.onboarded = true;
-  settings.name = String(f.name || '').trim().slice(0, NAME_MAX); settings.olAnhang = f.olAnhang !== false;
   settings.thema = f.thema || 'system'; zentraleThema();
   if (!onboarding) settings.aiWunsch = String(f.aiWunsch || '').trim().slice(0, 300);
   // Themenpakete aus dem Katalog (Willkommen): Feeds der gewählten Gruppen
@@ -212,7 +211,7 @@ function renderEinrichtung() {
   if (f.schritt === 1) {
     body = [
       h('p', { style: 'margin:0;color:var(--ink2)' }, tt('Deine Quellen an einem ruhigen Ort. Alles, was du hier einstellst, bleibt auf diesem Gerät.')),
-      einstSprache(), zentraleNameFeld(f),
+      einstSprache(),
       knopfReihe(h('button', { type: 'button', class: 'btn primary', onClick: () => weiter(2) }, tt('Weiter'))),
       renderStorage(true)];
   } else if (f.schritt === 2) {
@@ -268,7 +267,7 @@ function renderSettings(onboarding) {
   const speichern = h('button', { type: 'button', class: 'btn primary', onClick: () => einstUebernehmen(f, false) }, tt('Speichern und neu laden'));
   let inhalt;
   if (reiter === 'allgemein') {
-    inhalt = [einstSprache(), zentraleNameFeld(f),
+    inhalt = [einstSprache(),
       h('div', { class: 'card-box' }, h('h3', {}, tt('Darstellung')), einstWahl([['system', tt('System')], ['hell', tt('Hell')], ['dunkel', tt('Dunkel')]], f.thema, (w) => { f.thema = w; settings.thema = w; zentraleThema(); })),
       einstPause(f), zentralePingBox(f), speichern, einstDatenschutz(),
       h('div', { class: 'card-box' }, h('h3', {}, tt('Über')),

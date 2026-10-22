@@ -1,1 +1,1 @@
-Exported from KOMPASS kompass-v0-50 (8575a09) by tools/export-reference.py
+Exported from KOMPASS kompass-v0-55 (6e2ddd2) by tools/export-reference.py

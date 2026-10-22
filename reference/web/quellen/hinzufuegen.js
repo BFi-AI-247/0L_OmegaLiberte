@@ -28,6 +28,7 @@ async function runAddSearch() {
       let r; try { r = await bskyQuelleAufloesen(q); } catch (e) { throw new Error(/Starter-Pack/.test(e.message) ? e.message : bskyFehler(e)); }
       res = [{ kind: 'feed', url: r.feed.url, name: r.feed.title, avatar: r.feed.icon, service: 'bluesky', sub: BSKY_ART_LABEL()[r.feed.art] + (r.beschreibung ? ' · ' + r.beschreibung : ''), feed: r.feed }];
     } else if (tab === 'ki') { const v = await kiQuellenVorschlaege(q); res = v.res; A.verworfen = v.verworfen; }
+    else if (tab === 'mastodon' && modulAn('mastodon-hashtags') && mastodonHashtag(q)) res = mastodonHashtagTreffer(mastodonHashtag(q));
     else if (tab === 'mastodon') res = await searchMastodon(q);
     else if (tab === 'bluesky') {
       const d = await getJSON('https://public.api.bsky.app/xrpc/app.bsky.actor.searchActors?limit=15&q=' + encodeURIComponent(q.replace(/^@/, '')));
@@ -53,6 +54,21 @@ async function runAddSearch() {
   if (err && reddit) err = tt('Reddit lässt Abrufe über unseren Server gerade nicht zu (Sperre gegen automatische Abrufe). Später noch einmal versuchen oder den Beitrag direkt bei Reddit lesen.');
   if (S.add !== A || A.seq !== seq) return; // inzwischen neue Suche gestartet
   A.res = res; A.err = err; A.busy = false; A.done = true; render();
+}
+// Issue #17 (Modul mastodon-hashtags): #tag im Reiter Mastodon → öffentliche Tag-Zeitleiste als RSS (…/tags/<tag>.rss).
+// Instanzen aus M021, im Prüfstand 9/9 bestätigt; die RSS-Ausgabe braucht keine Anmeldung (anders als die API mancher Instanzen).
+const HASHTAG_INSTANZEN = ['mastodon.social', 'norden.social', 'mastodon.de', 'digitalcourage.social', 'fosstodon.org'];
+function mastodonHashtag(q) {
+  const m = /^#([\p{L}\p{N}_]{1,64})$/u.exec(String(q || '').trim()); return m ? m[1] : null;
+}
+function mastodonHashtagTreffer(tag) {
+  const eigene = (parseMastodon(settings.mastodon) || {}).host;
+  const hosts = [...new Set([eigene, ...HASHTAG_INSTANZEN].filter(Boolean))].slice(0, 4);
+  return hosts.map((host) => {
+    const url = 'https://' + host + '/tags/' + encodeURIComponent(tag) + '.rss';
+    return { kind: 'feed', url, name: '#' + tag + ' · ' + host, service: 'mastodon', sub: tt('Hashtag-Zeitleiste auf ') + host + (host === eigene ? tt(' (deine Instanz)') : ''),
+      feed: { url, title: '#' + tag + ' (' + host + ')', kind: 'rss', icon: '', site: 'https://' + host + '/tags/' + encodeURIComponent(tag) } };
+  });
 }
 async function searchMastodon(q) {
   const pm = parseMastodon(settings.mastodon);
@@ -142,7 +158,7 @@ function removeKF(key) {
 function renderAdd() {
   const A = S.add;
   const close = () => { S.add = null; render(); };
-  const ph = { ki: tt('Thema, z. B. Fußball-Bundesliga, Raumfahrt, Kochen'), mastodon: tt('Name oder @name@instanz'), bluesky: tt('Name, Handle oder Adresse eines Feeds/einer Liste'), youtube: tt('Kanal-Adresse oder @name'), web: tt('Website oder Feed-Adresse, z. B. heise.de'), katalog: tt('Katalog filtern …') }[A.tab];
+  const ph = { ki: tt('Thema, z. B. Fußball-Bundesliga, Raumfahrt, Kochen'), mastodon: tt('Name, @name@instanz oder #hashtag'), bluesky: tt('Name, Handle oder Adresse eines Feeds/einer Liste'), youtube: tt('Kanal-Adresse oder @name'), web: tt('Website oder Feed-Adresse, z. B. heise.de'), katalog: tt('Katalog filtern …') }[A.tab];
   const hint = {
     mastodon: tt('Sucht über ') + ((parseMastodon(settings.mastodon) || {}).host || 'mastodon.social') + '. Du folgst dann in KOMPASS (nur lesend), nicht auf Mastodon selbst.',
     bluesky: tt('Öffentliche Bluesky-Suche. Du folgst dann in KOMPASS (nur lesend), nicht auf Bluesky selbst.'),
@@ -192,7 +208,7 @@ function renderAdd() {
     h('div', { class: 'bottom-sheet add-sheet', role: 'dialog', 'aria-label': tt('Quelle hinzufügen') },
       h('div', { class: 'add-head' }, h('b', {}, tt('Quelle hinzufügen')), closeBtn(tt('Schließen'), close)),
       h('div', { class: 'add-tabs scrollx', role: 'tablist' }, ADD_TABS.map(([k, l]) => h('button', { type: 'button', role: 'tab', class: 'filter-pill', 'aria-pressed': A.tab === k ? 'true' : 'false',
-        onClick: () => { A.tab = k; A.res = []; A.err = ''; A.done = false; render(); if (A.q.trim() && k !== 'katalog') runAddSearch(); } }, l))),
+        onClick: () => { A.tab = k; A.res = []; A.err = ''; A.done = false; render(); const l = document.querySelector('.add-list'); if (l) l.scrollTop = 0; if (A.q.trim() && k !== 'katalog') runAddSearch(); } }, l))),
       h('div', { class: 'add-search' }, h('div', { class: 'search', style: 'flex:1' }, icon('search', { sm: true }), h('label', { for: 'k-add', class: 'sr' }, ph), input),
         A.tab !== 'katalog' ? h('button', { type: 'button', class: 'btn primary', disabled: A.busy, onClick: runAddSearch }, tt('Suchen')) : null),
       h('span', { class: 'small add-hint' }, hint),
@@ -227,5 +243,8 @@ function quelleErkennen(eingabe) {
   if (m) return { art: 'microblog', feed: 'https://' + m[1].toLowerCase() + '.micro.blog/feed.xml', name: m[1] + ' (Micro.blog)' };
   m = s.match(/^micro\.blog\/([A-Za-z0-9_]+)([\/?#]|$)/i);
   if (m) return { art: 'microblog', feed: 'https://' + m[1].toLowerCase() + '.micro.blog/feed.xml', name: m[1] + ' (Micro.blog)' };
+  // Issue #17: Adresse einer Hashtag-Seite (https://<instanz>/tags/<tag>) → deren RSS
+  m = s.match(/^([a-z0-9.-]+\.[a-z]{2,})\/tags\/([\p{L}\p{N}_]{1,64})\/?(\.rss)?([?#]|$)/iu);
+  if (m && typeof modulAn === 'function' && modulAn('mastodon-hashtags')) return { art: 'hashtag', feed: 'https://' + m[1].toLowerCase() + '/tags/' + m[2] + '.rss', name: '#' + m[2] + ' (' + m[1].toLowerCase() + ')' };
   return null;
 }

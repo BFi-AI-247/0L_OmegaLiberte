@@ -11,7 +11,7 @@
 'use strict';
 
 /* ---------- Hilfen ---------------------------------------------------- */
-const VERSION = 'v0.50';
+const VERSION = 'v0.55';
 const LS = 'kompass.v0.' + (INSTANZ.speicher ? INSTANZ.speicher + '.' : '');
 // Modul-Schalter (instanz.js → module): false zieht ein Feature zurück, fehlt = an
 function modulAn(id) { return !(INSTANZ.module && INSTANZ.module[id] === false); }
@@ -230,6 +230,13 @@ const CATALOG = [
     ['Braunschweiger Zeitung – Gifhorn', 'https://www.braunschweiger-zeitung.de/niedersachsen/gifhorn/rss', 'braunschweiger-zeitung.de'],
     ['Polizeiinspektion Gifhorn', 'https://www.presseportal.de/rss/dienststelle_56517.rss2', 'presseportal.de'],
     ['MTV Gifhorn', 'https://www.mtv-gifhorn.de/?format=feed&type=rss', 'mtv-gifhorn.de']] },
+  // Umgebung Gifhorn (Issue #39): M022, Prüfstand 22.10.2026 6/8 – Braunschweiger Amtsblatt/Bekanntmachungen ohne Feed verworfen,
+  // Polizei-Regionen Gifhorn/Meine doppeln die Polizeiinspektion Gifhorn oben. Nicht Teil des W0-Einstiegs (nur Gifhorn).
+  { gruppe: 'Regional: Wolfsburg & Braunschweig', items: [
+    ['WAZ Wolfsburger Allgemeine', 'https://www.waz-online.de/arc/outboundfeeds/rss/', 'waz-online.de'],
+    ['Polizei Wolfsburg (Presseportal)', 'https://www.presseportal.de/rss/polizei/r/Wolfsburg.rss2', 'presseportal.de'],
+    ['Polizei Braunschweig (Presseportal)', 'https://www.presseportal.de/rss/polizei/r/Braunschweig.rss2', 'presseportal.de'],
+    ['VfL Wolfsburg', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCfdfDFNp50xLjAjD0TKOa4g', 'youtube.com', 'youtube']] },
   // Regionalpaket Borkum (Issue #13): M018 Abschnitt 10, Prüfstand 21.10.2026 – nur Quellen mit aktuellem Feed
   { gruppe: 'Regional: Borkum', items: [
     ['Borkum-News', 'https://www.borkum-news.de/feed/', 'borkum-news.de'],
