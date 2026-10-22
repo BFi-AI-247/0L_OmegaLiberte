@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// UI smoke test of the reference app: start, finish welcome, add a catalog source, open settings —
+// UI smoke test of the reference app: start, welcome in three steps, add a catalog source, open settings —
 // light and dark, phone 412 px and laptop 1400 px. Screenshots go to pruefstand/shots/ (git-ignored).
 //   php -S localhost:8000 -t reference/web &
 //   npm i playwright@1.56.0 && node pruefstand/oberflaeche.js        (BASE=… CHROMIUM=… optional)
@@ -35,8 +35,12 @@ require('fs').mkdirSync(OUT, { recursive: true });
         ergebnis.push([name, 'Hintergrund', bg]);
         await page.screenshot({ path: `${OUT}/${name}-1-start.png` });
       });
-      await schritt('Einrichtung abschließen (Los geht’s)', async () => {
-        await page.getByRole('button', { name: 'Los geht’s' }).click();
+      // Willkommen in drei Schritten: Sprache/Name/Speicher → Themenpakete → KI und Start
+      await schritt('Willkommen: drei Schritte bis „Los geht’s“', async () => {
+        await page.getByRole('button', { name: 'Weiter', exact: true }).click();
+        await page.screenshot({ path: `${OUT}/${name}-1a-schritt2.png` });
+        await page.getByRole('button', { name: 'Weiter', exact: true }).click();
+        await page.getByRole('button', { name: /^(Los geht’s|Mit Nachrichten starten)$/ }).click();
         await page.waitForTimeout(2500);
         await page.screenshot({ path: `${OUT}/${name}-1b-hauptansicht.png` });
       });
