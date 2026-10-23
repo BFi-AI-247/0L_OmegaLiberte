@@ -264,6 +264,13 @@ body:has(#vorschau-melden) .kib-flaeche.handy { margin-bottom: 40px; }
 .kif-knopf.nie[aria-pressed="true"] { background: #D0504A; border-color: #D0504A; color: #fff; }
 .kif-weitere summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .kif-weitere[open] summary { margin-bottom: 8px; }
+/* #89 Filter aufräumen */
+.kif-ordnen-knopf { align-self: flex-start; }
+.kif-ordnen { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-radius: 14px; border: 1.5px solid #9B87F5; background: color-mix(in srgb, #7C5CE0 8%, var(--bg)); }
+.kif-ordnen-liste { margin: 0; padding-left: 4px; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.kif-ordnen-liste li { overflow-wrap: anywhere; }
+.kif-ordnen-liste li.mehr b { color: #3FA66B; } .kif-ordnen-liste li.weniger b { color: #B08A12; } .kif-ordnen-liste li.nie b { color: #D0504A; }
+.kif-ordnen-knoepfe { display: flex; flex-wrap: wrap; gap: 8px; }
 .kif-verstehe { border-top: 1px solid var(--line2); padding-top: 10px; display: flex; flex-direction: column; gap: 6px; }
 .kif-verstehe h2 { margin: 0; font-size: 16px; }
 .kif-verstehe ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 15px; }
