@@ -112,7 +112,7 @@ document.addEventListener('keydown', (e) => {
 });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') { store.set('lastOpen', Date.now()); if (SY.timer) { clearTimeout(SY.timer); SY.timer = null; syncNow(); } }
-  else if (sync.provider && Date.now() - sync.last > 60000) syncNow();
+  else { if (sync.provider && Date.now() - sync.last > 60000) syncNow(); if (typeof marktLaden === 'function') marktLaden(); }
 });
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
@@ -122,6 +122,7 @@ const GOOGLE_ENDE = googleUebergang();  // #66: Google-Drive-Abgleich einmalig t
 if (!GOOGLE_ENDE) startseiteOeffnen();  // #43: Startseite über der App
 render(true);
 if (EINLADUNG_NEU) flash(tt('Einladung übernommen – die KI-Funktionen sind auf diesem Gerät frei.'));
+if (typeof marktLaden === 'function') marktLaden();  // #24: vor den Feeds, damit die Karte meist als erste kommt
 if (settings.onboarded && !EINSTIEG_NEULADEN) loadAll();
 zentraleTitel(); pingBeimStart();
 paketAusAdresse();

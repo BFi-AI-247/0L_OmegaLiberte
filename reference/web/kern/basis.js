@@ -11,7 +11,7 @@
 'use strict';
 
 /* ---------- Hilfen ---------------------------------------------------- */
-const VERSION = 'v0.74';
+const VERSION = 'v0.82';
 const LS = 'kompass.v0.' + (INSTANZ.speicher ? INSTANZ.speicher + '.' : '');
 // Modul-Schalter (instanz.js → module): false zieht ein Feature zurück, fehlt = an
 function modulAn(id) { return !(INSTANZ.module && INSTANZ.module[id] === false); }
@@ -229,6 +229,7 @@ const CATALOG = [
     ['Space.com', 'https://www.space.com/feeds.xml', 'space.com', 'rss', 'en'],
     ['NASA (YouTube)', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCLA_DiR1FfKNvjuUpBHmylQ', 'youtube.com', 'youtube', 'en'],
     ['Raumfahrer.net', 'https://www.raumfahrer.net/feed/', 'raumfahrer.net'],
+    ['Raketenstarts – Startplan (Launch Library 2)', 'https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=10&mode=normal', 'thespacedevs.com'],  // #42: offene API, rss.php macht daraus einen Tageseintrag
     ['ESA – Space News', 'https://www.esa.int/rssfeed/Our_Activities/Space_News', 'esa.int', 'rss', 'en'],
     ['Wikipedia – Artikel des Tages', 'https://de.wikipedia.org/w/api.php?action=featuredfeed&feed=featured&feedformat=atom', 'de.wikipedia.org'],
     ['Wikipedia – Was geschah am …?', 'https://de.wikipedia.org/w/api.php?action=featuredfeed&feed=onthisday&feedformat=rss', 'de.wikipedia.org'],

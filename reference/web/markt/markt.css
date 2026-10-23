@@ -1,0 +1,16 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* Markt am Morgen (#24) – Zeitungsbox wie in der Wiesenzeitung: Serifentitel, Linien, Pfeile grün/rot */
+.markt-karte .card-body { justify-content: center; }
+.markt-box { border-top: 3px solid var(--ink); border-bottom: 1px solid var(--line2); padding: 14px 0 10px; max-width: 40rem; width: 100%; align-self: center; }
+.markt-titel { margin: 0 0 10px; font-family: Georgia, 'Times New Roman', serif; font-size: 26px; font-weight: 700; letter-spacing: .01em; }
+.markt-zeilen { display: flex; flex-direction: column; }
+.markt-zeile { display: grid; grid-template-columns: 7.5rem auto 1fr; align-items: baseline; gap: 4px 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.markt-name { font-weight: 700; }
+.markt-wert { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.markt-pfeil { font-size: 14px; font-weight: 600; }
+.markt-pfeil.auf { color: #1E7B3A; } .markt-pfeil.ab { color: var(--danger); } .markt-pfeil.gleich { color: var(--muted); }
+.markt-notiz { grid-column: 2 / -1; font-size: 13px; color: var(--muted); line-height: 1.4; }
+.markt-link { grid-column: 2 / -1; font-weight: 600; color: var(--accent-ink); }
+.markt-quellen { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
+@media (prefers-color-scheme: dark) { .markt-pfeil.auf { color: #5BC27E; } }
+@media (max-width: 460px) { .markt-zeile { grid-template-columns: 1fr auto; } .markt-pfeil { grid-column: 1 / -1; } .markt-notiz, .markt-link { grid-column: 1 / -1; } }

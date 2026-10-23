@@ -180,7 +180,9 @@ function einstNetz(f, dienst) {
 function einstUebernehmen(f, onboarding) {
   settings.mastodon = f.mastodon; settings.bluesky = f.bluesky; settings.radar = f.radar; settings.pauseAfter = f.pauseAfter; settings.onboarded = true;
   settings.thema = f.thema || 'system'; zentraleThema();
+  const wunschVorher = settings.aiWunsch || '';
   if (!onboarding) settings.aiWunsch = String(f.aiWunsch || '').trim().slice(0, 300);
+  const wunschNeu = !onboarding && (settings.aiWunsch || '') !== wunschVorher;  // geänderter KI-Wunsch → neu kuratieren
   // Themenpakete aus dem Katalog (Willkommen): Feeds der gewählten Gruppen
   const gruppen = Object.keys(f.pakete || {}).filter((g) => f.pakete[g]);
   CATALOG.filter((g) => gruppen.includes(g.gruppe)).forEach((g) => katalogFuerMich(g).forEach(([n, u, d, kind]) => {
@@ -189,7 +191,8 @@ function einstUebernehmen(f, onboarding) {
   zentralePingUebernehmen(f); zentraleTitel();
   S.nextPauseAt = S.day.n + (settings.pauseAfter || 0);
   if (onboarding) { Object.keys(RADAR_FEEDS).forEach((k) => { if (settings.radar[k]) S.favs[k] = true; }); save('favs'); }
-  save('settings'); S.screen = null; S.form = null; render(); loadAll();
+  save('settings'); S.screen = null; S.form = null; render();
+  Promise.resolve(loadAll()).then(() => { if (wunschNeu && S.ai && S.ai.on && typeof curate === 'function') curate(); });
 }
 function einstQuellenZahl(f) {
   const gruppen = Object.keys(f.pakete || {}).filter((g) => f.pakete[g]);
@@ -273,6 +276,8 @@ function renderSettings(onboarding) {
   if (reiter === 'allgemein') {
     inhalt = [einstSprache(),
       h('div', { class: 'card-box' }, h('h3', {}, tt('Darstellung')), einstWahl([['system', tt('System')], ['hell', tt('Hell')], ['dunkel', tt('Dunkel')]], f.thema, (w) => { f.thema = w; settings.thema = w; zentraleThema(); })),
+      typeof sprachfilterBox === 'function' ? sprachfilterBox() : null,  // #69
+      typeof briefingWahl === 'function' ? briefingWahl() : null,  // #51
       einstPause(f), zentralePingBox(f), speichern, einstDatenschutz(),
       h('div', { class: 'card-box' }, h('h3', {}, tt('Über')),
         h('p', { class: 'small', style: 'margin:0;line-height:1.5' }, tt('{name} ist freie Software (AGPL-3.0). Quellcode und Rezept: ').replace('{name}', INSTANZ.name),

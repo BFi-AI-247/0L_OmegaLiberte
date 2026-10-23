@@ -6,7 +6,23 @@ function socialBuehne(stage, animate) {
   const old = [...stage.querySelectorAll('.card, .empty')].filter((x) => !/out-/.test(x.className)).pop();
   const c = cur();
   let next;
-  if (S.loading && !c) next = h('div', { class: 'loading' }, tt('Lade deine Quellen …'));
+  const bild = modulAn('leerbild');  // #64: Startbild statt leerer Bühne
+  const quellen = settings.feeds.length + S.kfollows.length + Object.keys(settings.radar || {}).filter((k) => settings.radar[k]).length + (settings.mastodon ? 1 : 0) + (settings.bluesky ? 1 : 0);
+  if (bild && S.loading && !c) next = startbild(tt('Lade deine Quellen …'));
+  else if (bild && !c && !S.ended) next = !quellen
+    ? startbild(tt('Noch keine Quellen – leg los.'), leerKnoepfe(h('button', { type: 'button', class: 'btn primary', onClick: () => openAdd() }, tt('Quelle hinzufügen')),
+      h('button', { type: 'button', class: 'btn', onClick: () => { S.screen = 'settings'; render(); } }, tt('Einstellungen'))))
+    : S.errors.length
+      ? startbild(tt('Deine Quellen sind gerade nicht erreichbar.'), leerKnoepfe(h('button', { type: 'button', class: 'btn primary', onClick: loadAll }, tt('Neu laden')),
+        h('button', { type: 'button', class: 'btn', onClick: () => { S.screen = 'settings'; render(); } }, tt('Einstellungen'))), leerDetails(S.errors))
+      : startbild(tt('Noch keine Beiträge.'), leerKnoepfe(h('button', { type: 'button', class: 'btn primary', onClick: loadAll }, tt('Neu laden')),
+        h('button', { type: 'button', class: 'btn', onClick: () => openAdd() }, tt('Quelle hinzufügen'))));
+  else if (bild && S.ended && !(S.filter && MEHR.laeuft[S.filter])) next = startbild(S.filter ? tt('Das war alles, was gerade erreichbar ist.') : aiActive() ? tt('Das war die KI-Auswahl. Alles Weitere findest du chronologisch.') : tt('Alles gesehen. Schön!'),
+    S.filter ? endeHinweis(S.filter) : null,
+    leerKnoepfe(aiActive() ? h('button', { type: 'button', class: 'btn', onClick: () => setAiMode(false) }, tt('Chronologisch weiterlesen')) : null,
+      h('button', { type: 'button', class: 'btn', onClick: shuffle }, tt('Mischen')),
+      h('button', { type: 'button', class: 'btn primary', onClick: loadAll }, tt('Neu laden'))));
+  else if (S.loading && !c) next = h('div', { class: 'loading' }, tt('Lade deine Quellen …'));
   else if (S.ended && S.filter && MEHR.laeuft[S.filter]) next = h('div', { class: 'loading' }, tt('Lade ältere Beiträge von ') + ((S.entries[S.filter] || {}).name || tt('dieser Quelle')) + ' …');
   else if (S.ended) next = h('div', { class: 'empty' }, h('b', {}, S.filter ? tt('Das war alles, was gerade erreichbar ist') : tt('Alles gesehen')),
     S.filter ? endeHinweis(S.filter) : null,

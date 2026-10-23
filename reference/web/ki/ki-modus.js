@@ -101,7 +101,7 @@ function setAiMode(on) {
   if (on) {
     const stale = !S.ai.res || Date.now() - S.ai.res.at > 60 * 60000;
     if (stale) { render(true); curate(); return; }
-    aiPrepare(); show(lageId(), 'up'); flash(tt('KI-Auswahl – kuratiert von ') + KI.name() + tt(' aus deinen Quellen.'));
+    aiPrepare(); show(lageId(), 'up'); flash(S.pruefDaten ? tt('KI-Auswahl aus den Beispieldaten (ohne KI).') : tt('KI-Auswahl – kuratiert von ') + KI.name() + tt(' aus deinen Quellen.'));
   } else { kibStapelOhneKi(); render(true); next(true); flash(tt('Chronologisch – alle Beiträge, neueste zuerst.')); }
 }
 // Lage und Themen gibt es nur in der KI-Auswahl: alle „ai:“-Einträge aus dem Stapel nehmen, damit weder
@@ -456,7 +456,8 @@ function kibMosaik() {
   const kopf = h('div', { class: 'kib-titel' },
     h('h1', {}, r.ueberschrift || tt('Heute in deinen Quellen')),
     h('span', { class: 'kib-datum' }, datum + ' · ' + th.length + (th.length === 1 ? tt(' Thema') : tt(' Themen'))),
-    h('button', { type: 'button', class: 'kib-knopf', 'aria-pressed': KIB.alsListe ? 'true' : 'false', onClick: () => { KIB.alsListe = !KIB.alsListe; kibZeichnen(els.stage); } }, KIB.alsListe ? tt('Als Mosaik') : tt('Als Liste')));
+    h('button', { type: 'button', class: 'kib-knopf', 'aria-pressed': KIB.alsListe ? 'true' : 'false', onClick: () => { KIB.alsListe = !KIB.alsListe; kibZeichnen(els.stage); } }, KIB.alsListe ? tt('Als Mosaik') : tt('Als Liste')),
+    !isWide() ? h('button', { type: 'button', class: 'kib-knopf', disabled: S.ai.busy, onClick: () => curate() }, S.ai.busy ? tt('Kuratiere …') : tt('Neu kuratieren')) : null);  // Handy: Laptop hat den Knopf in der Kopfzeile
   const hinweis = r.hinweis || (r.wunsch && r.treffer === 0) ? h('div', { class: 'kib-hinweis' },
     h('span', {}, r.hinweis || tt('Zu deinem Wunsch finde ich nichts in deinen Quellen.')),
     h('button', { type: 'button', class: 'kib-knopf', onClick: () => openAdd('ki', r.wunsch) }, tt('✦ KI nach passenden Quellen fragen'))) : null;

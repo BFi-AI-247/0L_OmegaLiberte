@@ -305,7 +305,10 @@ function lies_feed(string $body, string $feedUrl): ?array {
             'medien' => $medien,
         ];
     }
-    return ['titel' => $titel, 'seite' => $seite, 'eintraege' => $out];
+    // #69: Sprache des Feeds (RSS <language>, Atom xml:lang) – zwei Buchstaben, sonst leer
+    $sp = strtolower(trim($atom ? $root->getAttributeNS('http://www.w3.org/XML/1998/namespace', 'lang') : kt($x, $kanal, 'language')));
+    $sp = preg_match('/^([a-z]{2})(?:[-_][a-z0-9]+)?$/', $sp, $m2) ? $m2[1] : '';
+    return ['titel' => $titel, 'seite' => $seite, 'sprache' => $sp, 'eintraege' => $out];
 }
 
 // ---------- JSON Feed 1.0/1.1 (von Mistral, M007 zu Karte A006; Regex-Trennzeichen in jf_absolut korrigiert) ----
@@ -531,9 +534,42 @@ function ard_feed(string $url, string $urn): array {
     return $d;
 }
 
+// ---------- Startplan Raumfahrt (#42): Launch Library 2 (The Space Devs), JSON ohne Schlüssel ------------
+// Frei nutzbar mit Quellenangabe; Gratis-Stufe 15 Abrufe/Stunde je Server → Puffer 30 Minuten (ll2_url → puffer_feed).
+// Ein Eintrag je Tag: „Raketenstarts – die nächsten N“ als Liste (Zeit in UTC). Kein Scraping, nur die offene API.
+function ll2_url(string $u): bool { return (bool)preg_match('#^https://ll\.thespacedevs\.com/2\.[0-9]\.[0-9]/launch/upcoming/?(\?[A-Za-z0-9=&_]*)?$#', $u); }
+function ll2_feed(string $url, string $body): ?array {
+    $j = json_decode($body, true);
+    if (!is_array($j) || !isset($j['results']) || !is_array($j['results'])) return null;
+    $zeilen = []; $bild = '';
+    foreach (array_slice($j['results'], 0, 15) as $l) {
+        if (!is_array($l)) continue;
+        $t = strtotime((string)($l['net'] ?? '')); if (!$t) continue;
+        $status = (string)($l['status']['abbrev'] ?? '');
+        $anbieter = (string)($l['launch_service_provider']['name'] ?? '');
+        $ort = (string)($l['pad']['location']['name'] ?? $l['pad']['name'] ?? '');
+        $zeilen[] = '• ' . gmdate('d.m. H:i', $t) . ' UTC – ' . text((string)($l['name'] ?? ''), 140)
+            . ($anbieter !== '' ? ' (' . text($anbieter, 60) . ')' : '') . ($ort !== '' ? ' · ' . text($ort, 80) : '') . ($status !== '' ? ' · ' . text($status, 12) : '');
+        if ($bild === '' && is_string($l['image'] ?? null) && preg_match('#^https://#', $l['image'])) $bild = $l['image'];
+    }
+    if (!$zeilen) return null;
+    $tag = gmdate('Y-m-d');
+    return ['titel' => 'Raketenstarts (Launch Library 2)', 'seite' => 'https://thespacedevs.com/llapi', 'eintraege' => [[
+        'titel' => 'Raketenstarts – die nächsten ' . count($zeilen), 'link' => 'https://thespacedevs.com/llapi#' . $tag,
+        'datum' => $tag . 'T00:01:00Z', 'text' => implode("\n", $zeilen) . "\n\nDaten: Launch Library 2 · The Space Devs",
+        'bild' => $bild, 'autor' => 'The Space Devs', 'video' => null, 'medien' => null]]];
+}
+
 // ---------- Feed: Abruf → Antwort -----------------------------------------
 function feed_ergebnis(string $url, array $h): array {
     [$code, $body, , $end, $gekuerzt] = $h;
+    if ($code === 200 && ll2_url($url)) {  // #42: Startplan als JSON
+        $f = ll2_feed($url, (string)$body);
+        if (!$f) return feed_fehler($url, 'Startplan konnte nicht gelesen werden.');
+        $d = ['status' => 'ok', 'url' => $url, 'titel' => $f['titel'], 'seite' => $f['seite'], 'abgerufen' => gmdate('c'), 'eintraege' => $f['eintraege']];
+        @file_put_contents(puffer_datei('feed', $url), als_json($d), LOCK_EX);
+        return $d;
+    }
     if ($code !== 200 || $body === '' || !ist_feed($body)) {
         $m = $code === 0 ? 'Adresse nicht erlaubt oder nicht erreichbar.' : ($code === -1 ? 'Der Feed ist zu groß.'
             : ($code === 200 ? 'Unter dieser Adresse liegt kein Feed.' : 'Quelle antwortet mit ' . $code . '.'));
@@ -542,6 +578,7 @@ function feed_ergebnis(string $url, array $h): array {
     $f = lies_feed($body, $end);
     if (!$f) return feed_fehler($url, 'Feed konnte nicht gelesen werden.');
     $d = ['status' => 'ok', 'url' => $url, 'titel' => $f['titel'], 'seite' => $f['seite'], 'abgerufen' => gmdate('c'), 'eintraege' => $f['eintraege']];
+    if (!empty($f['sprache'])) $d['sprache'] = $f['sprache'];  // #69
     if ($gekuerzt) $d['gekuerzt'] = true; // langer Feed: nur die ersten Einträge geladen
     @file_put_contents(puffer_datei('feed', $url), als_json($d), LOCK_EX);
     return $d;
@@ -555,7 +592,7 @@ function feed_fehler(string $url, string $meldung): array {
 }
 /** Frischer Puffer (Feed oder gemerkter Fehler) – sonst null. */
 function puffer_feed(string $url): ?array {
-    foreach ([['feed', 600], ['fehl', FEHLER_PUFFER]] as [$art, $sek]) {
+    foreach ([['feed', ll2_url($url) ? 1800 : 600], ['fehl', FEHLER_PUFFER]] as [$art, $sek]) {
         $p = puffer_datei($art, $url);
         if (puffer_frisch($p, $sek) && is_array($d = json_decode((string)file_get_contents($p), true))) return $art === 'fehl' ? (puffer_alt($url) ?? $d) : $d;
     }
@@ -617,7 +654,7 @@ if ($aktion === 'sammel') {
 $url = norm_url((string)($_GET['url'] ?? ''));
 if ($url === '') raus(400, ['status' => 'fehler', 'meldung' => 'Keine Adresse angegeben.']);
 $pufferDatei = puffer_datei($aktion, $url);
-if (puffer_frisch($pufferDatei, $aktion === 'feed' ? 600 : 86400)) {
+if (puffer_frisch($pufferDatei, $aktion === 'feed' ? (ll2_url($url) ? 1800 : 600) : 86400)) {
     header('Cache-Control: public, max-age=300');
     readfile($pufferDatei);
     exit;

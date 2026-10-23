@@ -128,12 +128,18 @@ function renderTop() {
 }
 const OVERVIEW_TITLES = ttFest(() => ({ fav: tt('Deine Favoriten'), dienst: tt('Alle Dienste'), kontakt: tt('Alle Kontakte'), creator: tt('Alle Creator') }));
 function emptyHint() {
-  return h('p', { class: 'small', style: 'padding:16px;text-align:center' }, S.loading ? tt('Lade Quellen …') : S.mode === 'fav'
-    ? tt('Noch keine Favoriten. Wechsle zu Dienst, Kontakt oder Creator und markiere Einträge mit dem Stern.') : tt('Noch nichts verbunden – Quellen in den Einstellungen hinzufügen.'));
+  // #64: Text je Reiter – sind schon Quellen da, nicht „noch nichts verbunden“ sagen
+  const da = settings.feeds.length || settings.mastodon || settings.bluesky || S.kfollows.length;
+  const je = { fav: tt('Noch keine Favoriten. Wechsle zu Dienst, Kontakt oder Creator und markiere Einträge mit dem Stern.'),
+    dienst: tt('Noch keine Dienste – Mastodon, Bluesky, YouTube oder Websites in den Einstellungen verbinden.'),
+    kontakt: tt('Noch keine Kontakte – Kontakte sind Menschen, denen du auf Mastodon oder Bluesky folgst.'),
+    creator: tt('Noch keine Creator – Creator sind YouTube-Kanäle, Websites und Personen, denen du folgst.') };
+  return h('p', { class: 'small', style: 'padding:16px;text-align:center' }, S.loading ? tt('Lade Quellen …')
+    : (modulAn('leerbild') && da && je[S.mode]) || (S.mode === 'fav' ? je.fav : tt('Noch nichts verbunden – Quellen in den Einstellungen hinzufügen.')));
 }
 function unreadAll() {
   const since = S.countMode === 0 ? S.prevOpen : S.countMode === 1 ? Date.now() - 86400000 : 0;
-  return visible().filter((p) => !S.seen[sk(p.id)] && (Date.parse(p.date) || 0) >= since).length;
+  return visible().filter((p) => p.service !== 'markt' && !S.seen[sk(p.id)] && (Date.parse(p.date) || 0) >= since).length;  // #24: Markt-Karte zählt nicht
 }
 
 /* Laptop: linke Spalte mit allen Einträgen, Mitte Beitrag, rechts Faktencheck + Dialog */

@@ -52,3 +52,20 @@ function startseitePruefen() {
   const rest = 1800 - (Date.now() - STARTSEITE.seit);
   if (rest <= 0) startseiteSchliessen(); else setTimeout(startseitePruefen, rest);
 }
+
+// #64 (Modul leerbild): Startbild als ruhiges Bauteil für leere Zustände der Bühne – dieselbe Quelle für Logo und Schriftzug
+function startbild(satz, ...kinder) {
+  const logo = h('div', { class: 'start-logo' }); logo.innerHTML = STARTSEITE_LOGO;
+  return h('div', { class: 'empty leerbild' }, logo,
+    h('div', { class: 'start-zeilen', 'aria-label': 'Your Social Media – ' + INSTANZ.marke + ' ~ OmegaLiberte' },
+      h('div', { class: 'start-z', 'aria-hidden': 'true' }, 'YOUR'), h('div', { class: 'start-z', 'aria-hidden': 'true' }, 'SOCIAL'),
+      h('div', { class: 'start-z', 'aria-hidden': 'true' }, 'MEDIA'),
+      h('div', { class: 'start-z start-marke', 'aria-hidden': 'true' }, INSTANZ.marke, h('span', { class: 'start-tilde' }, ' ~ '), 'OmegaLiberte')),
+    satz ? h('p', { class: 'leer-satz', role: 'status' }, satz) : null, ...kinder);
+}
+function leerKnoepfe(...k) { return h('div', { class: 'leer-knoepfe' }, ...k.filter(Boolean)); }
+// Lange Fehlerlisten nicht als Fließtext: eingeklappt unter „Details“
+function leerDetails(liste) {
+  if (!liste || !liste.length) return null;
+  return h('details', { class: 'leer-details small' }, h('summary', {}, tt('Details') + ' (' + liste.length + ')'), h('ul', {}, liste.map((x) => h('li', {}, x))));
+}

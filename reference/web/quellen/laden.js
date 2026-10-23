@@ -89,7 +89,7 @@ function mastoPost(st, host, kind) {
   return {
     id: 'm:' + s.uri, service: 'mastodon', tags: ['mastodon', 'm:' + acct],
     who: a.display_name || a.username, whoKey: 'm:' + acct, avatar: a.avatar_static, handle: '@' + acct,
-    kind, title: '', text, rich, card, urls: linkKeys(rich, card),
+    kind, title: '', text, rich, card, urls: linkKeys(rich, card), sprache: (s.language || '').slice(0, 2).toLowerCase() || undefined,  // #69
     link: s.url || s.uri, date: s.created_at,
     media: (s.media_attachments || []).filter((x) => x.type === 'image' || x.type === 'gifv').slice(0, 4).map((x) => x.preview_url),
     mediaGross: (s.media_attachments || []).filter((x) => x.type === 'image' || x.type === 'gifv').slice(0, 4).map((x) => (x.type === 'image' && x.url) || x.preview_url),
@@ -166,7 +166,7 @@ function bskyPost(fp, kind) {
   return {
     id: 'b:' + p.uri, service: 'bluesky', tags: ['bluesky', 'b:' + a.handle],
     who: a.displayName || a.handle, whoKey: 'b:' + a.handle, avatar: a.avatar, handle: '@' + a.handle,
-    kind, title: '', text, rich, card, urls: linkKeys(rich, card, text), link: 'https://bsky.app/profile/' + a.handle + '/post/' + rkey,
+    kind, title: '', text, rich, card, urls: linkKeys(rich, card, text), link: 'https://bsky.app/profile/' + a.handle + '/post/' + rkey, sprache: (Array.isArray(rec.langs) && rec.langs[0] ? String(rec.langs[0]).slice(0, 2).toLowerCase() : undefined),  // #69
     date: rec.createdAt || p.indexedAt, media, mediaGross, mediaAlt,
     videoAnhang: /embed\.video/.test(String(em.$type || '') + String((em.media && em.media.$type) || '')) || undefined  // #68
   };
@@ -322,7 +322,7 @@ function feedPosts(f, d) {
   const ptEmbed = (link) => { const m = pt && /^https:\/\/([^/]+)\/(?:w|videos\/watch)\/([A-Za-z0-9-]{8,40})(?:[?#].*)?$/.exec(link || ''); return m ? 'https://' + m[1] + '/videos/embed/' + m[2] : ''; };
   return (d.eintraege || []).map((e) => ({ ptEmbed: ptEmbed(e.link) || undefined,
     id: e.video ? 'y:' + e.video : 'w:' + (e.link || e.titel), service: yt ? 'youtube' : 'rss', tags: [yt ? 'youtube' : 'rss', key],
-    who: f.title || d.titel, whoKey: key, avatar: f.icon || '', handle: hostOf(f.site || f.url),
+    who: f.title || d.titel, whoKey: key, avatar: f.icon || '', handle: hostOf(f.site || f.url), sprache: d.sprache || undefined,  // #69
     title: leerPlatzhalter(e.titel), text: leerPlatzhalter(e.text), link: e.link || '', date: e.datum,
     media: e.bild && !e.video && !e.medien ? [e.bild] : [], video: e.video || null, short: /youtube\.com\/shorts\//.test(e.link || ''), medien: e.medien || null, thumb: e.bild || '', card: null, urls: e.link ? [urlKey(e.link)] : []
   }));

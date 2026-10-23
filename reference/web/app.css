@@ -572,3 +572,15 @@ details.einr-radar > summary h3 { display: inline; }
 .takeout ol { margin: 6px 0 8px; padding-left: 20px; line-height: 1.5; }
 .takeout-wahl { display: inline-flex; cursor: pointer; }
 .paket-haken[aria-pressed="false"] { opacity: .6; }
+.sprach-wahl { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.sprach-wahl .filter-pill { align-self: auto; }
+/* #64 Startbild in leeren Zuständen der Bühne (Modul leerbild) – ruhig, ohne Animation */
+.empty.leerbild { gap: 14px; overflow-y: auto; justify-content: safe center; --start-flamme: #E8A33D; }
+.leerbild .start-logo { animation: none; }
+.leerbild .start-zeilen { gap: 0; }
+.leerbild .start-z { animation: none; font-size: clamp(28px, 8vw, 44px); color: var(--ink); }
+.leerbild .start-marke { margin-top: 8px; font-size: clamp(15px, 4vw, 19px); }
+.leer-satz { margin: 6px 0 0; font-size: 16px; color: var(--ink2); max-width: 28rem; }
+.leer-knoepfe { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.leer-details { max-width: 28rem; text-align: left; color: var(--muted); }
+.leer-details ul { margin: 6px 0 0; padding-left: 18px; }

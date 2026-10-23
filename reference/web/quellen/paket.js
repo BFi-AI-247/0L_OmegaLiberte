@@ -93,10 +93,26 @@ function paketPruefen(p) {
   return aus;
 }
 
+// #76: Ein Paket-Wunsch ersetzt nie still den eigenen KI-Wunsch. Leer → übernehmen; eigener Wunsch → „behalten“ (Standard),
+// wählbar „ergänzen“ oder „ersetzen“. Woher der Wunsch kam, merkt settings.aiWunschPaket (für das Entfernen von Paketen, #70).
+function paketWunschStandard(w) {
+  if (!w) return '';
+  const eigen = String(settings.aiWunsch || '').trim();
+  return !eigen ? 'ersetzen' : eigen === w || eigen.includes(w) ? 'gleich' : 'behalten';
+}
+function paketWunschAnwenden(w, wahl) {
+  if (!w || wahl === 'gleich' || wahl === 'behalten' || !wahl) return false;
+  const eigen = String(settings.aiWunsch || '').trim();
+  settings.aiWunsch = (wahl === 'ergaenzen' && eigen ? eigen + '; ' + w : w).slice(0, 400);
+  settings.aiWunschPaket = w;
+  return true;
+}
+
 function paketVorschau(text, woher) {
   const p = paketLesen(text);
   const liste = paketPruefen(p);
-  S.paket = { stufe: 'vorschau', p, liste, woher: woher || '', sprache: SPRACHEN.some((x) => x[0] === p.sprache) ? p.sprache : '' };
+  S.paket = { stufe: 'vorschau', p, liste, woher: woher || '', sprache: SPRACHEN.some((x) => x[0] === p.sprache) ? p.sprache : '',
+    wunschWahl: paketWunschStandard(p.wunsch) };
   if (!liste.length && !p.wunsch && !S.paket.sprache) S.paket.leer = p.hinweis || tt('In diesem Paket habe ich keine Quellen gefunden.');
   render();
 }
@@ -184,7 +200,7 @@ async function paketUebernehmen() {
     } catch (er) { P.fehlt.push(e.titel || e.wert); }
     schritt();
   });
-  if (P.p.wunsch) settings.aiWunsch = P.p.wunsch;
+  paketWunschAnwenden(P.p.wunsch, P.wunschWahl);  // #76
   const neueSprache = P.sprache && P.sprache !== LANG ? P.sprache : '';
   if (neueSprache) settings.sprache = neueSprache;
   const warNeu = !settings.onboarded;
@@ -267,13 +283,20 @@ function renderPaket() {
       h('span', { class: 'row-sub' }, (PAKET_LABEL[e.art] || e.art) + (e.wert && e.wert !== name(e) ? ' · ' + e.wert : '') + (e.status !== 'neu' ? ' · ' + STATUS[e.status] + (e.grund ? ' (' + e.grund + ')' : '') : '') + (e.art === 'bluesky' || e.art === 'mastodon' ? tt(' · in KOMPASS folgen') : ''))),
     e.status === 'neu' ? h('button', { type: 'button', class: 'mini paket-haken', 'aria-pressed': e.aus ? 'false' : 'true', 'aria-label': (e.aus ? tt('Auswählen: ') : tt('Abwählen: ')) + name(e),
       onClick: () => { e.aus = !e.aus; render(); } }, e.aus ? '○' : '✓') : null));
-  const extra = [P.p.wunsch ? tt('Wunsch für die KI-Auswahl: „') + P.p.wunsch + '“' : '', P.sprache && P.sprache !== LANG ? tt('Sprache: ') + (SPRACHEN.find((x) => x[0] === P.sprache) || [])[1] : ''].filter(Boolean);
+  const wunschEigen = P.p.wunsch && (P.wunschWahl === 'behalten' || P.wunschWahl === 'ergaenzen' || (P.wunschWahl === 'ersetzen' && String(settings.aiWunsch || '').trim()));
+  const wahlKnopf = (id, text) => h('button', { type: 'button', class: 'mini' + (P.wunschWahl === id ? ' primary' : ''), 'aria-pressed': P.wunschWahl === id ? 'true' : 'false',
+    onClick: () => { P.wunschWahl = id; render(); } }, text);
+  const wunschBlock = wunschEigen ? h('div', { class: 'paket-wunsch', role: 'group', 'aria-label': tt('Wunsch für die KI-Auswahl') },
+    h('p', { class: 'small', style: 'margin:0 0 4px' }, tt('Das Paket bringt einen Wunsch für die KI-Auswahl mit: „') + P.p.wunsch + tt('“. Dein Wunsch: „') + String(settings.aiWunsch || '').trim() + '“'),
+    h('div', { class: 'btn-row' }, wahlKnopf('behalten', tt('Meinen behalten')), wahlKnopf('ergaenzen', tt('Ergänzen')), wahlKnopf('ersetzen', tt('Ersetzen')))) : null;
+  const extra = [P.p.wunsch && !wunschEigen && P.wunschWahl !== 'gleich' ? tt('Wunsch für die KI-Auswahl: „') + P.p.wunsch + '“' : '', P.sprache && P.sprache !== LANG ? tt('Sprache: ') + (SPRACHEN.find((x) => x[0] === P.sprache) || [])[1] : ''].filter(Boolean);
   return blatt(tt('Starter-Paket – Vorschau'), kopf(P.p.titel || tt('Starter-Paket')),
     h('span', { class: 'small add-hint' }, (P.woher ? P.woher + ' · ' : '') + neu + (neu === 1 ? tt(' neue Quelle') : tt(' neue Quellen')) + (P.liste.length > neu ? ' · ' + (P.liste.length - neu) + tt(' übersprungen') : '') + tt('. Nichts wird ohne dich übernommen.')),
     extra.length ? h('p', { class: 'small', style: 'margin:0 0 4px' }, extra.join(' · ')) : null,
+    wunschBlock,
     P.leer ? h('p', { class: 'small add-msg' }, P.leer) : h('div', { class: 'add-list' }, zeilen),
     h('div', { class: 'btn-row' },
-      h('button', { type: 'button', class: 'btn primary', disabled: !(neu || P.p.wunsch || (P.sprache && P.sprache !== LANG)), onClick: paketUebernehmen }, tt('Übernehmen')),
+      h('button', { type: 'button', class: 'btn primary', disabled: !(neu || (P.p.wunsch && P.wunschWahl !== 'behalten' && P.wunschWahl !== 'gleich') || (P.sprache && P.sprache !== LANG)), onClick: paketUebernehmen }, tt('Übernehmen')),
       h('button', { type: 'button', class: 'btn', onClick: close }, tt('Abbrechen'))));
 }
 

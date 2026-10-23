@@ -7,7 +7,8 @@ function chronoVisible() {
   const nm = modulAn('nur-medien');
   return S.posts.filter((p) => (S.filter ? p.tags.includes(S.filter) : true) &&
     !p.tags.some((t) => t !== S.filter && !cfgOf(t).show) &&
-    !(nm && !hatMedien(p) && p.tags.some((t) => cfgOf(t).nurMedien)));
+    !(nm && !hatMedien(p) && p.tags.some((t) => cfgOf(t).nurMedien)) &&
+    (typeof spracheErlaubt !== 'function' || spracheErlaubt(p)));  // #69
 }
 // #68 (Modul nur-medien): Beitrag mit eigenem Bild oder Video – ein Link-Vorschaubild (card) allein zählt nicht
 function hatMedien(p) {
@@ -15,13 +16,14 @@ function hatMedien(p) {
     (p.medien && /video|bild|image/i.test(String(p.medien.art || p.medien.typ || '')))));
 }
 function visible() {
-  const base = chronoVisible();
   const m = aktiverModus();
+  // #24: „Markt am Morgen“ einmal am Tag vorne, nur in der chronologischen Ansicht
+  const base = m && m.id === 'social' && typeof marktVorne === 'function' ? marktVorne(chronoVisible()) : chronoVisible();
   return m && m.reihenfolge ? m.reihenfolge(base) : base;
 }
 function markSeen(p) {
   if (!p || S.seen[sk(p.id)]) return;
-  if (String(p.id).startsWith('ai:')) { S.seen[sk(p.id)] = Date.now(); return; }
+  if (/^(ai|markt):/.test(String(p.id))) { S.seen[sk(p.id)] = Date.now(); return; }
   S.seen[sk(p.id)] = Date.now();
   if (S.day.d !== today()) { S.day = { d: today(), n: 0 }; S.nextPauseAt = settings.pauseAfter || 0; }  // über Mitternacht offen
   S.day.n += 1; S.total += 1;
