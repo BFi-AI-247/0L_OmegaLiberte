@@ -60,9 +60,11 @@ $p = parse_url($url);
 if (!$p || ($p['scheme'] ?? '') !== 'https' || empty($p['host']) || isset($p['user']) || isset($p['query']) || isset($p['fragment'])) nein('Nur https-Adressen ohne Zusatz.');
 $pfad = (string)($p['path'] ?? '/');
 if (str_contains($pfad, '..')) nein('Pfad nicht erlaubt.');
-// Nur der Ordner KOMPASS und Dateien kompass-*.json darin
-$istOrdner = (bool)preg_match('#/KOMPASS/?$#', $pfad);
-$istDatei = (bool)preg_match('#/KOMPASS/kompass-[a-z0-9-]{1,40}\.json$#', $pfad);
+// Nur der Ordner KOMPASS (bzw. KOMPASS/<Profil>, #60) und Dateien kompass-*.json darin
+if (preg_match('#%2[ef]|%5c#i', $pfad)) nein('Pfad nicht erlaubt.');
+$istOrdner = (bool)preg_match('#/KOMPASS(/[A-Za-z0-9%._~-]{1,160})?/?$#', $pfad);
+$istDatei = (bool)preg_match('#/KOMPASS/([A-Za-z0-9%._~-]{1,160}/)?kompass-[a-z0-9-]{1,40}\.json$#', $pfad);
+if ($istDatei) $istOrdner = false;
 if (!$istOrdner && !$istDatei) nein('Nur der Ordner KOMPASS ist erlaubt.');
 if ($methode === 'MKCOL' && !$istOrdner) nein('Nur der Ordner KOMPASS.');
 if (($methode === 'GET' || $methode === 'PUT') && !$istDatei) nein('Nur KOMPASS-Dateien.');

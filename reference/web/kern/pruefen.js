@@ -119,3 +119,23 @@ function pruefZeichnen() {
     h('div', { class: 'small pruefen-hinweis' }, tt('Nur in der Vorschau. Beispieldaten werden nicht gespeichert; „Zurück“ lädt neu.'))) : null;
   el.replaceChildren(knopf, ...(menue ? [menue] : []));
 }
+
+// ---------- Link direkt an die Stelle (#84) ----------
+// …/kompass-vorschau/#pruefen=beispiel&zeige=ki        → Beispieldaten, KI-Mosaik
+// …#pruefen=beispiel&zeige=ki-filter                  → Beispieldaten, Seite „KI-Filter“
+// …#pruefen=beispiel&zeige=ki-ende                    → Beispieldaten, KI-Mosaik ans Ende gescrollt (weitere Mosaik-Seiten)
+// Wirkt nur in der Vorschau; der Teil wird aus der Adresse entfernt, damit Neuladen normal startet.
+const PRUEF_ZIELE = ['ki', 'ki-filter', 'ki-ende'];
+function pruefAusAdresse() {
+  const hs = (location.hash || '').replace(/^#/, ''); const teile = hs.split('&');
+  const m = teile.find((t) => /^pruefen=/.test(t)); if (!m || !pruefAn()) return false;
+  const z = (teile.find((t) => /^zeige=/.test(t)) || '').slice(6);
+  const rest = teile.filter((t) => !/^(pruefen|zeige)=/.test(t)).join('&');
+  history.replaceState(null, '', location.pathname + location.search + (rest ? '#' + rest : ''));
+  pruefDatenLaden(m.slice(8) === 'leer' ? 'leer' : 'beispiel');
+  if (!PRUEF_ZIELE.includes(z) || !S.ai.res) return true;
+  modusWahl('ki');
+  if (z === 'ki-filter' && typeof kifId === 'function' && modulAn('ki-filter')) show(kifId(), 'up');
+  if (z === 'ki-ende') setTimeout(() => { const f = document.querySelector('.kib-flaeche'); if (f) f.scrollTop = f.scrollHeight; }, 400);
+  return true;
+}

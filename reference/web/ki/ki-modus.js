@@ -12,6 +12,7 @@ function aiPrepare() {
   if (!S.ai.res) return;
   const r = S.ai.res;
   S.byId[lageId()] = { id: lageId(), service: 'ki', tags: [], who: 'KI-Auswahl', whoKey: 'ki', title: tt('Heute in deinen Quellen'), text: '', date: new Date(r.at).toISOString(), media: [] };
+  if (modulAn('ki-filter')) S.byId[kifId()] = { id: kifId(), service: 'ki', tags: [], who: 'KI-Auswahl', whoKey: 'ki', title: tt('KI-Filter'), text: '', date: new Date(r.at).toISOString(), media: [] };  // #80
   S.aiWhy = {}; S.aiTheme = {}; KIB.gewicht = {};
   (r.auswahl || []).forEach((a) => { S.aiWhy[a.id] = a.warum; if (a.gewicht) KIB.gewicht[a.id] = Math.max(1, Math.min(3, Math.round(+a.gewicht) || 1)); });
   (r.lage || []).forEach((t, i) => (t.ids || []).forEach((id) => { if (S.aiTheme[id] == null) S.aiTheme[id] = i; }));
@@ -51,7 +52,7 @@ async function curate(weiter) {
       const t = String(p.text || '').replace(/\s+/g, ' ').trim();
       return { id: p.id, quelle: entryNameOf(p), titel: p.title || t.slice(0, 140), text: p.title ? t.slice(0, 220) : t.slice(140, 360) };
     }),
-    wunsch: settings.aiWunsch || '',
+    wunsch: modulAn('ki-filter') ? kifWunsch() : (settings.aiWunsch || ''),  // #80: KI-Filter (＋/−/⦸) geht mit
     favoriten: Object.keys(S.favs).map((k) => (S.entries[k] || {}).name).filter(Boolean),
     anzahl: 20
   };
@@ -74,7 +75,7 @@ async function curate(weiter) {
       if (!lage.length) return 'leer';
       r.lage = r.lage.concat(lage); r.auswahl = r.auswahl.concat((d.auswahl || []).filter((a) => !da.has(a.id)));
       r.n += cand.length; r.runde = (r.runde || 1) + 1; r.nachAt = Date.now();
-      store.set('aiRes', r); aiPrepare();
+      store.set('aiRes', r); if (modulAn('ki-filter')) kifZaehlen(lage); aiPrepare();
       return 'ok';
     }
     KIB.nachLeer = false; KIB.weiter = null;
@@ -83,6 +84,7 @@ async function curate(weiter) {
       von: KI.art() !== 'kompass' && KI.bereit() ? KI.name() : tt('Mistral (KOMPASS-Probe)') };
     if (words.length && !match.length && !S.ai.res.hinweis) S.ai.res.hinweis = 'Zu „' + wunsch + tt('“ finde ich in deinen ungelesenen Beiträgen nichts. Füge passende Quellen hinzu.');
     store.set('aiRes', S.ai.res);
+    if (modulAn('ki-filter')) kifZaehlen(S.ai.res.lage);
     aiPrepare();
     S.ai.busy = false;
     // Während des Kuratierens umgeschaltet (Chronologisch, Quelle gewählt): nicht in die KI-Auswahl springen
@@ -215,6 +217,7 @@ function themaIndex(id) {
 function kibEbene() {
   const c = cur();
   if (!c || c.id === lageId()) return 'mosaik';
+  if (c.id === kifId() && modulAn('ki-filter')) return 'filter';
   if (themaIndex(c.id) >= 0) return 'thema';
   return c.service === 'ki' ? 'mosaik' : 'karte';
 }
@@ -451,6 +454,7 @@ function kibZurueck() {
     else if (ti >= 0) { const k = kibPos(KIB.liste, c.id); kibZeigeZeile(ti, Math.floor(k / 2)); KIB.fokus = 'post:' + (KIB.liste[k] || c.id); show(themaId(ti), 'down'); }
     else { KIB.fokus = null; show(lageId(), 'down'); }
   } else if (e === 'thema') { KIB.fokus = 'thema:' + themaIndex(cur().id); show(lageId(), 'down'); }
+  else if (e === 'filter') { KIB.fokus = 'ki-filter'; show(lageId(), 'down'); }
 }
 function kibZeigeZeile(ti, row) {
   const z = KIB.zeile[ti] || 0;
@@ -491,9 +495,9 @@ function kibMosaik() {
     h('span', {}, r.hinweis || tt('Zu deinem Wunsch finde ich nichts in deinen Quellen.')),
     h('button', { type: 'button', class: 'kib-knopf', onClick: () => openAdd('ki', r.wunsch) }, tt('✦ KI nach passenden Quellen fragen'))) : null;
   if (!th.length) return h('div', { class: 'kib kib-mosaik' }, kopf, hinweis, h('p', { class: 'kib-leer' }, tt('Die KI hat keine Themen erkannt. „Neu kuratieren“ versucht es noch einmal.')));
-  if (KIB.alsListe) return h('div', { class: 'kib kib-mosaik' }, kopf, hinweis, kibAlsListe(th));
+  if (KIB.alsListe) return h('div', { class: 'kib kib-mosaik' }, kopf, hinweis, modulAn('ki-filter') ? kifKachel() : null, kibAlsListe(th));
   const flaeche = h('section', { class: 'kib-flaeche', 'aria-label': tt('Themen des Tages') });
-  const root = h('div', { class: 'kib kib-mosaik' }, kopf, hinweis, flaeche);
+  const root = h('div', { class: 'kib kib-mosaik' }, kopf, hinweis, modulAn('ki-filter') ? kifKachel() : null, flaeche);
   root._legen = () => {
     const W = flaeche.clientWidth; const H = flaeche.clientHeight; if (W < 50 || H < 50) return;
     if (!isWide()) { kibHandyRaster(flaeche, th, W, H); return; }
@@ -660,7 +664,7 @@ function kibZeichnen(el) {
   el.querySelectorAll('.kib, .kib-leiste').forEach((x) => x.remove());
   if (e === 'karte') return;
   el.querySelectorAll('.card, .empty, .loading').forEach((x) => x.remove());
-  const root = e === 'thema' ? kibThema(themaIndex(cur().id)) : kibMosaik();
+  const root = e === 'thema' ? kibThema(themaIndex(cur().id)) : e === 'filter' ? kifSeite() : kibMosaik();
   if (neu) root.classList.add('kib-rein');
   el.appendChild(root);
   if (root._legen) root._legen();
@@ -723,6 +727,8 @@ function kibTaste(e) {
     else if (k === 'ArrowUp' || k === 'k' || (k === ' ' && e.shiftKey)) kibSchritt(-1);
     else if (k === 'Escape' && !S.overview && !S.factOpen) kibZurueck();
     else ok = false;
+  } else if (eb === 'filter') {
+    if (k === 'Escape') kibZurueck(); else return false;
   } else if (eb === 'thema') {
     const alle = KIB.dom ? [...KIB.dom.spur.querySelectorAll('[data-nav]')] : [];
     const j = alle.indexOf(document.activeElement);
@@ -749,7 +755,7 @@ function kibTaste(e) {
 function kibRad(e) {
   if (!kibAn() || !els.stage || !els.stage.contains(e.target)) return;
   const eb = kibEbene();
-  if (eb === 'mosaik') return;
+  if (eb === 'mosaik' || eb === 'filter') return;
   if (eb === 'karte') { const sc = e.target.closest('.card-body'); if (sc && sc.scrollHeight > sc.clientHeight + 2) return; }
   if (Math.abs(e.deltaY) < 30 || KIB.sperre) return;
   KIB.sperre = true; setTimeout(() => { KIB.sperre = false; }, 450);
@@ -805,6 +811,93 @@ function kibChatBezug() {
   const e = kibEbene(); if (e === 'karte') return null;
   const p = S.byId[e === 'thema' ? cur().id : lageId()]; if (!p) return null;
   return { art: e === 'thema' ? 'thema' : 'lage', titel: e === 'thema' ? p.title : (S.ai.res.ueberschrift || p.title), text: p.text, quelle: 'KI-Auswahl' };
+}
+
+/* ---------- #80 KI-Filter (Modul ki-filter) ----------------------------------
+   Kachel „KI-Filter“ oben im Mosaik → eigene Seite: die häufigsten Themen deiner Quellen mit ＋ (mehr) / − (weniger) / ⦸ (nie),
+   „So verstehe ich dich“ zeigt, was an die KI geht. Die Wahl liegt in settings.kiFilter (geht mit dem Abgleich mit);
+   wie oft ein Thema vorkam, zählt nur das Gerät (store kiThemen). Ein Pseudo-Eintrag im Stapel trägt die Seite (Zurück/Esc → Mosaik). */
+const KIF_ZEICHEN = { mehr: '＋', weniger: '−', nie: '⦸' };
+const KIF_TEXT = { mehr: () => tt('Mehr davon'), weniger: () => tt('Weniger davon'), nie: () => tt('Nie') };
+function kifId() { return 'ai:filter:' + (S.ai.res ? S.ai.res.at : 0); }
+function kifName(t) { return String(t || '').replace(/\s+/g, ' ').trim().slice(0, 80); }
+function kifSchluessel(t) { return kifName(t).toLowerCase(); }
+function kifWahl() { return settings.kiFilter && typeof settings.kiFilter === 'object' ? settings.kiFilter : {}; }
+function kifZaehlen(lage) {
+  const z = store.get('kiThemen', {}); const jetzt = Date.now();
+  (lage || []).forEach((t) => { const k = kifSchluessel(t.thema); if (!k) return; const x = z[k] || { name: kifName(t.thema), n: 0, beitraege: 0 };
+    x.n += 1; x.beitraege += (t.ids || []).length; x.zuletzt = jetzt; z[k] = x; });
+  // höchstens 60 Themen merken; was 30 Tage nicht vorkam, fällt heraus
+  const liste = Object.entries(z).filter(([, x]) => jetzt - (x.zuletzt || 0) < 30 * 86400000).sort((a, b) => b[1].n - a[1].n || b[1].zuletzt - a[1].zuletzt).slice(0, 60);
+  store.set('kiThemen', Object.fromEntries(liste));
+}
+// Themen für die Seite: gezählte zuerst (häufigste), dann die der aktuellen Auswahl, dann eingestellte, die gerade nicht vorkommen
+function kifThemen() {
+  const z = store.get('kiThemen', {}); const da = new Map();
+  Object.entries(z).sort((a, b) => b[1].n - a[1].n || (b[1].beitraege || 0) - (a[1].beitraege || 0)).forEach(([k, x]) => da.set(k, { name: x.name, n: x.n }));
+  ((S.ai.res && S.ai.res.lage) || []).forEach((t) => { const k = kifSchluessel(t.thema); if (k && !da.has(k)) da.set(k, { name: kifName(t.thema), n: 1 }); });
+  Object.entries(kifWahl()).forEach(([k, w]) => { if (!da.has(k)) da.set(k, { name: w.name || k, n: 0 }); });
+  return [...da.entries()].map(([k, x]) => Object.assign({ k }, x));
+}
+function kifSetzen(k, name, art) {
+  const w = Object.assign({}, kifWahl());
+  if (w[k] && w[k].art === art) delete w[k]; else w[k] = { name: kifName(name), art };
+  settings.kiFilter = w; save('settings'); KIF.geaendert = true;
+  if (els.stage) kibZeichnen(els.stage);
+}
+const KIF = { geaendert: false };
+function kifGruppen() {
+  const g = { mehr: [], weniger: [], nie: [] };
+  Object.values(kifWahl()).forEach((x) => { if (g[x.art]) g[x.art].push(x.name); });
+  return g;
+}
+// Was an die KI geht: der eigene Wunsch und die Filter, in Alltagssprache
+function kifWunsch() {
+  const g = kifGruppen(); const teile = [String(settings.aiWunsch || '').trim()].filter(Boolean);
+  if (g.mehr.length) teile.push('mehr: ' + g.mehr.join(', '));
+  if (g.weniger.length) teile.push('weniger: ' + g.weniger.join(', '));
+  if (g.nie.length) teile.push('nie zeigen: ' + g.nie.join(', '));
+  return teile.join('; ').slice(0, 400);  // kurator.php und ki.js lesen höchstens 400 Zeichen
+}
+function kifKachel() {
+  const g = kifGruppen();
+  const begriffe = ['mehr', 'weniger', 'nie'].flatMap((a) => g[a].map((n) => KIF_ZEICHEN[a] + ' ' + n));
+  return h('button', { type: 'button', class: 'kif-kachel', 'data-nav': '', 'data-fokus': 'ki-filter', 'aria-label': tt('KI-Filter einstellen') + (begriffe.length ? ': ' + begriffe.join(', ') : ''),
+    onClick: () => { KIF.geaendert = false; show(kifId(), 'up'); } },
+    h('span', { class: 'kif-marke', 'aria-hidden': 'true' }, '⚙'),
+    h('span', { class: 'kif-text' }, h('b', {}, tt('KI-Filter')),
+      h('span', { class: 'kif-begriffe' }, begriffe.length ? begriffe.slice(0, 6).join(' · ') + (begriffe.length > 6 ? ' · …' : '') : tt('Noch nichts eingestellt'))),
+    h('span', { class: 'kif-pfeil', 'aria-hidden': 'true' }, '›'));
+}
+function kifZeile(x) {
+  const w = kifWahl()[x.k]; const art = w ? w.art : '';
+  return h('div', { class: 'kif-thema' + (art ? ' ' + art : ''), role: 'group', 'aria-label': x.name },
+    h('span', { class: 'kif-name' }, x.name, x.n > 1 ? h('span', { class: 'kif-zahl' }, tt(' · in ') + x.n + tt(' Auswahlen')) : null),
+    h('span', { class: 'kif-knoepfe' }, ['mehr', 'weniger', 'nie'].map((a) => h('button', { type: 'button', class: 'kif-knopf ' + a, 'aria-pressed': art === a ? 'true' : 'false',
+      'aria-label': KIF_TEXT[a]() + ': ' + x.name, title: KIF_TEXT[a](), onClick: () => kifSetzen(x.k, x.name, a) }, KIF_ZEICHEN[a]))));
+}
+function kifSeite() {
+  const alle = kifThemen(); const top = alle.slice(0, 6); const rest = alle.slice(6);
+  const g = kifGruppen(); const wunsch = String(settings.aiWunsch || '').trim();
+  const verstehe = [['mehr', tt('Mehr davon')], ['weniger', tt('Weniger davon')], ['nie', tt('Nie zeigen')]].filter(([a]) => g[a].length)
+    .map(([a, t]) => h('li', {}, h('b', {}, t + ': '), g[a].join(', ')));
+  if (wunsch) verstehe.push(h('li', {}, h('b', {}, tt('Dein Wunsch: ')), wunsch));
+  return h('div', { class: 'kib kif-seite' },
+    h('div', { class: 'kif-kopf' },
+      h('button', { type: 'button', class: 'kib-knopf', 'data-nav': '', onClick: kibZurueck }, '← ' + tt('Mosaik'), h('span', { class: 'kib-taste' }, tt('Esc'))),
+      h('h1', {}, tt('KI-Filter'))),
+    h('div', { class: 'kif-inhalt' },
+      h('p', { class: 'kif-satz' }, tt('Die Themen, die die KI in deinen Quellen am häufigsten findet. ＋ mehr davon, − weniger, ⦸ nie. Nochmal tippen hebt die Wahl auf.')),
+      top.length ? h('section', { class: 'kif-liste', 'aria-label': tt('Häufigste Themen') }, top.map(kifZeile))
+        : h('p', { class: 'kif-satz' }, tt('Noch keine Themen – nach der ersten KI-Auswahl stehen sie hier.')),
+      rest.length ? h('details', { class: 'kif-weitere' }, h('summary', {}, tt('Weitere Themen') + ' (' + rest.length + ')'), h('section', { class: 'kif-liste' }, rest.map(kifZeile))) : null,
+      h('section', { class: 'kif-verstehe', 'aria-label': tt('So verstehe ich dich') },
+        h('h2', {}, tt('So verstehe ich dich')),
+        verstehe.length ? h('ul', {}, verstehe) : h('p', { class: 'kif-satz' }, tt('Noch keine Vorgaben – die KI wählt nur nach dem, was in deinen Quellen wichtig ist.')),
+        h('p', { class: 'kif-klein' }, tt('Das geht bei jeder Auswahl an die KI.'))),
+      h('div', { class: 'kif-fuss' },
+        h('button', { type: 'button', class: 'kib-knopf primaer', disabled: !!(S.ai.busy || S.pruefDaten), onClick: () => { KIF.geaendert = false; curate(); } }, tt('Neu kuratieren mit diesem Filter')),
+        KIF.geaendert ? h('span', { class: 'kif-klein', role: 'status' }, tt('Geändert – wirkt bei der nächsten Auswahl.')) : null)));
 }
 
 /* ---------- Anmeldung am Kern (Modus-Schnittstelle, siehe kern/modi.js) ---------- */

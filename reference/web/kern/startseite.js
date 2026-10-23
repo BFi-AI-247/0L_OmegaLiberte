@@ -27,9 +27,17 @@ function startseiteZeichnen() {
       h('div', { class: 'start-z', style: '--i:0' }, 'YOUR'), h('div', { class: 'start-z', style: '--i:1' }, 'SOCIAL'),
       h('div', { class: 'start-z', style: '--i:2' }, 'MEDIA'),
       h('div', { class: 'start-z start-marke', style: '--i:3' }, INSTANZ.marke, h('span', { class: 'start-tilde' }, ' ~ '), 'OmegaLiberte'));
-    const knoepfe = STARTSEITE.erst ? h('div', { class: 'start-knoepfe', style: '--i:4' },
-      h('button', { type: 'button', class: 'btn primary', onClick: () => startseiteSchliessen() }, tt('Start')),
-      h('button', { type: 'button', class: 'btn', onClick: () => { STARTSEITE.seite = 2; startseiteZeichnen(); } }, tt('Mehr erfahren'))) : null;
+    // #78 (Modul start-wege): drei Wege – neu einrichten, eigene Daten holen, mehr erfahren
+    const wege = modulAn('start-wege');
+    const knoepfe = !STARTSEITE.erst ? null : wege ? h('div', { class: 'start-knoepfe start-wege', style: '--i:4' },
+      h('button', { type: 'button', class: 'btn primary', onClick: () => startseiteSchliessen() }, tt('Ich bin neu')),
+      h('button', { type: 'button', class: 'btn', onClick: () => { startseiteSchliessen(); einstForm().schritt = 'holen'; S.screen = 'onboarding'; render(); } },
+        tt('Ich kenne {name}').replace('{name}', INSTANZ.marke)),
+      h('span', { class: 'start-wege-hinweis' }, tt('Deine Daten liegen in deinem Browser oder deinem eigenen Speicher – nicht bei uns. Darum musst du sie in einem neuen Browser einmal holen.')),
+      h('button', { type: 'button', class: 'btn', onClick: () => { STARTSEITE.seite = 2; startseiteZeichnen(); } }, tt('Mehr erfahren')))
+      : h('div', { class: 'start-knoepfe', style: '--i:4' },
+        h('button', { type: 'button', class: 'btn primary', onClick: () => startseiteSchliessen() }, tt('Start')),
+        h('button', { type: 'button', class: 'btn', onClick: () => { STARTSEITE.seite = 2; startseiteZeichnen(); } }, tt('Mehr erfahren')));
     el.replaceChildren(h('div', { class: 'start-mitte' }, logo, zeilen, knoepfe));
   } else {
     el.replaceChildren(h('div', { class: 'start-mitte start-mehr' }, logo,

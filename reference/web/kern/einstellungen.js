@@ -119,6 +119,8 @@ function renderStorage(onboarding) {
       inp('k-dav-url', 'WebDAV-Adresse', 'url', 'url', 'https://cloud.beispiel.de/remote.php/dav/files/name/'),
       inp('k-dav-user', tt('Benutzer'), 'user', 'text', ''),
       inp('k-dav-pass', 'App-Passwort', 'pass', 'password', ''),
+      modulAn('speicher-profil') ? inp('k-dav-profil', tt('Profil (wenn sich mehrere einen Zugang teilen)'), 'profil', 'text', tt('leer lassen oder z. B. Papa')) : null,  // #60
+      modulAn('speicher-profil') ? h('span', { class: 'small', style: 'line-height:1.4' }, tt('Jede Person braucht einen eigenen Ordner oder ein eigenes Profil – sonst teilt ihr Quellen und Verlauf. Mit Profil liegen die Dateien in KOMPASS/<Profil>/.')) : null,
       h('ul', { class: 'small dav-dienste' },  // Stand M015 (Oktober 2026); MagentaCLOUD vom Betreiber live geprüft
         h('li', {}, tt('Nextcloud (z. B. Disroot, 2 GB gratis): Dateien → Einstellungen → WebDAV-Adresse; App-Passwort unter Sicherheit anlegen.')),
         h('li', {}, tt('Koofr (Slowenien, 10 GB gratis): https://app.koofr.net/dav/Koofr – eigenes Passwort unter Account Settings → Preferences → Password erzeugen.')),
@@ -127,7 +129,8 @@ function renderStorage(onboarding) {
       h('span', { class: 'small', style: 'line-height:1.4' }, tt('Die Anfragen laufen per HTTPS über das KOMPASS-Backend (der Browser darf diese Speicher nicht direkt ansprechen); dort wird nichts gespeichert. Das App-Passwort bleibt auf diesem Gerät.')),
       h('button', { type: 'button', class: 'btn primary', disabled: SY.connecting || SY.busy, onClick: async () => {
         SY.connecting = true; render();
-        try { await DAV.connect({ url: SY.dav.url, user: SY.dav.user, pass: SY.dav.pass }); }
+        try { if (modulAn('speicher-profil') && SY.dav.profil && !davProfil(SY.dav)) throw new Error(tt('Profil: 1–40 Zeichen, Buchstaben, Ziffern, Leerzeichen, Punkt, Minus, Unterstrich.'));
+          await DAV.connect({ url: SY.dav.url, user: SY.dav.user, pass: SY.dav.pass, profil: SY.dav.profil }); }
         catch (e) { flash(e.message); }
         SY.connecting = false; render();
       } }, SY.connecting ? tt('Verbinde …') : tt('Verbinden')));
@@ -204,11 +207,24 @@ function einstQuellenZahl(f) {
 function renderEinrichtung() {
   const f = einstForm();
   const kopf = h('div', { class: 'screen-head' }, h('div', {}, h('h2', {}, tt('Willkommen bei {name}').replace('{name}', zentraleName())),
-    h('div', { class: 'small' }, zentraleVersion() + ' · ' + tt('Schritt {n} von 3').replace('{n}', f.schritt))), h('span', {}));
+    h('div', { class: 'small' }, zentraleVersion() + ' · ' + (f.schritt === 'holen' ? tt('Meine Daten holen') : tt('Schritt {n} von 3').replace('{n}', f.schritt)))), h('span', {}));
   const weiter = (n) => { f.schritt = n; render(); const b = document.querySelector('.screen-body'); if (b) b.scrollTop = 0; };
   const knopfReihe = (...k) => h('div', { class: 'btn-row einr-knoepfe' }, ...k);
   let body;
-  if (f.schritt === 1) {
+  if (f.schritt === 'holen' && modulAn('start-wege')) {
+    // #78 (Modul start-wege): „Ich kenne …“ auf der Startseite – Daten aus dem eigenen Speicher, einer Sicherungsdatei oder einem Paket holen,
+    // danach direkt in die gewohnte Ansicht (Abgleich, Einspielen und Paket setzen „eingerichtet“ selbst)
+    body = [
+      h('p', { style: 'margin:0;color:var(--ink2)' }, tt('Deine Daten liegen in deinem Browser oder deinem eigenen Speicher – nicht bei uns. Darum musst du sie in einem neuen Browser einmal holen.')),
+      renderStorage(true),
+      h('div', { class: 'card-box' }, h('h3', {}, tt('Sicherungsdatei laden')),
+        h('span', { class: 'small' }, tt('Die Datei aus Einstellungen → Speicher → „Sicherung herunterladen“ (kompass-sicherung-….json).')),
+        h('div', { class: 'btn-row' }, h('button', { type: 'button', class: 'mini primary', onClick: sicherungWaehlen }, tt('Sicherungsdatei wählen …'))), sicherungFrage()),
+      h('div', { class: 'card-box' }, h('h3', {}, tt('Paket-Link einfügen')),
+        h('span', { class: 'small' }, tt('Quellen von einem anderen Gerät: dort Einstellungen → Quellen → „Mein Paket teilen“, Link kopieren und hier einfügen.')),
+        h('div', { class: 'btn-row' }, h('button', { type: 'button', class: 'mini primary', onClick: () => { S.paket = { stufe: 'eingeben', text: '' }; render(); } }, tt('Paket einfügen')))),
+      knopfReihe(h('button', { type: 'button', class: 'btn', onClick: () => weiter(1) }, tt('Doch neu einrichten')))];
+  } else if (f.schritt === 1 || f.schritt === 'holen') {
     body = [
       h('p', { style: 'margin:0;color:var(--ink2)' }, tt('Deine Quellen an einem ruhigen Ort. Alles, was du hier einstellst, bleibt auf diesem Gerät.')),
       einstSprache(),
@@ -342,25 +358,36 @@ function einstSicherung() {
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
     flash(tt('Sicherung gespeichert. Zugänge (KI, Posten) sind nicht enthalten.'));
   };
-  const ein = () => {
-    const inp = h('input', { type: 'file', accept: '.json,application/json', style: 'display:none' });
-    inp.addEventListener('change', async () => {
-      const file = inp.files && inp.files[0]; inp.remove(); if (!file) return;
-      let d = null; try { d = JSON.parse(await file.text()); } catch (e) { /* unten */ }
-      if (!d || d.format !== 'kompass-sicherung/1' || !d.teile || typeof d.teile !== 'object') { flash(tt('Das ist keine KOMPASS-Sicherung.')); return; }
-      S.einstFrage = { art: 'einspielen', daten: d }; render();
-    });
-    document.body.appendChild(inp); inp.click();
-  };
-  const frage = S.einstFrage && S.einstFrage.art === 'einspielen' ? h('div', { class: 'einst-frage' },
-    h('p', { class: 'small', style: 'margin:0' }, tt('Sicherung vom {datum} einspielen? Deine jetzigen Einstellungen und dein Verlauf auf diesem Gerät werden ersetzt.').replace('{datum}', new Date(S.einstFrage.daten.erstellt || Date.now()).toLocaleString(LANG === 'de' ? 'de-DE' : 'en-US'))),
-    h('div', { class: 'btn-row' },
-      h('button', { type: 'button', class: 'mini primary', onClick: () => { const t = S.einstFrage.daten.teile; Object.keys(PART_FILE).forEach((p) => { if (t[p] !== undefined) partSet(p, t[p]); }); S.einstFrage = null; location.reload(); } }, tt('Ja, einspielen')),
-      h('button', { type: 'button', class: 'mini', onClick: () => { S.einstFrage = null; render(); } }, tt('Abbrechen')))) : null;
+  const ein = sicherungWaehlen;
+  const frage = sicherungFrage();
   return h('div', { class: 'card-box' }, h('h3', {}, tt('Sicherung')),
     h('p', { class: 'small', style: 'margin:0;line-height:1.5' }, tt('Wenn deine Daten nur auf diesem Gerät liegen: Sichere sie ab und zu als Datei. Ohne Sicherung sind sie weg, wenn der Browser-Speicher gelöscht wird.')),
     h('div', { class: 'btn-row' }, h('button', { type: 'button', class: 'mini primary', onClick: herunter }, tt('Sicherung herunterladen')), h('button', { type: 'button', class: 'mini', onClick: ein }, tt('Sicherung einspielen'))),
     frage);
+}
+// Sicherung einspielen – auch aus „Meine Daten holen“ (#78)
+function sicherungWaehlen() {
+  const inp = h('input', { type: 'file', accept: '.json,application/json', style: 'display:none' });
+  inp.addEventListener('change', async () => {
+    const file = inp.files && inp.files[0]; inp.remove(); if (!file) return;
+    sicherungPruefen(await file.text());
+  });
+  document.body.appendChild(inp); inp.click();
+}
+function sicherungPruefen(text) {
+  let d = null; try { d = JSON.parse(text); } catch (e) { /* unten */ }
+  if (!d || d.format !== 'kompass-sicherung/1' || !d.teile || typeof d.teile !== 'object') { flash(tt('Das ist keine KOMPASS-Sicherung.')); return false; }
+  S.einstFrage = { art: 'einspielen', daten: d }; render(); return true;
+}
+function sicherungEinspielen() {
+  const t = S.einstFrage.daten.teile; Object.keys(PART_FILE).forEach((p) => { if (t[p] !== undefined) partSet(p, t[p]); }); S.einstFrage = null; location.reload();
+}
+function sicherungFrage() {
+  return S.einstFrage && S.einstFrage.art === 'einspielen' ? h('div', { class: 'einst-frage' },
+    h('p', { class: 'small', style: 'margin:0' }, tt('Sicherung vom {datum} einspielen? Deine jetzigen Einstellungen und dein Verlauf auf diesem Gerät werden ersetzt.').replace('{datum}', new Date(S.einstFrage.daten.erstellt || Date.now()).toLocaleString(LANG === 'de' ? 'de-DE' : 'en-US'))),
+    h('div', { class: 'btn-row' },
+      h('button', { type: 'button', class: 'mini primary', onClick: sicherungEinspielen }, tt('Ja, einspielen')),
+      h('button', { type: 'button', class: 'mini', onClick: () => { S.einstFrage = null; render(); } }, tt('Abbrechen')))) : null;
 }
 function einstLoeschen() {
   const offen = S.einstFrage && S.einstFrage.art === 'loeschen';

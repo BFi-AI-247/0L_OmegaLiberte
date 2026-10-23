@@ -16,7 +16,10 @@ Object.entries(SYNC_FILES).forEach(([f, d]) => d.parts.forEach((p) => { PART_FIL
 const UNION = { history: true, seen: true, checks: true, cache: true, zaehler: true };
 const sync = Object.assign({ provider: null, t: {}, last: 0, gdrive: {}, dav: {} }, store.get('sync', {}));
 const SY = { busy: false, again: false, timer: null, at: 0, error: '', applying: false, json: {}, pick: null, gState: '', clientId: '',
-  dav: { url: (sync.dav && sync.dav.url) || '', user: (sync.dav && sync.dav.user) || '', pass: '' } };
+  dav: { url: (sync.dav && sync.dav.url) || '', user: (sync.dav && sync.dav.user) || '', pass: '', profil: (sync.dav && sync.dav.profil) || '' } };
+// #60 (Modul speicher-profil): Profil für geteilte WebDAV-Zugänge – Dateien dann in KOMPASS/<profil>/. Leer = wie bisher KOMPASS/.
+// Muss nur unter denen eindeutig sein, die sich denselben Zugang teilen; liegt nur auf dem Gerät (store 'sync'), nicht im Abgleich.
+function davProfil(c) { const p = modulAn('speicher-profil') ? String((c || sync.dav || {}).profil || '').trim() : ''; return /^[\p{L}\p{N} ._-]{1,40}$/u.test(p) && !/^\.+$/.test(p) ? p : ''; }
 function storeSync() { store.set('sync', sync); }
 function deviceName() {
   const ua = navigator.userAgent;
@@ -175,13 +178,16 @@ async function syncNow(manual) {
 
 /* WebDAV (europäische Speicher: Nextcloud, Strato HiDrive, MagentaCLOUD …) über api/dav.php */
 const DAV = {
-  label() { try { return tt('WebDAV (') + new URL(sync.dav.url).host + ')'; } catch (e) { return 'WebDAV'; } },
+  label() { const p = davProfil(); try { return tt('WebDAV (') + new URL(sync.dav.url).host + (p ? ' · ' + p : '') + ')'; } catch (e) { return 'WebDAV'; } },
   openUrl() { return null; },
-  folderUrl(url) { return String(url || sync.dav.url).replace(/\/+$/, '') + '/KOMPASS/'; },
-  async req(methode, name, inhalt, cred) {
+  folderUrl(url, cred) {
+    const basis = String(url || sync.dav.url).replace(/\/+$/, '') + '/KOMPASS/'; const p = davProfil(cred);
+    return cred === 'basis' || !p ? basis : basis + encodeURIComponent(p) + '/';
+  },
+  async req(methode, name, inhalt, cred, nurBasis) {
     const c = cred || sync.dav;
     const r = await fetch('api/dav.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: this.folderUrl(c.url) + (name || ''), user: c.user, pass: c.pass, methode, inhalt }) });
+      body: JSON.stringify({ url: this.folderUrl(c.url, nurBasis ? 'basis' : c) + (name || ''), user: c.user, pass: c.pass, methode, inhalt }) });
     const d = await r.json().catch(() => ({}));
     if (d.status !== 'ok') throw new Error(d.antwort || tt('WebDAV-Speicher nicht erreichbar.'));
     if (d.code === 401 || d.code === 403) throw new Error(tt('Benutzer oder App-Passwort stimmt nicht.'));
@@ -196,18 +202,21 @@ const DAV = {
   async write(name, obj) {
     const body = JSON.stringify(obj, null, 2);
     let d = await this.req('PUT', name, body);
-    if (d.code === 404 || d.code === 409) { await this.req('MKCOL', ''); d = await this.req('PUT', name, body); }
+    if (d.code === 404 || d.code === 409) { if (davProfil()) await this.req('MKCOL', '', null, null, true); await this.req('MKCOL', ''); d = await this.req('PUT', name, body); }
     if (![200, 201, 204].includes(d.code)) throw new Error(tt('WebDAV speichert nicht (') + d.code + ').');
   },
   async connect(cred) {
     if (!/^https:\/\/[^/]+/.test(cred.url)) throw new Error(tt('Bitte die WebDAV-Adresse mit https:// angeben.'));
     let d = await this.req('PROPFIND', '', null, cred);
-    if (d.code === 404) { d = await this.req('MKCOL', '', null, cred); if (![200, 201, 204, 405].includes(d.code)) throw new Error(tt('Ordner KOMPASS lässt sich nicht anlegen (') + d.code + ').'); }
+    if (d.code === 404) {
+      if (davProfil(cred)) { const b = await this.req('MKCOL', '', null, cred, true); if (![200, 201, 204, 405].includes(b.code)) throw new Error(tt('Ordner KOMPASS lässt sich nicht anlegen (') + b.code + ').'); }  // #60: erst KOMPASS/, dann KOMPASS/<profil>/
+      d = await this.req('MKCOL', '', null, cred); if (![200, 201, 204, 405].includes(d.code)) throw new Error(tt('Ordner KOMPASS lässt sich nicht anlegen (') + d.code + ').');
+    }
     else if (d.code !== 207 && d.code !== 200) throw new Error(tt('WebDAV antwortet mit ') + d.code + tt(' – Adresse prüfen.'));
-    sync.dav = { url: cred.url.replace(/\/+$/, '') + '/', user: cred.user, pass: cred.pass };
+    sync.dav = { url: cred.url.replace(/\/+$/, '') + '/', user: cred.user, pass: cred.pass, profil: davProfil(cred) || undefined };
     await activate('dav');
   },
-  async disconnect() { sync.dav = { url: sync.dav.url, user: sync.dav.user }; }
+  async disconnect() { sync.dav = { url: sync.dav.url, user: sync.dav.user, profil: sync.dav.profil }; }
 };
 const CONN = { dav: DAV };
 Object.keys(PART_FILE).forEach((p) => { if (!UNION[p]) SY.json[p] = JSON.stringify(partGet(p)); });

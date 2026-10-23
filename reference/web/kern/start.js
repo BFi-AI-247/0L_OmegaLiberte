@@ -50,7 +50,7 @@ function render(stageToo) {
   if (typeof meldenZeichnen === 'function') meldenZeichnen();  // #46: nur Vorschau
   if (typeof pruefZeichnen === 'function') pruefZeichnen();  // #74: nur Vorschau
   scrolls.forEach(([sel, y]) => { const el = app.querySelector(sel); if (el && y) el.scrollTop = y; });
-  if (['k-chat', 'k-search', 'k-esearch', 'k-add', 'k-name', 'k-wunsch', 'k-masto', 'k-bsky', 'k-dav-url', 'k-dav-user', 'k-dav-pass'].includes(active)) {
+  if (['k-chat', 'k-search', 'k-esearch', 'k-add', 'k-name', 'k-wunsch', 'k-masto', 'k-bsky', 'k-dav-url', 'k-dav-user', 'k-dav-pass', 'k-dav-profil'].includes(active)) {
     const el = document.getElementById(active);
     if (el && !el.disabled) { el.focus(); try { el.setSelectionRange(el.value.length, el.value.length); } catch (e) { /* Feldtyp ohne Auswahl */ } }
   }
@@ -126,5 +126,6 @@ if (typeof marktLaden === 'function') marktLaden();  // #24: vor den Feeds, dami
 if (settings.onboarded && !EINSTIEG_NEULADEN) loadAll();
 zentraleTitel(); pingBeimStart();
 paketAusAdresse();
+if (typeof pruefAusAdresse === 'function') pruefAusAdresse();  // #84: Vorschau-Link direkt an eine Stelle (#pruefen=beispiel&zeige=…)
 if (sync.provider) syncNow();
 kiInit();
