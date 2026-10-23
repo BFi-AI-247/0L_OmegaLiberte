@@ -1,7 +1,7 @@
 # OmegaLiberte — the reference app
 
 A complete, working OmegaLiberte hub: one web app (no build step, plain JavaScript) plus a few small PHP relays.
-Give it your own name and run it for yourself, your family or your community. It is exported **instance-neutral** from KOMPASS, the first public instance (<https://digifil.de/kompass/>): no fixed server paths, no fixed domain, no analytics account, no keys.
+Give it your own name and run it for yourself, your family or your community. It is exported **instance-neutral** from KOMPASS, the first public instance (<https://omegaliberte.eu/kompass/>): no fixed server paths, no fixed domain, no analytics account, no keys.
 
 ```
 reference/
@@ -89,7 +89,7 @@ Copy [config.example.php](config.example.php) and fill in what you need:
 | `user_agent` | how the feed relay identifies itself to other sites | `OmegaLiberte-Feed/1 (+link to this repo)` |
 | `ping_annehmen` | let `api/ping.php` count installation pings of other hubs (Zero Ledger, sums at `api/ping.php?summen`) | off |
 
-**Own name and Zero Ledger.** People name their hub in *Settings* (default: the instance name; `~OmegaLiberte` appended unless switched off). The install name on the home screen stays the instance name from `manifest.webmanifest` — a per-person manifest is not reliable across browsers; iPhones take the page title, which follows the own name. The optional, opt-in installation ping goes to `ping` in `web/instanz.js` (default: the Zero Ledger on digifil.de; `''` hides the offer). Format: [formats/ledger-ping.md](../formats/ledger-ping.md).
+**Own name and Zero Ledger.** People name their hub in *Settings* (default: the instance name; `~OmegaLiberte` appended unless switched off). The install name on the home screen stays the instance name from `manifest.webmanifest` — a per-person manifest is not reliable across browsers; iPhones take the page title, which follows the own name. The optional, opt-in installation ping goes to `ping` in `web/instanz.js` (default: the Zero Ledger on omegaliberte.eu; `''` hides the offer). Format: [formats/ledger-ping.md](../formats/ledger-ping.md).
 
 **Never commit a real `config.php`.** Keys belong only on your server.
 

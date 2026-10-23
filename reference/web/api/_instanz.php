@@ -79,7 +79,7 @@ function ol_zaehler(): string {
 // Nur wenn der Betreiber es in config.php einschaltet: 'zero_ledger_instanz' => true (Ziel: 'zero_ledger', Standard Referenz-Ledger).
 // Gesendet werden nur Instanz-Adresse (Host + Pfad) und App-Version – einmal, danach höchstens alle 30 Tage ein Lebenszeichen.
 // Ausgelöst von api/instanz.php (wird mit jeder Seite geladen); der Abruf läuft nach der Antwort an den Browser.
-const OL_LEDGER = 'https://digifil.de/kompass/api/ping.php';
+const OL_LEDGER = 'https://omegaliberte.eu/kompass/api/ping.php';
 function ol_instanz_ping(): void {
     $c = ol_konfig();
     if (empty($c['zero_ledger_instanz'])) return;

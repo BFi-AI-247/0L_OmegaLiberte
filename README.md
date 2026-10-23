@@ -12,7 +12,7 @@ It is not a product with an owner. The valuable part is the **recipe**: principl
 
 | | You want to … | Do this |
 |---|---|---|
-| **1 · Just use it** | read your sources in one calm place — with your AI or without | Open **Kompass~OmegaLiberte**: <https://digifil.de/kompass/> and install it as an app. With your AI: paste *“Read https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/prompts/setup.md and help me start with OmegaLiberte.”* into ChatGPT, Claude, Le Chat … — a few questions, then one link that loads your sources. |
+| **1 · Just use it** | read your sources in one calm place — with your AI or without | Open **Kompass~OmegaLiberte**: <https://omegaliberte.eu/kompass/> and install it as an app. With your AI: paste *“Read https://github.com/BFi-AI-247/0L_OmegaLiberte/blob/main/prompts/setup.md and help me start with OmegaLiberte.”* into ChatGPT, Claude, Le Chat … — a few questions, then one link that loads your sources. |
 | **2 · Run your own instance** | your own hub on your web space or your own computer | Any web space with PHP: copy [reference/web](reference/) and follow [RECIPE.md](RECIPE.md) — or let your AI guide you with [prompts/host.md](prompts/host.md). On your computer: `php -S localhost:8000 -t reference/web`; on Windows the script [tools/windows-setup.ps1](tools/windows-setup.ps1) does everything (see [reference/README.md](reference/README.md)). |
 | **3 · Build with us** | change it, improve it, take it somewhere new | Fork the repo, change what you like, and write a [logbook](logbook/) entry explaining *why* ([CONTRIBUTING.md](CONTRIBUTING.md)). Tell us on Mastodon with **#OmegaLiberte** — we read along and adopt what fits. |
 

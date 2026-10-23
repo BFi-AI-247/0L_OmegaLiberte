@@ -38,7 +38,7 @@ One line, entries separated by `|` (in links write `%7C` — some chat apps end 
 | `yt:@handle` | `{ "kind": "youtube", "handle": … }` |
 | `bsky:<handle>` · `masto:@user@instance` | `{ "kind": "bluesky" / "mastodon", "handle": … }` |
 
-As a link: `<instance>/#paket=<short form>` — e.g. `https://digifil.de/kompass/#paket=0l1%7Cweb:https://www.tagesschau.de`.
+As a link: `<instance>/#paket=<short form>` — e.g. `https://omegaliberte.eu/kompass/#paket=0l1%7Cweb:https://www.tagesschau.de`.
 Large packs: `<instance>/#paket-url=<https address of a JSON file>` (the file host must allow cross-origin reads, e.g. a raw GitHub file or a gist).
 
 ## Rules for importers

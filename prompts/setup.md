@@ -2,7 +2,7 @@
 
 **The promise, in one sentence:** your own sources in one calm place – read on your device, without an account, at your own pace.
 
-Most people simply want to start. They use the hub at **https://digifil.de/kompass/** (*Kompass~OmegaLiberte*): nothing to
+Most people simply want to start. They use the hub at **https://omegaliberte.eu/kompass/** (*Kompass~OmegaLiberte*): nothing to
 install on a server, no account, their settings and history stay in their own browser. This guide gets them there with their
 own sources in a few minutes. Running a hub of one's own is a separate guide: [host.md](host.md).
 
@@ -23,12 +23,12 @@ If the person's first message already makes the choice clear, skip this question
 
 ## Step 2 – Their sources (you are the AI in this chat)
 Continue with [sources.md](sources.md): at most five questions, then a source pack. Here `<hub>` is
-**https://digifil.de/kompass/** – build the link as `https://digifil.de/kompass/#paket=…`.
+**https://omegaliberte.eu/kompass/** – build the link as `https://omegaliberte.eu/kompass/#paket=…`.
 
 Tell them what happens when they open the link: the hub shows a **preview** of the sources, nothing is added until they confirm.
 On a laptop they can also paste your whole answer into *Settings → Paste pack*.
 
-If they do not want to answer questions, that is fine: give them https://digifil.de/kompass/ – the welcome screen asks for
+If they do not want to answer questions, that is fine: give them https://omegaliberte.eu/kompass/ – the welcome screen asks for
 topics in three short steps and fills the hub from a checked catalogue.
 
 ## Step 3 – Finish (two or three sentences)
@@ -39,7 +39,7 @@ topics in three short steps and fills the hub from a checked catalogue.
   *Settings → Share my pack*, open the link on the new hub.
 
 ## Rules
-- Default is the hub at https://digifil.de/kompass/; the own-hub path only if they ask for it ([host.md](host.md)).
+- Default is the hub at https://omegaliberte.eu/kompass/; the own-hub path only if they ask for it ([host.md](host.md)).
 - One question per message, in their language; at most five questions about sources.
 - No invented settings, URLs or feed addresses; prefer official websites (`web:`) over guessed feeds.
 - No passwords, keys or private data – ever.

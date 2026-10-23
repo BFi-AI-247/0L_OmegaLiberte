@@ -11,7 +11,7 @@ const INSTANZ = {
   marke: 'Kompass',
   betreiber: { de: 'der Betreiber', en: 'the operator' },
   radar: [],
-  ping: 'https://digifil.de/kompass/api/ping.php',   // Zero Ledger (nur nach Einwilligung); '' = kein Ping-Angebot
+  ping: 'https://omegaliberte.eu/kompass/api/ping.php',   // Zero Ledger (nur nach Einwilligung); '' = kein Ping-Angebot
   module: { 'ki-probe': false },   // #5: keine öffentliche KI-Probe über das Backend
   speicher: ''
 };

@@ -23,7 +23,7 @@ This document is written for **humans and AIs alike**. An AI reading it should b
 | Logbook | Public record of changes and reasons | [logbook-entry](formats/logbook-entry.md) |
 
 ## 3. Ways to run it
-- **Use an existing instance** — e.g. the reference instance *Kompass~OmegaLiberte* at <https://digifil.de/kompass/>.
+- **Use an existing instance** — e.g. the reference instance *Kompass~OmegaLiberte* at <https://omegaliberte.eu/kompass/>.
 - **Web space with PHP** — copy `reference/web/` to any PHP host (see [reference/README.md](reference/README.md)). The relay (`api/rss.php`) is needed because browsers may not read most feeds directly (CORS).
 - **Fully local** — PHP alone: `php -S localhost:8000 -t reference/web`, or XAMPP (put the contents of `reference/web/` into `htdocs/kompass/`). Use a local AI (in-browser model, or Ollama on the same machine) and local/WebDAV storage. Only the feed requests themselves reach the internet.
 

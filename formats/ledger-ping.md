@@ -6,7 +6,7 @@ Two separate counts across all OmegaLiberte hubs:
 ## Request (user ping)
 `POST <ledger>/api/ping.php`, body JSON (sent as `text/plain`, no preflight needed), at most 1 KB:
 ```json
-{ "id": "3e0i5f6c612f6g421a2v5x13", "art": "neu", "version": "v0.29", "sprache": "de", "instanz": "digifil.de/kompass" }
+{ "id": "3e0i5f6c612f6g421a2v5x13", "art": "neu", "version": "v0.29", "sprache": "de", "instanz": "omegaliberte.eu/kompass" }
 ```
 | Field | Meaning |
 |---|---|
@@ -29,4 +29,4 @@ Once when switched on, then at most every 30 days as a sign of life. **Only** ho
 - Open to all instances (CORS `*` on this endpoint only), rate limit per IP hash and hour, size limit.
 - Instances are stored separately (latest state per `instanz`: first/last date, `version`), same 12-month expiry.
 - Public sums: `GET <ledger>/api/ping.php?summen` → `{ installationen, neu, bestehend, aktiv_30_tage, version: {…}, sprache: {…}, instanzen, instanzen_aktiv_30_tage, nutzer_je_instanz: {…}, stand }` — `nutzer_je_instanz` counts active user installations (30 days) per instance address; values below 5 are shown as `"<5"`.
-- Reference ledger: <https://digifil.de/kompass/api/ping.php?summen>. Any instance may run its own (`ping_annehmen` in `config.php`).
+- Reference ledger: <https://omegaliberte.eu/kompass/api/ping.php?summen>. Any instance may run its own (`ping_annehmen` in `config.php`).

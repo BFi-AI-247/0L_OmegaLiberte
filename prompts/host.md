@@ -20,7 +20,7 @@ Offer these options, in this order:
 2. **On their own computer** (PHP installed, or XAMPP/MAMP/WAMP). Quick to try; only on that computer.
 3. **Not sure / no web space yet** – explain in two sentences what PHP web space is and that small hosting plans are inexpensive;
    then offer option 2 to start today.
-4. **Just start reading** – switch to [setup.md](setup.md): they use the hub at https://digifil.de/kompass/ (their data
+4. **Just start reading** – switch to [setup.md](setup.md): they use the hub at https://omegaliberte.eu/kompass/ (their data
    stays in their browser), and moving to their own hub later is easy (*Settings → Share my pack* → open the link on the new hub).
 
 Then ask how comfortable they are with files and folders (beginner / some experience / technical) and adapt the detail.
@@ -48,7 +48,7 @@ Zero Ledger, sends nothing personal, off by default – their choice.
 
 ## Step 4 – Sources
 Now continue with [sources.md](sources.md) (max. 5 questions, then a source pack). **Build the link with their own address**
-(e.g. `https://their.domain/kompass/#paket=…`), never with digifil.de.
+(e.g. `https://their.domain/kompass/#paket=…`), never with omegaliberte.eu.
 
 ## Step 5 – Finish
 In two or three sentences: how to install the hub as an app (browser menu → *Add to home screen*), that sync goes only to their own

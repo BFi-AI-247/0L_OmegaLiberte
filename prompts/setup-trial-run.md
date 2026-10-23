@@ -28,10 +28,10 @@
 - tagesschau (YouTube) – Nachrichten als Video
 - ESA (Bluesky) – Raumfahrt aus erster Hand
 
-[KOMPASS öffnen](https://digifil.de/kompass/#paket=0l1%7Clang:de%7Cwish:Klima%20und%20Wissenschaft,%20kein%20Sport,%20keine%20Promis%7Cweb:https://www.tagesschau.de%7Crss:https://www.deutschlandfunk.de/nachrichten-100.rss%7Cweb:https://www.spektrum.de%7Cyt:@tagesschau%7Cbsky:esa.int)
+[KOMPASS öffnen](https://omegaliberte.eu/kompass/#paket=0l1%7Clang:de%7Cwish:Klima%20und%20Wissenschaft,%20kein%20Sport,%20keine%20Promis%7Cweb:https://www.tagesschau.de%7Crss:https://www.deutschlandfunk.de/nachrichten-100.rss%7Cweb:https://www.spektrum.de%7Cyt:@tagesschau%7Cbsky:esa.int)
 
 ```
-https://digifil.de/kompass/#paket=0l1%7Clang:de%7Cwish:Klima%20und%20Wissenschaft,%20kein%20Sport,%20keine%20Promis%7Cweb:https://www.tagesschau.de%7Crss:https://www.deutschlandfunk.de/nachrichten-100.rss%7Cweb:https://www.spektrum.de%7Cyt:@tagesschau%7Cbsky:esa.int
+https://omegaliberte.eu/kompass/#paket=0l1%7Clang:de%7Cwish:Klima%20und%20Wissenschaft,%20kein%20Sport,%20keine%20Promis%7Cweb:https://www.tagesschau.de%7Crss:https://www.deutschlandfunk.de/nachrichten-100.rss%7Cweb:https://www.spektrum.de%7Cyt:@tagesschau%7Cbsky:esa.int
 ```
 
 ```json

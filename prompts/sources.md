@@ -1,6 +1,6 @@
 # Choosing sources for an OmegaLiberte hub with your AI
 
-*Step 2 of [setup.md](setup.md) and step 4 of [host.md](host.md). Use it on its own when the person already has a hub. `<hub>` below means the hub the person uses: `https://digifil.de/kompass/` when they came through setup.md, otherwise the address of **their own** hub (e.g. `https://their.domain/kompass/` or `http://localhost:8000/`).*
+*Step 2 of [setup.md](setup.md) and step 4 of [host.md](host.md). Use it on its own when the person already has a hub. `<hub>` below means the hub the person uses: `https://omegaliberte.eu/kompass/` when they came through setup.md, otherwise the address of **their own** hub (e.g. `https://their.domain/kompass/` or `http://localhost:8000/`).*
 
 KOMPASS gathers a person's own news sources in one quiet place. Reading happens on their device, no account required, no endless scroll. This prompt turns a short conversation into a personal starter package the person can import with one click.
 
@@ -45,7 +45,7 @@ If the link does not work: in KOMPASS under Settings → "Paste pack" (German: �
 **Link (short form v1)** – one line, no spaces. The separator `|` is written as `%7C` inside the link, because some chat apps cut a link at `|`:
 
 ```
-https://digifil.de/kompass/#paket=0l1%7Clang:de%7Cwish:mehr%20Raumfahrt,%20kein%20Fu%C3%9Fball%7Cweb:https://www.tagesschau.de%7Cweb:https://www.wissenschaft.de%7Cyt:@tagesschau%7Cbsky:esa.int%7Cname:Sternenblick
+https://omegaliberte.eu/kompass/#paket=0l1%7Clang:de%7Cwish:mehr%20Raumfahrt,%20kein%20Fu%C3%9Fball%7Cweb:https://www.tagesschau.de%7Cweb:https://www.wissenschaft.de%7Cyt:@tagesschau%7Cbsky:esa.int%7Cname:Sternenblick
 ```
 
 | Entry | Meaning |
@@ -89,10 +89,10 @@ For a German speaker interested in spaceflight and news, no football (reply in G
 - tagesschau (YouTube) – video news daily
 - ESA (Bluesky) – European space updates
 
-[KOMPASS öffnen](https://digifil.de/kompass/#paket=0l1%7Clang:de%7Cwish:mehr%20Raumfahrt,%20kein%20Fu%C3%9Fball%7Cweb:https://www.tagesschau.de%7Cweb:https://www.wissenschaft.de%7Cyt:@tagesschau%7Cbsky:esa.int%7Cname:Sternenblick)
+[KOMPASS öffnen](https://omegaliberte.eu/kompass/#paket=0l1%7Clang:de%7Cwish:mehr%20Raumfahrt,%20kein%20Fu%C3%9Fball%7Cweb:https://www.tagesschau.de%7Cweb:https://www.wissenschaft.de%7Cyt:@tagesschau%7Cbsky:esa.int%7Cname:Sternenblick)
 
 ```
-https://digifil.de/kompass/#paket=0l1%7Clang:de%7Cwish:mehr%20Raumfahrt,%20kein%20Fu%C3%9Fball%7Cweb:https://www.tagesschau.de%7Cweb:https://www.wissenschaft.de%7Cyt:@tagesschau%7Cbsky:esa.int%7Cname:Sternenblick
+https://omegaliberte.eu/kompass/#paket=0l1%7Clang:de%7Cwish:mehr%20Raumfahrt,%20kein%20Fu%C3%9Fball%7Cweb:https://www.tagesschau.de%7Cweb:https://www.wissenschaft.de%7Cyt:@tagesschau%7Cbsky:esa.int%7Cname:Sternenblick
 ```
 
 … followed by the JSON block and the two sentences from the Output format section.
