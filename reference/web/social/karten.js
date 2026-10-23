@@ -96,6 +96,49 @@ function videoBlock(v, p) {
     h('span', { class: 'play' }, h('span', { class: 'play-tri' })),
     h('span', { class: 'video-note' }, tt('Abspielen lädt den Player von YouTube')));
 }
+// #85 (Modul video-einbettung): Link-Vorschau einer Videoseite bekommt ▶ statt nur Bild. YouTube über youtube-nocookie,
+// Vimeo/PeerTube über den offiziellen Player, sonst das Video, das die Seite selbst angibt (og:video, api/rss.php?aktion=medien) –
+// abgespielt direkt vom Gerät, nichts läuft über unseren Server. Erst der Tipp lädt etwas vom Anbieter; nichts gefunden → Link bleibt.
+function linkVideoArt(c) {
+  if (!c || !c.url) return null;
+  let u; try { u = new URL(c.url); } catch (e) { return null; }
+  const host = u.hostname.replace(/^(www|m)\./, ''); const pfad = u.pathname;
+  let m;
+  if (host === 'youtube.com' && pfad === '/watch' && /^[\w-]{11}$/.test(u.searchParams.get('v') || '')) return { art: 'yt', id: u.searchParams.get('v') };
+  if ((host === 'youtube.com' && (m = /^\/(?:shorts|live)\/([\w-]{11})/.exec(pfad))) || (host === 'youtu.be' && (m = /^\/([\w-]{11})/.exec(pfad)))) return { art: 'yt', id: m[1], short: /shorts/.test(pfad) };
+  if (host === 'vimeo.com' && (m = /^\/(\d{5,})\/?$/.exec(pfad))) return { art: 'frame', src: 'https://player.vimeo.com/video/' + m[1] + '?autoplay=1&dnt=1' };
+  if (modulAn('peertube') && (m = /^\/(?:w|videos\/watch)\/([0-9a-f-]{36}|[1-9A-HJ-NP-Za-km-z]{22})\/?$/.exec(pfad))) return { art: 'frame', src: u.origin + '/videos/embed/' + m[1] + '?autoplay=1&warningTitle=0' };
+  if (c.typ === 'video' || /\/(video|videos|mediathek|sendung|player)(\/|-|$)/i.test(pfad)) return { art: 'suche' };
+  return null;
+}
+function linkVideoBlock(v, p) {
+  if (!modulAn('video-einbettung')) return null;
+  const c = v.card; const a = linkVideoArt(c); if (!a) return null;
+  const st = S.mediaLookup[c.url];
+  if (a.art === 'suche' && st === 'leer') return null;  // nichts Abspielbares → normale Link-Vorschau
+  const unter = h('a', Object.assign({ class: 'lv-link', href: c.url }, EXT), h('b', {}, c.title || shortUrl(c.url)), h('span', { class: 'lc-host' }, hostOf(c.url)));
+  const spielt = S.playing === 'lv:' + p.id;
+  if (spielt && a.art === 'yt') return h('div', { class: 'link-video' }, videoBlock({ video: a.id, short: a.short, title: c.title }, { id: 'lv:' + p.id }), unter);
+  if (spielt && a.art === 'frame') return h('div', { class: 'link-video' }, h('div', { class: 'video' }, h('iframe', { src: a.src, title: c.title || tt('Video'),
+    allow: 'autoplay; fullscreen; picture-in-picture', allowfullscreen: true, referrerpolicy: 'strict-origin-when-cross-origin' })), unter);
+  if (a.art === 'suche' && st && st.url) return h('div', { class: 'link-video' }, mediaBlock({ medien: st, thumb: c.image || st.bild, title: c.title, link: c.url }, spielt), unter);
+  const tippen = async () => {
+    if (a.art !== 'suche') { S.playing = 'lv:' + p.id; render(true); return; }
+    S.mediaLookup[c.url] = 'lade'; render(true);
+    try { const d = await getJSON('api/rss.php?aktion=medien&url=' + encodeURIComponent(c.url)); S.mediaLookup[c.url] = d.status === 'ok' && d.url ? d : 'leer'; }
+    catch (e) { S.mediaLookup[c.url] = 'leer'; }
+    if (S.mediaLookup[c.url] !== 'leer') S.playing = 'lv:' + p.id;
+    render(true);
+    if (S.mediaLookup[c.url] === 'leer') flash(tt('Kein abspielbares Video gefunden – öffne die Seite.'));
+  };
+  const host = a.art === 'yt' ? 'YouTube' : hostOf(a.art === 'frame' ? a.src : c.url);
+  return h('div', { class: 'link-video' },
+    h('button', { type: 'button', class: 'video video-thumb', disabled: st === 'lade', 'aria-label': tt('Video abspielen: ') + (c.title || hostOf(c.url)), onClick: tippen },
+      c.image ? h('img', { src: c.image, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }) : (a.art === 'yt' ? h('img', { src: 'https://i.ytimg.com/vi/' + a.id + '/hqdefault.jpg', alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }) : null),
+      h('span', { class: 'play' }, h('span', { class: 'play-tri' })),
+      h('span', { class: 'video-note' }, st === 'lade' ? tt('Suche Video …') : tt('Abspielen lädt das Video von ') + host)),
+    unter);
+}
 // Herkunft: über welchen Weg und welches Konto/welchen Feed der Beitrag kam
 function viaText(v, creator) {
   const lbl = SERVICE_LABEL[v.service] || v.service;
@@ -156,7 +199,7 @@ function cardFor(p) {
       v.service === 'rss' && !v.medien && !v.video && v.link && (!showText || thinText(v) || /video|sendung|tagesthemen|tagesschau_20/i.test(v.link)) ? watchBlock(v) : null,
       showText ? clampText(p, v) : null,
       media.length ? h('div', { class: 'card-media' + (media.length === 1 ? ' one' : '') }, media.map((src, i) => bildInKarte(v, src, i))) : null,
-      linkCard(v.card),
+      linkVideoBlock(v, p) || linkCard(v.card),
       kartenZusatz(p, 'unten'),  // #23: z. B. „Antworten ansehen“
       p.kind === 'neu' ? h('button', { type: 'button', class: 'follow-btn', onClick: () => kfollow(p) }, S.kfollows.some((f) => f.key === p.whoKey) ? tt('In KOMPASS gefolgt ✓') : tt('In KOMPASS folgen')) : null),
     foot);

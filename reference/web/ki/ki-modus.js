@@ -349,7 +349,7 @@ const KIB_RUNDEN = 3;
 function kibSchritt(d) {
   const l = kibListe(); const i = kibPos(l, (cur() || {}).id); const j = i + d;
   if (j >= 0 && j < l.length) { KIB.weiter = null; KIB.fokus = 'post:' + l[j]; show(l[j], d > 0 ? 'up' : 'down'); return; }
-  if (d < 0) { flash(tt('Das ist der erste Beitrag des Themas.')); return; }
+  if (d < 0) { kibZurueckThema(); return; }
   if (KIB.thema < 0) { flash(tt('Ende des Themas – Esc führt zurück.')); return; }
   const th = kibThemen(); const pos = th.findIndex((x) => x.i === KIB.thema);
   const naechstes = pos >= 0 && pos + 1 < th.length ? th[pos + 1] : null;
@@ -366,6 +366,20 @@ function kibSchritt(d) {
   KIB.weiter = null;
   if (naechstes) { const ps = kibHaupt(naechstes.t); kibOeffnePost(naechstes.i, ps, ps[0].id); return; }
   kibMehr();
+}
+// #86: Wischen ist umkehrbar – vom ersten Beitrag eines Themas zurück zum letzten Beitrag des vorigen Themas,
+// vom ersten Beitrag des ersten Themas ins Mosaik
+function kibZurueckThema() {
+  KIB.weiter = null;
+  if (KIB.thema < 0) { flash(tt('Das ist der erste Beitrag des Themas.')); return; }
+  const th = kibThemen(); const pos = th.findIndex((x) => x.i === KIB.thema);
+  const vorher = pos > 0 ? th[pos - 1] : null;
+  if (!vorher) { kibZumMosaik(KIB.thema); return; }
+  const ps = kibHaupt(vorher.t); if (!ps.length) { kibZumMosaik(KIB.thema); return; }
+  KIB.thema = vorher.i; KIB.liste = ps.map((p) => p.id);
+  const id = ps[ps.length - 1].id; KIB.fokus = 'post:' + id;
+  show(id, 'down');
+  flash(tt('↑ Zurück: Thema „') + vorher.t.thema + '“');
 }
 function kibRundenEnde() { return !S.ai.res || (S.ai.res.runde || 1) >= KIB_RUNDEN || !!KIB.nachLeer; }
 function kibSchonAusgewaehlt() {

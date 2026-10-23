@@ -971,4 +971,6 @@ SPRACHE.en = Object.fromEntries(Object.entries({
   "Sonne": "Sun",
   "Auf- und Untergang in {ort}": "Sunrise and sunset in {ort}",
   "Datum und Sonne: auf deinem Gerät berechnet": "date and sun: calculated on your device",
+  "↑ Zurück: Thema „": "↑ Back: topic “",
+  "Abspielen lädt das Video von ": "Playing loads the video from ",
 }).filter(([, v]) => v));

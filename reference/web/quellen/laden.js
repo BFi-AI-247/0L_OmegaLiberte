@@ -84,7 +84,7 @@ function mastoPost(st, host, kind) {
   const acct = mastoAcct(a, new URL(a.url).host || host);
   const rich = richFromHtml(s.content);
   if (s.spoiler_text) rich.unshift({ x: s.spoiler_text + '\n\n' });
-  const card = s.card && s.card.url ? { url: s.card.url, title: s.card.title || '', desc: s.card.description || '', image: s.card.image || '' } : null;
+  const card = s.card && s.card.url ? { url: s.card.url, title: s.card.title || '', desc: s.card.description || '', image: s.card.image || '', typ: s.card.type === 'video' ? 'video' : undefined } : null;  // typ: #85
   const text = [s.spoiler_text, htmlToText(s.content)].filter(Boolean).join('\n\n');
   return {
     id: 'm:' + s.uri, service: 'mastodon', tags: ['mastodon', 'm:' + acct],

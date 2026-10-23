@@ -684,6 +684,8 @@ if ($aktion === 'medien') {
         $kand = [];
         if (preg_match_all('#"contentUrl"\s*:\s*"([^"]+)"#i', $html, $m)) foreach ($m[1] as $x) $kand[] = stripcslashes($x);
         if (preg_match_all('#<meta[^>]+property=["\']og:video(?::secure_url|:url)?["\'][^>]+content=["\']([^"\']+)["\']#i', $html, $m)) foreach ($m[1] as $x) $kand[] = $x;
+        // #85: auch <meta content="…" property="og:video"> (Reihenfolge der Attribute umgekehrt)
+        if (preg_match_all('#<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:video(?::secure_url|:url)?["\']#i', $html, $m)) foreach ($m[1] as $x) $kand[] = $x;
         if (preg_match_all('#<(?:video|source|audio)\b[^>]*\bsrc=["\']([^"\']+)["\']#i', $html, $m)) foreach ($m[1] as $x) $kand[] = $x;
         $flach = str_replace(['\\/', '&quot;', '&#34;'], ['/', '"', '"'], $html);
         if (preg_match_all('#https?://[^"\'\s<>]+?\.(?:mp4|m3u8|mp3)(?:\?[^"\'\s<>]*)?#i', $flach, $m)) foreach ($m[0] as $x) $kand[] = $x;

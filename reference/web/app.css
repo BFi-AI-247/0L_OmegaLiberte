@@ -584,3 +584,9 @@ details.einr-radar > summary h3 { display: inline; }
 .leer-knoepfe { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 .leer-details { max-width: 28rem; text-align: left; color: var(--muted); }
 .leer-details ul { margin: 6px 0 0; padding-left: 18px; }
+
+/* #85 Video aus Link-Vorschau */
+.link-video { display: flex; flex-direction: column; gap: 6px; flex: none; }
+.link-video .lv-link { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; text-decoration: none; color: var(--ink); font-size: 14px; }
+.link-video .lv-link b { font-weight: 600; }
+.link-video .feed-video { width: 100%; border-radius: 12px; background: #000; }
