@@ -257,6 +257,15 @@ function kibWoerter(p) {
 // Gleiche Geschichte → eine Kachel. Grundlage: was die KI in „auch“ nennt; dazu Beiträge desselben Themas
 // (ausgewählt oder nicht), die mehrere Wörter teilen, die im Thema vorkommen, außerhalb aber selten sind
 // (z. B. „phobos“, „jaxa“, „mmx“, „42“). Zu einem Thema gehört nur, was die KI ihm zugeordnet hat.
+// #87: Gattungswörter der Nachrichten verbinden keine Geschichten („Wahl“ in Brasilien und Serbien, „Deutschland“ bei PHP-Lücke und Sturm)
+const KIB_GATTUNG = new Set(['wahl', 'wahlen', 'wahlkampf', 'krieg', 'kriege', 'angriff', 'angriffe', 'regierung', 'präsident', 'präsidentin', 'studie', 'polizei', 'minister', 'ministerin',
+  'partei', 'parteien', 'land', 'länder', 'stadt', 'städte', 'menschen', 'jahr', 'jahre', 'jahren', 'prozent', 'millionen', 'milliarden', 'euro', 'woche', 'wochen', 'tage', 'bericht', 'berichte',
+  'update', 'live', 'video', 'neue', 'neuer', 'neues', 'neuen', 'erste', 'ersten', 'zwei', 'drei', 'deutschland', 'deutsche', 'deutschen', 'europa', 'europäische', 'welt', 'usa', 'protest', 'proteste',
+  'gericht', 'urteil', 'streit', 'kritik', 'chef', 'chefin', 'bundesregierung', 'bund', 'länder', 'sturm', 'wetter', 'unfall', 'tote', 'toten', 'verletzte', 'nachrichten', 'aktuell', 'heute', 'gestern', 'morgen',
+  'election', 'elections', 'war', 'attack', 'government', 'president', 'police', 'study', 'says', 'after', 'over', 'more', 'year', 'years', 'people', 'world', 'news', 'first', 'two', 'three', 'million', 'billion']);
+// Gleiche Geschichte → eine Kachel. Grundlage: was die KI in „auch“ nennt – aber nur, wenn es auch hier zusammenpasst (#87) –, dazu
+// Beiträge desselben Themas (ausgewählt oder nicht), die mehrere Wörter teilen, die im Thema vorkommen, außerhalb aber selten sind
+// (z. B. „phobos“, „jaxa“, „mmx“, „42“). Zu einem Thema gehört nur, was die KI ihm zugeordnet hat.
 function kibGruppieren() {
   const r = S.ai.res; KIB.zu = {}; KIB.auch = {};
   const gewaehlt = new Set((r.auswahl || []).map((a) => a.id));
@@ -265,24 +274,30 @@ function kibGruppieren() {
   const woerter = (id) => wort.get(id) || kibWoerter(S.byId[id]);
   const selten = Math.max(2, Math.round(S.posts.length * 0.005));
   (r.lage || []).forEach((t, i) => {
-    const ids = [...new Set(t.ids || [])].filter((id) => S.byId[id] && S.aiTheme[id] === i);
+    const kern = [...new Set(t.ids || [])].filter((id) => S.byId[id] && S.aiTheme[id] === i);
+    const imThema = new Map(); kern.forEach((id) => woerter(id).forEach((x) => imThema.set(x, (imThema.get(x) || 0) + 1)));
+    const istSelten = (x) => !KIB_GATTUNG.has(x) && (df.get(x) || 0) - (imThema.get(x) || 0) <= selten;
+    // Ähnlichkeit zweier Beiträge: seltene gemeinsame Wörter (ohne Gattungswörter) und Dice-Wert
+    const vergleich = (x, y) => {
+      const A = woerter(x); const B = woerter(y); let geteilt = 0; let rar = 0;
+      A.forEach((w) => { if (B.has(w)) { geteilt++; if (istSelten(w)) rar++; } });
+      const sa = S.byId[x].sprache; const sb = S.byId[y].sprache;
+      return { rar, d: A.size + B.size ? (2 * geteilt) / (A.size + B.size) : 0, fremd: !!(sa && sb && sa !== sb) };
+    };
+    // „auch“ der KI nur, wenn es lokal passt: ein seltenes gemeinsames Wort oder Dice ≥ 0,25; andere Sprache braucht ein seltenes Wort
+    const kiPasst = (x, y) => { const v = vergleich(x, y); return v.fremd ? v.rar >= 1 : v.rar >= 1 || v.d >= 0.25; };
+    const ids = kern.slice();
     // „auch“ der KI: zählt auch für Beiträge ohne eigenes Thema
-    (r.auswahl || []).forEach((a) => { if (ids.includes(a.id)) (a.auch || []).forEach((id) => { if (S.byId[id] && S.aiTheme[id] == null && !ids.includes(id)) ids.push(id); }); });
+    (r.auswahl || []).forEach((a) => { if (ids.includes(a.id)) (a.auch || []).forEach((id) => { if (S.byId[id] && S.aiTheme[id] == null && !ids.includes(id) && kiPasst(a.id, id)) ids.push(id); }); });
     const eltern = {}; ids.forEach((id) => { eltern[id] = id; });
     const wurzel = (id) => { while (eltern[id] !== id) id = eltern[id] = eltern[eltern[id]]; return id; };
     const binde = (a, b) => { if (eltern[a] != null && eltern[b] != null) eltern[wurzel(a)] = wurzel(b); };
-    (r.auswahl || []).forEach((a) => { if (eltern[a.id] != null) (a.auch || []).forEach((id) => binde(id, a.id)); });
-    const imThema = new Map(); ids.forEach((id) => woerter(id).forEach((x) => imThema.set(x, (imThema.get(x) || 0) + 1)));
-    const istSelten = (x) => (df.get(x) || 0) - (imThema.get(x) || 0) <= selten;
+    (r.auswahl || []).forEach((a) => { if (eltern[a.id] != null) (a.auch || []).forEach((id) => { if (eltern[id] != null && kiPasst(a.id, id)) binde(id, a.id); }); });
     for (let a = 0; a < ids.length; a++) {
       for (let b = a + 1; b < ids.length; b++) {
-        const A = woerter(ids[a]); const B = woerter(ids[b]);
-        let geteilt = 0; let rar = 0;
-        A.forEach((x) => { if (B.has(x)) { geteilt++; if (istSelten(x)) rar++; } });
-        const d = A.size + B.size ? (2 * geteilt) / (A.size + B.size) : 0;
-        const gleicheQuelle = S.byId[ids[a]].whoKey === S.byId[ids[b]].whoKey;
-        // Themenwörter allein reichen nicht: erst drei seltene gemeinsame Wörter (oder zwei bei derselben Quelle) oder fast gleicher Text
-        if (rar >= 3 || (rar >= 2 && gleicheQuelle) || d >= 0.5) binde(ids[a], ids[b]);
+        const v = vergleich(ids[a], ids[b]);
+        // Themenwörter allein reichen nicht: erst drei seltene gemeinsame Wörter oder fast gleicher Text; dieselbe Quelle senkt die Schwelle nicht (#87)
+        if (!v.fremd && (v.rar >= 3 || v.d >= 0.5)) binde(ids[a], ids[b]);
       }
     }
     // Je Gruppe ein Hauptbeitrag: ausgewählt, Gewicht, mit Bild, neuer
