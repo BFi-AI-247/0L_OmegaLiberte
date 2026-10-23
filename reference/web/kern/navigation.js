@@ -18,7 +18,8 @@ function hatMedien(p) {
 function visible() {
   const m = aktiverModus();
   // #24: „Markt am Morgen“ einmal am Tag vorne, nur in der chronologischen Ansicht
-  const base = m && m.id === 'social' && typeof marktVorne === 'function' ? marktVorne(chronoVisible()) : chronoVisible();
+  const chrono = typeof einstiegOrdnen === 'function' ? einstiegOrdnen(chronoVisible()) : chronoVisible();  // #39 W0: Gifhorn zuerst
+  const base = m && m.id === 'social' && typeof marktVorne === 'function' ? marktVorne(chrono) : chrono;
   return m && m.reihenfolge ? m.reihenfolge(base) : base;
 }
 function markSeen(p) {

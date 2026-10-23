@@ -8,7 +8,7 @@ async function loadRadar(key) {
   return (d.eintraege || []).map((e) => ({
     id: 'r:' + (e.link || e.titel), service: 'radar', tags: [key],
     who: RADAR_FEEDS[key] || d.titel || tt('RADAR 724'), whoKey: key,
-    title: leerPlatzhalter(e.titel), text: leerPlatzhalter(e.text), link: e.link || '', date: e.datum, media: []
+    title: leerPlatzhalter(e.titel), text: ohneAnhaengsel(leerPlatzhalter(e.text)), link: e.link || '', date: e.datum, media: []
   }));
 }
 
@@ -297,6 +297,28 @@ async function loadFeeds(feeds, beiTeil) {
 /* Antwort von rss.php (aktion=feed bzw. ein Eintrag aus aktion=sammel) → Beiträge */
 // #65: Platzhalter einiger Feeds („NONE“, „null“) nicht als Text zeigen – auch für Einträge aus älterem Server-Puffer
 function leerPlatzhalter(t) { t = t || ''; return /^\s*(none|null|undefined|n\/?a|-)\s*$/i.test(t) ? '' : t; }
+// #83: Anhängsel am Ende von Feed-Teasern („mehr...“, „Weiterlesen »“, „[…]“, „Read more“, „The post … appeared first on …“) –
+// im Feed waren das Links, als reiner Text sehen sie wie ein toter Knopf aus. Nur am Textende; „Artikel öffnen“ führt zum Artikel.
+const TEASER_ANHAENGSEL = [
+  /\s*\[\s*(?:…|\.{3})\s*\]\s*$/,
+  /\s*(?:»\s*)?\b(?:weiterlesen|weiter lesen|mehr lesen|lesen sie mehr|read more|continue reading|zum artikel)\b\s*(?:\.{2,}|…|»|›|>>|→)?\s*$/i,
+  /\s*\b(?:mehr|more)\s*(?:\.{2,}|…|»|›|>>|→)\s*$/i,
+  /\s*\(\s*(?:mehr|more)\s*\)\s*$/i,
+  /\s*the post .{1,300}? appeared first on .{1,200}$/i,
+  /\s*der beitrag .{1,300}? erschien zuerst auf .{1,200}$/i
+];
+function ohneAnhaengsel(t) {
+  let s = String(t || ''); const alt = s;
+  for (let i = 0; i < 3; i++) {
+    let v = s;
+    TEASER_ANHAENGSEL.forEach((re) => { v = v.replace(re, ''); });
+    v = v.replace(/([.!?…"“”])\s*(?:mehr|more)\s*$/i, '$1');   // „Attacken. mehr“ – nur nach Satzende, „nicht mehr“ bleibt
+    if (v === s) break; s = v;
+  }
+  s = s.trimEnd();
+  if (s !== alt.trimEnd() && s && !/[.!?…"“”)»]$/.test(s)) s += ' …';
+  return s;
+}
 // #71: Mastodon-Tag-Zeitleiste (https://<instanz>/tags/<tag>[.rss]) → „#tag (instanz)“, wie in „Quelle hinzufügen“
 function mastodonTagTitel(u) {
   const m = /^https:\/\/([^/?#]+)\/tags\/([^/?#.]+)(?:\.rss)?\/?$/i.exec(String(u || ''));
@@ -323,7 +345,7 @@ function feedPosts(f, d) {
   return (d.eintraege || []).map((e) => ({ ptEmbed: ptEmbed(e.link) || undefined,
     id: e.video ? 'y:' + e.video : 'w:' + (e.link || e.titel), service: yt ? 'youtube' : 'rss', tags: [yt ? 'youtube' : 'rss', key],
     who: f.title || d.titel, whoKey: key, avatar: f.icon || '', handle: hostOf(f.site || f.url), sprache: d.sprache || undefined,  // #69
-    title: leerPlatzhalter(e.titel), text: leerPlatzhalter(e.text), link: e.link || '', date: e.datum,
+    title: leerPlatzhalter(e.titel), text: ohneAnhaengsel(leerPlatzhalter(e.text)), link: e.link || '', date: e.datum,
     media: e.bild && !e.video && !e.medien ? [e.bild] : [], video: e.video || null, short: /youtube\.com\/shorts\//.test(e.link || ''), medien: e.medien || null, thumb: e.bild || '', card: null, urls: e.link ? [urlKey(e.link)] : []
   }));
 }

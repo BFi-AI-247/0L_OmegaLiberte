@@ -122,8 +122,21 @@ function paketVorschau(text, woher) {
 // die nichts konfigurieren sollen (Link öffnen, lesen). Inhalt kommt nur aus dieser Tabelle, nie aus dem Link.
 // Schon eingerichtete Geräte werden nicht still verändert: sie sehen die übliche Paket-Vorschau.
 const EINSTIEGE = {
-  w0: { modul: 'einstieg-w0', sprache: 'de', radar: ['radar-gifhorn'], gruppe: 'Regional: Gifhorn' }
+  // spaeter: #39 „Neue Wiesenzeitung“ – erst Gifhorn, dann Niedersachsen (Modul w0-gifhorn-zuerst, siehe einstiegOrdnen)
+  w0: { modul: 'einstieg-w0', sprache: 'de', radar: ['radar-gifhorn'], gruppe: 'Regional: Gifhorn',
+    spaeter: ['https://www.ndr.de/nachrichten/niedersachsen/index~rss2.xml'] }
 };
+// #39 (Modul w0-gifhorn-zuerst): Auf W0-Geräten stehen Beiträge der Gifhorn-Quellen aus den letzten 48 Stunden vorne,
+// Niedersachsen (NDR) und ältere Beiträge folgen danach in zeitlicher Reihenfolge – wie in der Wiesenzeitung (M025: ~80 % lokal).
+function einstiegOrdnen(liste) {
+  const E = EINSTIEGE[settings.einstieg];
+  if (!E || !E.spaeter || S.filter || !modulAn('w0-gifhorn-zuerst') || !modulAn(E.modul)) return liste;
+  const spaet = new Set(settings.feeds.filter((f) => E.spaeter.includes(f.url)).map((f) => 'f:' + f.id));
+  const grenze = Date.now() - 48 * 3600e3;
+  const vorne = [], rest = [];
+  liste.forEach((p) => ((!p.tags.some((t) => spaet.has(t)) && new Date(p.date).getTime() >= grenze) ? vorne : rest).push(p));
+  return vorne.concat(rest);
+}
 function einstiegAusAdresse() {
   const m = /^#(?:einstieg=)?(w0)$/i.exec(location.hash || ''); if (!m) return false;
   const id = m[1].toLowerCase(); const E = EINSTIEGE[id];
