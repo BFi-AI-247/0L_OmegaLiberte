@@ -28,9 +28,12 @@ function aiPrepare() {
 }
 function entryNameOf(p) { return (S.entries[p.whoKey] || {}).name || p.who || ''; }
 // weiter = { stunden }: weitere Runde – nur Ungelesenes, das noch nicht ausgewählt ist; Ergebnis wird angehängt (kibNachlegen)
-async function curate(weiter) {
+async function curate(weiter, auto) {
   if (!weiter || !weiter.stunden) weiter = null;  // auch als Klick-Handler (Ereignis als Argument)
   if (S.ai.busy || S.pruefDaten) return;  // #74: Beispieldaten haben eine feste Auswahl
+  if (!weiter && auto !== 'auto' && KIB.bereit) return kibBereitZeigen();  // #94: im Hintergrund fertige Auswahl auf Wunsch zeigen
+  // #94: von selbst gestartet (nach dem Laden) und schon eine Auswahl zu sehen → still arbeiten, Ansicht nicht wechseln
+  const still = !weiter && auto === 'auto' && !!S.ai.res && aiActive();
   if (weiter && !S.ai.res) return 'fehler';
   const wunsch = String(settings.aiWunsch || '').trim();
   const lim = Date.now() - (weiter ? weiter.stunden : wunsch ? 96 : 48) * 3600000;
@@ -46,20 +49,21 @@ async function curate(weiter) {
   const cand = pool.slice(0, wunsch ? 150 : 120);
   if (weiter && cand.length < 3) return 'leer';
   if (cand.length < 3) { S.ai.err = tt('Zu wenig Ungelesenes aus den letzten 48 Stunden für eine Auswahl.'); render(true); return; }
-  if (!weiter) { S.ai.busy = true; S.ai.err = ''; render(); }
+  if (!weiter) { S.ai.busy = true; S.ai.err = ''; if (!still) render(); }
   const body = {
     kandidaten: cand.map((p) => {
       const t = String(p.text || '').replace(/\s+/g, ' ').trim();
       return { id: p.id, quelle: entryNameOf(p), titel: p.title || t.slice(0, 140), text: p.title ? t.slice(0, 220) : t.slice(140, 360) };
     }),
     wunsch: modulAn('ki-filter') ? kifWunsch() : (settings.aiWunsch || ''),  // #80: KI-Filter (＋/−/⦸) geht mit
+    bekannt: modulAn('ki-filter') ? kifBekannt() : [],  // #93: bekannte Themennamen wörtlich wiederverwenden
     favoriten: Object.keys(S.favs).map((k) => (S.entries[k] || {}).name).filter(Boolean),
     anzahl: 20
   };
   try {
     let d;
     if (KI.art() !== 'kompass' && KI.bereit()) {
-      d = Object.assign({ status: 'ok' }, await kiKuratieren(body.kandidaten, body.wunsch, body.favoriten, body.anzahl));
+      d = Object.assign({ status: 'ok' }, await kiKuratieren(body.kandidaten, body.wunsch, body.favoriten, body.anzahl, body.bekannt));
     } else {
       if (!kiProbeErlaubt()) throw new Error(KI_OHNE());
       const r = await fetch('api/kurator.php', { method: 'POST', headers: kiServerKopf(), body: JSON.stringify(body) });
@@ -78,15 +82,20 @@ async function curate(weiter) {
       store.set('aiRes', r); if (modulAn('ki-filter')) kifZaehlen(lage); aiPrepare();
       return 'ok';
     }
-    KIB.nachLeer = false; KIB.weiter = null;
-    S.ai.res = { lage: d.lage || [], auswahl: d.auswahl || [], ueberschrift: String(d.ueberschrift || '').slice(0, 90), at: Date.now(), n: cand.length, quellen: new Set(cand.map(entryNameOf)).size,
+    const neu = { lage: d.lage || [], auswahl: d.auswahl || [], ueberschrift: String(d.ueberschrift || '').slice(0, 90), at: Date.now(), n: cand.length, quellen: new Set(cand.map(entryNameOf)).size,
       wunsch, treffer: words.length ? match.length : null, hinweis: String(d.hinweis || '').slice(0, 240),
       von: KI.art() !== 'kompass' && KI.bereit() ? KI.name() : tt('Mistral (KOMPASS-Probe)') };
-    if (words.length && !match.length && !S.ai.res.hinweis) S.ai.res.hinweis = 'Zu „' + wunsch + tt('“ finde ich in deinen ungelesenen Beiträgen nichts. Füge passende Quellen hinzu.');
-    store.set('aiRes', S.ai.res);
-    if (modulAn('ki-filter')) kifZaehlen(S.ai.res.lage);
-    aiPrepare();
+    if (words.length && !match.length && !neu.hinweis) neu.hinweis = 'Zu „' + wunsch + tt('“ finde ich in deinen ungelesenen Beiträgen nichts. Füge passende Quellen hinzu.');
+    store.set('aiRes', neu);
+    if (modulAn('ki-filter')) kifZaehlen(neu.lage);
     S.ai.busy = false;
+    if (still && S.ai.res && aiActive()) {  // #94: bereitlegen, der Nutzer holt sie mit „Neue Auswahl zeigen“
+      KIB.bereit = neu; kibKnopfNeu(); flash(tt('Neue KI-Auswahl ist fertig – oben „Neue Auswahl zeigen“ antippen.'));
+      return;
+    }
+    KIB.bereit = null; KIB.nachLeer = false; KIB.weiter = null;
+    S.ai.res = neu;
+    aiPrepare();
     // Während des Kuratierens umgeschaltet (Chronologisch, Quelle gewählt): nicht in die KI-Auswahl springen
     if (!aiActive()) { kibStapelOhneKi(); render(); return; }
     S.stack = S.stack.slice(0, S.pos + 1);
@@ -94,8 +103,25 @@ async function curate(weiter) {
     if (S.ai.res.hinweis) flash(S.ai.res.hinweis);
   } catch (e) {
     if (weiter) { KIB.nachFehler = e.message || ''; return 'fehler'; }
+    if (still) { S.ai.busy = false; return; }  // #94: Hintergrund-Versuch ohne Meldung; die alte Auswahl bleibt
     S.ai.busy = false; S.ai.err = e.message || tt('Die KI-Auswahl hat gerade nicht geklappt.'); render(true); flash(S.ai.err);
   }
+}
+// #94: Im Hintergrund fertig gewordene Auswahl erst auf Tipp zeigen
+function kibBereitZeigen() {
+  const neu = KIB.bereit; KIB.bereit = null;
+  if (!neu) return;
+  KIB.nachLeer = false; KIB.weiter = null; S.ai.res = neu;
+  aiPrepare();
+  if (!aiActive()) { kibStapelOhneKi(); render(); return; }
+  S.stack = S.stack.slice(0, S.pos + 1);
+  show(lageId(), 'up');
+  if (neu.hinweis) flash(neu.hinweis);
+}
+function kibKnopfText() { return S.ai.busy ? tt('Kuratiere …') : KIB.bereit ? tt('Neue Auswahl zeigen') : tt('Neu kuratieren'); }
+// Nur die Knopf-Beschriftungen auffrischen, ohne die Bühne neu zu zeichnen (nichts verschiebt sich unter dem Finger)
+function kibKnopfNeu() {
+  document.querySelectorAll('button[data-kuratieren]').forEach((b) => { b.textContent = kibKnopfText(); b.disabled = !!S.ai.busy; b.classList.toggle('primaer', !!KIB.bereit); });
 }
 function setAiMode(on) {
   S.ai.on = on; store.set('aiOn', on); S.filter = null; S.overview = false;
@@ -142,7 +168,7 @@ function aiBand() {
       h('span', { class: 'ai-band-st' }, st),
       h('span', { class: 'ai-band-btns' },
         h('button', { type: 'button', class: 'mini', disabled: S.ai.busy, onClick: () => { S.ai.wunschOpen = !S.ai.wunschOpen; render(); } }, tt('Wunsch')),
-        h('button', { type: 'button', class: 'mini primary', disabled: S.ai.busy, onClick: curate }, S.ai.busy ? tt('Kuratiere …') : tt('Neu kuratieren')))),
+        h('button', { type: 'button', class: 'mini primary', 'data-kuratieren': '', disabled: S.ai.busy, onClick: () => curate() }, kibKnopfText()))),
     S.ai.wunschOpen ? h('div', { class: 'ai-wunsch' },
       h('label', { for: 'k-wunsch', class: 'sr' }, tt('Was soll die KI beachten?')),
       h('input', { id: 'k-wunsch', value: S.ai.wunschDraft != null ? S.ai.wunschDraft : (settings.aiWunsch || ''), placeholder: tt('Was soll die KI beachten? z. B. mehr Raumfahrt, weniger Fußball'),
@@ -203,7 +229,7 @@ function aiNote(p, part) {
    Die Ebene folgt dem aktuellen Eintrag im Stapel: Lage = Mosaik, Thema-Eintrag = Thema, Beitrag = Karte.
    So laufen Zurück, Gesehen und der Chat-Bezug über die Kern-Navigation (show).
    Handy und schmale Fenster: weiter die Bühne des Social-Modus. */
-const KIB = { gewicht: {}, zu: {}, auch: {}, zeile: {}, liste: [], thema: -1, fokus: null, alsListe: false, dom: null, ebene: '', sperre: false,
+const KIB = { bereit: null, gewicht: {}, zu: {}, auch: {}, zeile: {}, liste: [], thema: -1, fokus: null, alsListe: false, dom: null, ebene: '', sperre: false,
   weiter: null, nach: null, nachLeer: false, nachFehler: '' };
 const KIB_FARBEN = ['#2A3550', '#272246', '#22402F', '#3A2A22', '#1C3340', '#3A2132', '#33283F', '#203A3A'];
 const KIB_RAND = 28; const KIB_ABSTAND = 6; // Andeutung oben/unten im 2×2, Abstand der Kacheln
@@ -473,7 +499,7 @@ function kibKopf() {
       modusLeiste(true),  // Kern-Leiste ✦ · ☰ · ✎ statt des eigenen Umschalters
       h('span', { class: 'kib-stand', role: 'status' }, st),
       h('button', { type: 'button', class: 'kib-knopf', 'aria-expanded': S.ai.wunschOpen ? 'true' : 'false', disabled: S.ai.busy, onClick: () => { S.ai.wunschOpen = !S.ai.wunschOpen; render(); } }, tt('Wunsch')),
-      h('button', { type: 'button', class: 'kib-knopf', disabled: S.ai.busy, onClick: curate }, S.ai.busy ? tt('Kuratiere …') : tt('Neu kuratieren')),
+      h('button', { type: 'button', class: 'kib-knopf' + (KIB.bereit ? ' primaer' : ''), 'data-kuratieren': '', disabled: S.ai.busy, onClick: () => curate() }, kibKnopfText()),
       h('button', { type: 'button', class: 'kib-knopf rund', 'aria-label': tt('Einstellungen'), title: tt('Einstellungen'), onClick: () => { S.screen = 'settings'; render(); } }, icon('settings', { sm: true }))),
     S.ai.wunschOpen ? h('div', { class: 'ai-wunsch' },
       h('label', { for: 'k-wunsch', class: 'sr' }, tt('Was soll die KI beachten?')),
@@ -489,8 +515,9 @@ function kibMosaik() {
   const kopf = h('div', { class: 'kib-titel' },
     h('h1', {}, r.ueberschrift || tt('Heute in deinen Quellen')),
     h('span', { class: 'kib-datum' }, datum + ' · ' + th.length + (th.length === 1 ? tt(' Thema') : tt(' Themen'))),
-    h('button', { type: 'button', class: 'kib-knopf', 'aria-pressed': KIB.alsListe ? 'true' : 'false', onClick: () => { KIB.alsListe = !KIB.alsListe; kibZeichnen(els.stage); } }, KIB.alsListe ? tt('Als Mosaik') : tt('Als Liste')),
-    !isWide() ? h('button', { type: 'button', class: 'kib-knopf', disabled: S.ai.busy, onClick: () => curate() }, S.ai.busy ? tt('Kuratiere …') : tt('Neu kuratieren')) : null);  // Handy: Laptop hat den Knopf in der Kopfzeile
+    // #91: „Als Liste“ entfällt; nur wer über „Weitere Themen“ in der Liste ist, bekommt den Weg zurück ins Mosaik
+    KIB.alsListe ? h('button', { type: 'button', class: 'kib-knopf', onClick: () => { KIB.alsListe = false; kibZeichnen(els.stage); } }, tt('Als Mosaik')) : null,
+    !isWide() ? h('button', { type: 'button', class: 'kib-knopf' + (KIB.bereit ? ' primaer' : ''), 'data-kuratieren': '', disabled: S.ai.busy, onClick: () => curate() }, kibKnopfText()) : null);  // Handy: Laptop hat den Knopf in der Kopfzeile
   const hinweis = r.hinweis || (r.wunsch && r.treffer === 0) ? h('div', { class: 'kib-hinweis' },
     h('span', {}, r.hinweis || tt('Zu deinem Wunsch finde ich nichts in deinen Quellen.')),
     h('button', { type: 'button', class: 'kib-knopf', onClick: () => openAdd('ki', r.wunsch) }, tt('✦ KI nach passenden Quellen fragen'))) : null;
@@ -690,9 +717,23 @@ function kibBuehne(el, animate) {
   const leiste = h('div', { class: 'kib-leiste' },
     kibMini(ti, tt('Zum Mosaik'), () => kibZumMosaik(ti)),
     h('button', { type: 'button', class: 'kib-knopf', onClick: kibZurueck }, '← ' + (t && l.length > 1 && isWide() ? t.thema : tt('KI-Auswahl')), h('span', { class: 'kib-taste' }, tt('Esc'))),
-    l.length > 1 ? h('span', { class: 'kib-datum' }, (k + 1) + ' von ' + l.length + (isWide() ? tt(' · ↑ ↓ oder Leertaste: nächster Beitrag') : tt(' · wischen: nächster Beitrag'))) : null);
+    l.length > 1 ? h('span', { class: 'kib-datum' }, (k + 1) + ' von ' + l.length + (isWide() ? tt(' · ↑ ↓ oder Leertaste: nächster Beitrag') : tt(' · wischen: nächster Beitrag'))) : null,
+    kibGruppeLeiste(c));
   const alt = el.querySelector('.kib-leiste'); if (alt) alt.replaceWith(leiste); else el.prepend(leiste);
   MODI.social.buehne(el, animate);
+}
+// #59 (Modul ki-gruppe): Handy – zusammengefasste Berichte derselben Geschichte mit ‹ › erreichbar (Laptop: „Auch berichtet von“ rechts)
+function kibGruppeLeiste(c) {
+  if (!modulAn('ki-gruppe') || isWide() || !c) return null;
+  const haupt = KIB.zu[c.id] || c.id;
+  const ids = [haupt].concat(KIB.auch[haupt] || []).filter((id) => S.byId[id]);
+  if (ids.length < 2) return null;
+  const j = Math.max(0, ids.indexOf(c.id)); const n = ids.length;
+  const geh = (d) => { const id = ids[(j + d + n) % n]; KIB.fokus = 'post:' + id; show(id, d > 0 ? 'up' : 'down'); };
+  return h('div', { class: 'kib-gruppe', role: 'group', 'aria-label': tt('Berichte derselben Geschichte') },
+    h('button', { type: 'button', class: 'kib-gruppe-knopf', 'aria-label': tt('Vorheriger Bericht'), onClick: () => geh(-1) }, '‹'),
+    h('span', { class: 'kib-gruppe-text' }, tt('Bericht {i} von {n}').replace('{i}', j + 1).replace('{n}', n) + ' · ' + entryNameOf(c)),
+    h('button', { type: 'button', class: 'kib-gruppe-knopf', 'aria-label': tt('Nächster Bericht'), onClick: () => geh(1) }, '›'));
 }
 function kibVerlassen() {
   // Stand ein KI-Eintrag vorn, zeigt die Social-Bühne danach den nächsten Beitrag statt einer leeren Mitte
@@ -847,20 +888,40 @@ function kifAehnlich(a, b) {
   let gleich = 0; A.forEach((x) => { if (B.has(x)) gleich += 1; });
   const klein = A.size <= B.size ? A : B;
   if (gleich === klein.size && (klein.size > 1 || [...klein][0].length >= 5)) return true;  // ein Thema steckt ganz im anderen
+  if (A.size === B.size && A.size >= 3 && gleich === A.size - 1) return true;  // #93: nur ein Wort anders („Politische Entwicklungen/Spannungen in Europa“)
   return gleich / (A.size + B.size - gleich) > 0.5;
+}
+// #93: zwei Themen mit deutlich gleichen Beiträgen (≥ 40 % der kleineren Liste) sind dasselbe Thema, egal wie die KI sie nennt
+function kifUeberlapp(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || !a.length || !b.length) return false;
+  const B = new Set(b); const gleich = a.filter((x) => B.has(x)).length;
+  return gleich >= 1 && gleich / Math.min(a.length, b.length) >= 0.4;
+}
+// #93: Namen, die die KI wörtlich wiederverwenden soll – gesetzte Filter zuerst, dann die häufigsten gezählten Themen
+function kifBekannt() {
+  const w = kifWahl(); const z = store.get('kiThemen', {});
+  return Object.values(w).map((x) => x.name).concat(Object.values(z).sort((a, b) => b.n - a.n).map((x) => x.name)).filter(Boolean).slice(0, 20);
 }
 // Schlüssel eines schon gesetzten Filters, der dasselbe Thema meint (oder '')
 function kifPassend(name, k) {
   const w = kifWahl(); if (k && w[k]) return k;
   return Object.keys(w).find((x) => kifAehnlich(w[x].name || x, name)) || '';
 }
-function kifKuerzer(a, b) { return !a ? b : !b ? a : (b.length < a.length ? b : a); }
+// #93: Anzeigename bleibt stabil – nur ersetzt, wenn der neue Name ein kürzerer Teil des alten ist („Ukraine-Krieg“ statt „Ukraine-Krieg und …“)
+function kifKuerzer(a, b) {
+  if (!a) return b; if (!b) return a;
+  const A = kifWoerter(a); const B = kifWoerter(b);
+  return b.length < a.length && B.size && B.size < A.size && [...B].every((x) => A.has(x)) ? b : a;
+}
 function kifZaehlen(lage) {
   const z = store.get('kiThemen', {}); const jetzt = Date.now();
   (lage || []).forEach((t) => { const kurz = kifKurz(t.thema); if (!kurz) return;
-    const k = z[kifSchluessel(kurz)] ? kifSchluessel(kurz) : (Object.keys(z).find((x) => kifAehnlich(z[x].name || x, kurz)) || kifSchluessel(kurz));
+    const k = z[kifSchluessel(kurz)] ? kifSchluessel(kurz) : (Object.keys(z).find((x) => kifAehnlich(z[x].name || x, kurz) || kifUeberlapp(z[x].ids, t.ids)) || kifSchluessel(kurz));
     const x = z[k] || { name: kurz, n: 0, beitraege: 0 };
-    x.name = kifKuerzer(kifKurz(x.name), kurz); x.n += 1; x.beitraege += (t.ids || []).length; x.zuletzt = jetzt; z[k] = x; });
+    // #93: Kennung (Schlüssel) bleibt; ein Name, den der Nutzer im Filter gesetzt hat, bleibt der Anzeigename
+    x.name = kifPassend(x.name) || !kifAehnlich(x.name, kurz) ? x.name : kifKuerzer(kifKurz(x.name), kurz);  // nur über Beiträge verbunden → alter Name bleibt
+    x.n += 1; x.beitraege += (t.ids || []).length; x.zuletzt = jetzt;
+    x.ids = [...new Set((t.ids || []).concat(x.ids || []))].slice(0, 24); z[k] = x; });
   // höchstens 60 Themen merken; was 30 Tage nicht vorkam, fällt heraus
   const liste = Object.entries(z).filter(([, x]) => jetzt - (x.zuletzt || 0) < 30 * 86400000).sort((a, b) => b[1].n - a[1].n || b[1].zuletzt - a[1].zuletzt).slice(0, 60);
   store.set('kiThemen', Object.fromEntries(liste));
@@ -869,16 +930,18 @@ function kifZaehlen(lage) {
 // #89: gleiche Themen erscheinen nur einmal; ein gesetzter Filter gibt Schlüssel und Namen vor, sonst gilt der kürzeste Name
 function kifThemen() {
   const z = store.get('kiThemen', {}); const w = kifWahl(); const roh = [];
-  Object.entries(z).sort((a, b) => b[1].n - a[1].n || (b[1].beitraege || 0) - (a[1].beitraege || 0)).forEach(([k, x]) => roh.push({ k, name: x.name, n: x.n }));
-  ((S.ai.res && S.ai.res.lage) || []).forEach((t) => { if (t.thema) roh.push({ k: kifSchluessel(kifKurz(t.thema)), name: t.thema, n: 0, frisch: true }); });
+  Object.entries(z).sort((a, b) => b[1].n - a[1].n || (b[1].beitraege || 0) - (a[1].beitraege || 0)).forEach(([k, x]) => roh.push({ k, name: x.name, n: x.n, ids: x.ids }));
+  ((S.ai.res && S.ai.res.lage) || []).forEach((t) => { if (t.thema) roh.push({ k: kifSchluessel(kifKurz(t.thema)), name: t.thema, n: 0, frisch: true, ids: t.ids }); });
   Object.entries(w).forEach(([k, x]) => roh.push({ k, name: x.name || k, n: 0, wahl: true }));
   const aus = [];
   roh.forEach((x) => {
     const kurz = x.wahl ? x.name : kifKurz(x.name);
-    const ziel = aus.find((o) => kifAehnlich(o.name, kurz));
-    if (!ziel) { aus.push({ k: x.wahl ? x.k : kifSchluessel(kurz), name: kurz, n: x.frisch ? 1 : x.n, wahl: !!x.wahl }); return; }
+    const ziel = aus.find((o) => kifAehnlich(o.name, kurz) || kifUeberlapp(o.ids, x.ids));  // #93: auch über gemeinsame Beiträge
+    if (!ziel) { aus.push({ k: x.wahl ? x.k : kifSchluessel(kurz), name: kurz, n: x.frisch ? 1 : x.n, wahl: !!x.wahl, ids: x.ids }); return; }
+    if (x.ids) ziel.ids = (ziel.ids || []).concat(x.ids);
+    if (x.frisch && ziel.n > 0) return;  // frisches Thema steckt schon im gezählten (gleiche Runde) – nicht doppelt zählen, gezählter Name bleibt
     ziel.n += x.n;
-    if (x.wahl && !ziel.wahl) { ziel.k = x.k; ziel.name = kurz; ziel.wahl = true; } else if (!ziel.wahl) ziel.name = kifKuerzer(ziel.name, kurz);
+    if (x.wahl && !ziel.wahl) { ziel.k = x.k; ziel.name = kurz; ziel.wahl = true; } else if (!ziel.wahl && kifAehnlich(ziel.name, kurz)) ziel.name = kifKuerzer(ziel.name, kurz);
   });
   return aus.map(({ k, name, n }) => ({ k, name, n: Math.max(n, 0) }));
 }

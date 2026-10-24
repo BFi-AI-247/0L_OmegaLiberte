@@ -302,6 +302,13 @@ function zwischenstand(extraPosts) {
 }
 /* Der gelesene Beitrag ist beim Zusammenführen in einen anderen aufgegangen (gleicher Beitrag auf mehreren Wegen)?
    Dann zeigt der Stapel auf diesen – statt zum nächsten Beitrag zu springen. */
+// #92: Hat die Quelle den Titel des gerade sichtbaren Beitrags geändert (z. B. Redaktion korrigiert), nur den Titel in der
+// Karte ersetzen – die Bühne wird nicht neu gezeichnet, nichts verschiebt sich unter dem Finger (#94)
+function titelNachziehen(vorher) {
+  const jetzt = cur();
+  if (!vorher || !jetzt || !vorher.title || !jetzt.title || vorher.title === jetzt.title || !els.stage) return;
+  els.stage.querySelectorAll('.card h1').forEach((e) => { if (e.textContent === vorher.title) e.textContent = jetzt.title; });
+}
 function stapelHalten() {
   const keep = S.stack[S.pos];
   if (!keep) return null;
@@ -312,6 +319,7 @@ function stapelHalten() {
 }
 async function loadAll() {
   if (typeof pruefDatenAktiv === 'function' && pruefDatenAktiv()) { pruefDatenBauen(); return; }  // #74: Vorschau-Beispieldaten statt Netz
+  const vorher = cur();  // #92: Titel der gerade sichtbaren Karte nach dem Laden nachziehen
   S.loading = true; S.errors = []; render();
   const base = {}; const posts = []; const people = [];
   ZWISCHEN.lauf = { base, people, posts }; ZWISCHEN.extra = null;
@@ -347,7 +355,7 @@ async function loadAll() {
   build();
   S.loading = false;
   const keep = stapelHalten();
-  if (!keep) { S.stack = []; S.pos = -1; next(true); } else render();
+  if (!keep) { S.stack = []; S.pos = -1; next(true); } else { render(); titelNachziehen(vorher); }
   if (S.errors.length) flash(S.errors.join(' · '));
-  if (S.ai.on && (!S.ai.res || Date.now() - S.ai.res.at > 60 * 60000)) curate();
+  if (S.ai.on && (!S.ai.res || Date.now() - S.ai.res.at > 60 * 60000)) curate(null, 'auto');  // #94: still, Ansicht wechselt nicht von selbst
 }

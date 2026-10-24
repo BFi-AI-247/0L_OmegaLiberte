@@ -327,7 +327,7 @@ a.mini { display: inline-flex; align-items: center; text-decoration: none; color
 /* Weniger Scrollen: Titel im Kopf, Medien passend zur Höhe, lange Texte gekürzt */
 .card-head.titled { align-items: flex-start; }
 .card-av-btn { border: 0; background: none; padding: 0; flex: none; border-radius: 50%; }
-.card-title { margin: 0; font-size: 19px; line-height: 1.25; font-weight: 700; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.card-title { margin: 0; font-size: 19px; line-height: 1.25; font-weight: 700; overflow-wrap: anywhere;  /* #92: in der Beitragsansicht immer der volle Titel */ }
 .app.wide .card .card-title { font-size: 22px; }
 .card-head.titled .card-meta, .card-head.titled .card-via { white-space: normal; }
 .card-creator-link { border: 0; background: none; padding: 0; font: inherit; color: var(--ink2); font-weight: 600; }
@@ -546,6 +546,19 @@ details.einr-radar > summary h3 { display: inline; }
 .fakt-modell { color: var(--muted); }
 .fakt-begruendung summary, .antw-mehr summary { cursor: pointer; color: var(--accent-ink); font-size: 14px; padding: 4px 0; }
 .fakt-begruendung > div { white-space: pre-wrap; margin-top: 4px; max-height: 40vh; overflow-y: auto; }
+/* #90 Faktencheck: Kernaussage, Einzelheiten, Begründung als formatierter Text */
+.fakt-kernsatz { font-size: 15px; line-height: 1.45; }
+.fakt-einzel { display: flex; flex-direction: column; gap: 3px; margin-top: 2px; }
+.fakt-einzel-kopf { color: var(--ink3); }
+.fakt-zeile { display: flex; gap: 8px; align-items: baseline; font-size: 14px; line-height: 1.4; }
+.fakt-zeichen { flex: none; width: 18px; text-align: center; font-weight: 700; }
+.fakt-zeile.ok .fakt-zeichen { color: var(--f-gruen); }
+.fakt-zeile.offen .fakt-zeichen { color: var(--ink3); }
+.fakt-zeile.nein .fakt-zeichen { color: var(--f-rot); }
+.fakt-begruendung > .fakt-md { white-space: normal; }
+.fakt-md p { margin: 0 0 6px; }
+.fakt-md-liste { margin: 0 0 6px; padding-left: 20px; }
+.app .fakt-karte .fact-note.fakt-kern { max-height: none; overflow: visible; }  /* Laptop: nicht in 28vh einsperren (.app.wide .fact-note) */
 /* #26 Ein-Fenster-Chat: Faktencheck als Antwortkarte mit Farbbalken, Ampel-Knopf im Kopf */
 .msg.fakt { align-self: stretch; max-width: 100%; background: transparent; padding: 0; }
 .fakt-karte { position: relative; overflow: hidden; border: 1px solid var(--line2); border-radius: 16px; background: var(--surface2); padding: 18px 14px 10px; }
@@ -584,6 +597,11 @@ details.einr-radar > summary h3 { display: inline; }
 .leerbild .start-zeilen { gap: 0; }
 .leerbild .start-z { animation: none; font-size: clamp(28px, 8vw, 44px); color: var(--ink); }
 .leerbild .start-marke { margin-top: 8px; font-size: clamp(15px, 4vw, 19px); }
+/* #81 Startbild neu (Modul startbild-neu): „Name~“ kleiner über „OmegaLiberte“, darunter YOUR / SOCIAL / MEDIA; je eine Stufe größer (#81, 23.10.) */
+.start-neu .start-name { font-size: clamp(21px, 6vw, 29px); font-weight: 600; letter-spacing: .02em; color: var(--ink2); }
+.start-neu .start-ol { font-size: clamp(30px, 9vw, 44px); font-weight: 700; letter-spacing: .01em; margin-bottom: 18px; }
+.leerbild .start-neu .start-name { font-size: clamp(17px, 4.6vw, 21px); color: var(--ink2); }
+.leerbild .start-neu .start-ol { font-size: clamp(23px, 6.6vw, 31px); margin-bottom: 10px; }
 .leer-satz { margin: 6px 0 0; font-size: 16px; color: var(--ink2); max-width: 28rem; }
 .leer-knoepfe { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 .leer-details { max-width: 28rem; text-align: left; color: var(--muted); }

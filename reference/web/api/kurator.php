@@ -3,7 +3,7 @@
 // ===================================================================
 // kurator.php – KI-Auswahl: Mistral wählt aus den ungelesenen Beiträgen aus
 // ===================================================================
-// Eingabe  (POST, JSON): { kandidaten: [ {id, quelle, titel, text} ], wunsch, favoriten: [..], anzahl }
+// Eingabe  (POST, JSON): { kandidaten: [ {id, quelle, titel, text} ], wunsch, favoriten: [..], anzahl, bekannt?: [Themennamen] }
 // Ausgabe (JSON): { status: "ok"|"pause"|"limit"|"abgelehnt"|"fehler",
 //                   ueberschrift, lage: [ {thema, satz, ids:[..], leit?} ], auswahl: [ {id, warum, gewicht?, auch?:[..]} ], antwort? }
 // Schlüssel: mistral_key aus config.php (Fundort: api/_instanz.php). Bremse: 10 Auswahlen je IP-Hash und Stunde
@@ -119,6 +119,8 @@ if (!$zeilen) nein('fehler', 'Keine Beiträge übergeben.', 400);
 $anzahl = max(5, min(30, (int)($in['anzahl'] ?? 20)));
 $wunsch = $kurz($in['wunsch'] ?? '', 400);
 $favs = array_slice(array_map(fn($x) => $kurz($x, 60), is_array($in['favoriten'] ?? null) ? $in['favoriten'] : []), 0, 30);
+// #93: bekannte Themennamen, damit gleiche Themen gleich heißen
+$bekannt = array_slice(array_values(array_unique(array_filter(array_map(fn($x) => trim(preg_replace('/[\s·|]+/u', ' ', $kurz($x, 50))), is_array($in['bekannt'] ?? null) ? $in['bekannt'] : [])))), 0, 20);
 
 $system = <<<TXT
 Du bist der Kurator in KOMPASS, einer Media-Zentrale, die dem Nutzer gehört. Aus einer Liste ungelesener Beiträge
@@ -129,6 +131,8 @@ wählst du die lesenswertesten aus – weniger ist mehr. Regeln:
 - Bilde 3 bis 6 Themen („lage“) aus dem, was die Beiträge berichten, je mit einem sachlichen Satz.
   Ein Thema handelt von einer Sache; fasse nichts Unverbundenes zu einem Sammelthema zusammen.
   Fasse nur zusammen, was in den Beiträgen steht. Erfinde nichts, keine Wertung.
+- Themennamen kurz und stabil: 2 bis 4 Wörter, ohne Doppelpunkt-Zusatz. Stehen „Bekannte Themen“ dabei und passt eins,
+  übernimm dessen Namen wörtlich; einen neuen Namen nur, wenn keins passt.
 - Begründe jede Auswahl in höchstens 12 Wörtern auf Deutsch („warum“), konkret (z. B. „Von 3 Redaktionen berichtet“, „Von einer Person, die du verfolgst“).
 - Gib jeder Auswahl ein „gewicht“: 1 lesenswert, 2 wichtig, 3 wichtig und neu. Gewicht 3 nur für Neues.
 - Nenne je Thema mit „leit“ den Beitrag, der es am besten zeigt (eine Nummer aus „ids“).
@@ -142,6 +146,7 @@ Antworte ausschließlich mit JSON in genau dieser Form:
 TXT;
 $nutzer = ($wunsch !== '' ? "Wunsch des Nutzers: {$wunsch}\n" : '')
     . ($favs ? 'Favoriten: ' . implode(', ', $favs) . "\n" : '')
+    . ($bekannt ? 'Bekannte Themen: ' . implode(' · ', $bekannt) . "\n" : '')
     . "\nBeiträge (Nummer | Quelle | Titel — Anriss):\n" . implode("\n", $zeilen);
 
 $ch = curl_init('https://api.mistral.ai/v1/chat/completions');

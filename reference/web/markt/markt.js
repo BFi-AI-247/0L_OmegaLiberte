@@ -125,5 +125,6 @@ function briefingKarte(art, d) {
       h('div', { class: 'markt-box' },
         h('h2', { class: 'markt-titel' }, tt('Auf einen Blick')),
         h('div', { class: 'markt-zeilen' }, ...zeilen),
+        typeof morgenBlock === 'function' ? morgenBlock() : null,  // #34
         h('p', { class: 'markt-quellen' }, tt('Stand ') + jetzt.toLocaleDateString(LANG === 'de' ? 'de-DE' : 'en-GB') + ' · ' + quellen.join(' · ') + '. ' + tt('Einmal am Tag, kein Ticker.')))));
 }

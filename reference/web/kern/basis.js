@@ -11,7 +11,7 @@
 'use strict';
 
 /* ---------- Hilfen ---------------------------------------------------- */
-const VERSION = 'v0.95';
+const VERSION = 'v1.00';
 const LS = 'kompass.v0.' + (INSTANZ.speicher ? INSTANZ.speicher + '.' : '');
 // Modul-Schalter (instanz.js → module): false zieht ein Feature zurück, fehlt = an
 function modulAn(id) { return !(INSTANZ.module && INSTANZ.module[id] === false); }

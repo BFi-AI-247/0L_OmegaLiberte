@@ -23,10 +23,7 @@ function startseiteZeichnen() {
   const el = STARTSEITE.el; if (!el) return;
   const logo = h('div', { class: 'start-logo' }); logo.innerHTML = STARTSEITE_LOGO;
   if (STARTSEITE.seite === 1) {
-    const zeilen = h('div', { class: 'start-zeilen' },
-      h('div', { class: 'start-z', style: '--i:0' }, 'YOUR'), h('div', { class: 'start-z', style: '--i:1' }, 'SOCIAL'),
-      h('div', { class: 'start-z', style: '--i:2' }, 'MEDIA'),
-      h('div', { class: 'start-z start-marke', style: '--i:3' }, INSTANZ.marke, h('span', { class: 'start-tilde' }, ' ~ '), 'OmegaLiberte'));
+    const zeilen = startSchriftzug(true);
     // #78 (Modul start-wege): drei Wege – neu einrichten, eigene Daten holen, mehr erfahren
     const wege = modulAn('start-wege');
     const knoepfe = !STARTSEITE.erst ? null : wege ? h('div', { class: 'start-knoepfe start-wege', style: '--i:4' },
@@ -61,14 +58,25 @@ function startseitePruefen() {
   if (rest <= 0) startseiteSchliessen(); else setTimeout(startseitePruefen, rest);
 }
 
+// Schriftzug des Startbilds – ein Bauteil für Startseite (#43, animiert) und leere Zustände (#64, ruhig).
+// #81 (Modul startbild-neu): Logo · „<Instanzname>~“ (kleiner) · „OmegaLiberte“ · YOUR / SOCIAL / MEDIA. Aus: alte Reihenfolge.
+function startSchriftzug(animiert) {
+  const z = (klasse, i, ...k) => h('div', animiert ? { class: 'start-z ' + klasse, style: '--i:' + i } : { class: 'start-z ' + klasse, 'aria-hidden': 'true' }, ...k);
+  const attr = (klasse) => animiert ? { class: klasse } : { class: klasse, 'aria-label': INSTANZ.marke + '~OmegaLiberte – Your Social Media' };
+  if (!modulAn('startbild-neu')) {
+    return h('div', attr('start-zeilen'), z('', 0, 'YOUR'), z('', 1, 'SOCIAL'), z('', 2, 'MEDIA'),
+      z('start-marke', 3, INSTANZ.marke, h('span', { class: 'start-tilde' }, ' ~ '), 'OmegaLiberte'));
+  }
+  return h('div', attr('start-zeilen start-neu'),
+    z('start-name', 0, INSTANZ.marke, h('span', { class: 'start-tilde' }, '~')),
+    z('start-ol', 1, 'OmegaLiberte'),
+    z('start-your', 2, 'YOUR'), z('', 2.6, 'SOCIAL'), z('', 3.2, 'MEDIA'));
+}
 // #64 (Modul leerbild): Startbild als ruhiges Bauteil für leere Zustände der Bühne – dieselbe Quelle für Logo und Schriftzug
 function startbild(satz, ...kinder) {
   const logo = h('div', { class: 'start-logo' }); logo.innerHTML = STARTSEITE_LOGO;
   return h('div', { class: 'empty leerbild' }, logo,
-    h('div', { class: 'start-zeilen', 'aria-label': 'Your Social Media – ' + INSTANZ.marke + ' ~ OmegaLiberte' },
-      h('div', { class: 'start-z', 'aria-hidden': 'true' }, 'YOUR'), h('div', { class: 'start-z', 'aria-hidden': 'true' }, 'SOCIAL'),
-      h('div', { class: 'start-z', 'aria-hidden': 'true' }, 'MEDIA'),
-      h('div', { class: 'start-z start-marke', 'aria-hidden': 'true' }, INSTANZ.marke, h('span', { class: 'start-tilde' }, ' ~ '), 'OmegaLiberte')),
+    startSchriftzug(false),
     satz ? h('p', { class: 'leer-satz', role: 'status' }, satz) : null, ...kinder);
 }
 function leerKnoepfe(...k) { return h('div', { class: 'leer-knoepfe' }, ...k.filter(Boolean)); }

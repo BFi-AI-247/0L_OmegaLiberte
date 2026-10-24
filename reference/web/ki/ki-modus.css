@@ -275,3 +275,14 @@ body:has(#vorschau-melden) .kib-flaeche.handy { margin-bottom: 40px; }
 .kif-verstehe h2 { margin: 0; font-size: 16px; }
 .kif-verstehe ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 15px; }
 .kif-fuss { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+/* #59 Handy: Berichte derselben Geschichte ‹ › */
+.kib-gruppe { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink2); }
+.kib-gruppe-text { flex: 1; min-width: 0; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kib-gruppe-knopf { flex: none; width: 36px; height: 32px; border-radius: 10px; border: 1px solid var(--line2); background: var(--surface); color: var(--ink); font-size: 18px; line-height: 1; }
+/* #91 Kopf straffen: Datum · Themenzahl · „Neu kuratieren“ in einer Zeile, KI-Filter-Kachel einzeilig */
+.app:not(.wide)[data-modus="ki"] .kib-titel .kib-knopf { padding-top: 4px; padding-bottom: 4px; }
+.kif-kachel { min-height: 44px; padding: 6px 12px; gap: 10px; }
+.kif-marke { width: 28px; height: 28px; font-size: 15px; border-radius: 8px; }
+.kif-text { flex-direction: row; align-items: baseline; gap: 8px; }
+.kif-text b { flex: none; }
+.kif-begriffe { flex: 1; min-width: 0; }
