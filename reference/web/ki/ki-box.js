@@ -45,7 +45,7 @@ function kiFehlerKlar(e) {
 }
 function renderKiBox() {
   const c = KI.cfg(); const u = KI.ui;
-  const hatBrowserKi = typeof self.LanguageModel !== 'undefined';
+  const hatBrowserKi = kiBrowserDa();
   const arten = ['openrouter', 'gemini', 'lokal', 'openai'].concat(hatBrowserKi ? ['browser'] : []).concat(kiProbeErlaubt() ? ['kompass'] : []);
   const row = (a) => h('button', { type: 'button', class: 'toggle-row ki-row', 'aria-pressed': c.art === a ? 'true' : 'false', onClick: () => kiWaehlen(a) },
     h('span', { class: 'row-text' }, h('span', { class: 'row-title', style: 'font-size:15px' }, KI_ARTEN[a].label,
@@ -129,6 +129,10 @@ async function kiInit() {
   KI.cfg();
   await Promise.all(['openrouter', 'gemini', 'openai'].map(kiKeyLaden));
   await kiOpenRouterRueckkehr();
+  // #96: prüfen, ob die Browser-KI auf diesem Gerät wirklich läuft (Chrome 148+ meldet sonst nur, dass es die Schnittstelle gibt)
+  if (typeof self.LanguageModel !== 'undefined' && typeof self.LanguageModel.availability === 'function') {
+    try { KI.browserStatus = String(await self.LanguageModel.availability()); } catch (e) { KI.browserStatus = ''; }
+  }
   if (KI.cfg().art === 'openrouter' && KI.keys.openrouter && S.screen === 'settings') kiOpenRouterModelle();
   render();
 }

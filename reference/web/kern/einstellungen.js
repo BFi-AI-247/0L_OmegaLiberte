@@ -416,7 +416,8 @@ function renderPause() {
           h('button', { type: 'button', class: 'btn', style: 'flex:1', onClick: () => close(settings.pauseAfter || 20) }, tt('Weiter')),
           h('button', { type: 'button', class: 'btn primary', style: 'flex:1', onClick: () => { S.pauseDone = true; render(); } }, tt('Genug für heute'))),
         h('span', { class: 'small' }, tt('Weiter – nächste Rückfrage nach … Beiträgen')),
-        h('div', { class: 'choices' }, [10, 20, 50].map((n) => h('button', { type: 'button', class: 'btn', onClick: () => close(n), 'aria-label': tt('Nächste Rückfrage nach ') + n + tt(' Beiträgen') }, String(n))))
+        h('div', { class: 'choices' }, [10, 20, 50].map((n) => h('button', { type: 'button', class: 'btn', onClick: () => close(n), 'aria-label': tt('Nächste Rückfrage nach ') + n + tt(' Beiträgen') }, String(n)))),
+        typeof pingPauseAngebot === 'function' ? pingPauseAngebot() : null  // #52
       ]));
 }
 

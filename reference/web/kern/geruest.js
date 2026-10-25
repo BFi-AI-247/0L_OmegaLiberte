@@ -120,7 +120,7 @@ function renderTop() {
           h('button', { type: 'button', class: 'mini primary', onClick: () => openAdd(null, S.eq.trim()) }, '„' + S.eq.trim() + tt('“ als neue Quelle suchen'))) : emptyHint(); })()),
       h('div', { class: 'overview-foot' },
         h('button', { type: 'button', class: 'counters', 'aria-label': tt('Verlauf öffnen'), onClick: () => { S.screen = 'history'; S.overview = false; render(); } },
-          h('span', {}, h('strong', {}, String(S.day.n)), tt(' heute')), h('span', {}, h('strong', {}, S.total.toLocaleString(LANG === 'de' ? 'de-DE' : 'en-US')), tt(' gesamt'))),
+          h('span', {}, h('strong', {}, String(S.day.n)), tt(' heute')), h('span', {}, h('strong', {}, S.total.toLocaleString(LANG === 'de' ? 'de-DE' : 'en-US')), tt(' gesamt')), pauseZaehler()),
         h('button', { type: 'button', class: 'mini', onClick: () => { S.overview = false; discover(); } }, tt('? Neues entdecken')),
         h('span', { class: 'brand' }, zentraleMarke()))));
   }
@@ -240,7 +240,7 @@ function renderSuggest() {
 function renderFoot(wide) {
   return h('footer', { class: 'foot' },
     h('button', { type: 'button', class: 'counters', 'aria-label': tt('Verlauf öffnen'), onClick: () => { S.screen = 'history'; S.overview = false; render(); } },
-      h('span', {}, h('strong', {}, String(S.day.n)), tt(' heute')), h('span', {}, h('strong', {}, S.total.toLocaleString(LANG === 'de' ? 'de-DE' : 'en-US')), tt(' gesamt'))),
+      h('span', {}, h('strong', {}, String(S.day.n)), tt(' heute')), h('span', {}, h('strong', {}, S.total.toLocaleString(LANG === 'de' ? 'de-DE' : 'en-US')), tt(' gesamt')), pauseZaehler()),
     h('div', { class: 'foot-right' },
       h('button', { type: 'button', class: 'ghost', 'aria-label': tt('Neu laden'), title: tt('Neu laden'), onClick: loadAll }, icon('refresh')),
       h('button', { type: 'button', class: 'ghost', 'aria-label': tt('Einstellungen'), title: tt('Einstellungen'), onClick: () => { S.screen = 'settings'; S.overview = false; render(); } }, icon('settings')),
@@ -312,4 +312,11 @@ function renderLayerZeichnen() {
   if (S.screen === 'settings' || S.screen === 'onboarding') L.appendChild(renderSettings(S.screen === 'onboarding'));
   if (S.pause) L.appendChild(renderPause());
   if (S.toast) L.appendChild(h('div', { class: 'toast', role: 'status' }, S.toast));
+}
+
+// #52 (Modul pause-zaehler): leiser Zähler neben „N heute“ – wie viele Beiträge noch bis zur nächsten Pause
+function pauseZaehler() {
+  if (!modulAn('pause-zaehler') || !(settings.pauseAfter > 0) || S.nextPauseAt == null) return null;
+  const n = Math.max(0, S.nextPauseAt - S.day.n);
+  return h('span', { class: 'pause-zaehler', 'aria-label': tt('noch {n} Beiträge bis zur Pause').replace('{n}', n) }, tt('noch {n} bis Pause').replace('{n}', n));
 }

@@ -564,7 +564,7 @@ details.einr-radar > summary h3 { display: inline; }
 .fakt-karte { position: relative; overflow: hidden; border: 1px solid var(--line2); border-radius: 16px; background: var(--surface2); padding: 18px 14px 10px; }
 .fakt-karte::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 8px; background: var(--fakt-farbe, var(--f-grau)); }
 .fakt-karte .fact-note { max-height: none; background: transparent; padding: 0; margin: 0; border: 0; }
-.fakt-knopf { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; white-space: nowrap; }
+.fakt-knopf { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .fakt-vorschlag { display: inline-flex; align-items: center; gap: 8px; }
 .ein-fenster .assist-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .app.wide .ein-fenster .assist-close { margin-left: 0; }
@@ -612,3 +612,10 @@ details.einr-radar > summary h3 { display: inline; }
 .link-video .lv-link { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; text-decoration: none; color: var(--ink); font-size: 14px; }
 .link-video .lv-link b { font-weight: 600; }
 .link-video .feed-video { width: 100%; border-radius: 12px; background: #000; }
+/* #52 Pause-Zähler (leise) und Nutzer-Kennung/Ping-Angebot */
+.pause-zaehler { color: var(--muted); font-weight: 400; }
+.nutzer-kennung { color: var(--muted); line-height: 1.6; }
+.nutzer-kennung code { font-size: 12px; }
+.linkish { background: none; border: 0; padding: 0; color: var(--accent-ink); text-decoration: underline; cursor: pointer; font: inherit; }
+.ping-pause { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--line); text-align: left; }
+.ping-probe { color: var(--muted); font-style: italic; }

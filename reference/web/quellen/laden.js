@@ -263,6 +263,12 @@ async function loadFeed(f) {
    Ergebnis: { posts, fehler: ['<Titel> nicht erreichbar', …] }. Antwortet der Server ohne Sammelabruf,
    wird das Paket einzeln geladen (wie bisher). */
 const FEED_PAKET = 6;
+// #99: YouTube-Ausfall verständlich melden statt „nicht erreichbar“
+function feedFehlerText(f, d) {
+  if (d && d.status === 'limit') return f.title + tt(': Abrufgrenze erreicht, später erneut');
+  if (f.kind === 'youtube') return f.title + ': ' + tt('YouTube antwortet gerade nicht – KOMPASS versucht es später wieder.');
+  return f.title + tt(' nicht erreichbar');
+}
 async function loadFeeds(feeds, beiTeil) {
   const bsky = feeds.filter((f) => f.kind === 'bluesky'); feeds = feeds.filter((f) => f.kind !== 'bluesky');
   const fav = (f) => (S.favs['f:' + f.id] || S.favs[S.alias['f:' + f.id]] ? 0 : 1);
@@ -281,13 +287,13 @@ async function loadFeeds(feeds, beiTeil) {
     } catch (e) { d = null; }
     if (!d || d.status !== 'ok' || !d.feeds) {
       const ps = [];
-      await pool(paket, 4, (f) => loadFeed(f).then((x) => { ps.push(...x); }).catch(() => fehler.push(f.title + tt(' nicht erreichbar'))));
+      await pool(paket, 4, (f) => loadFeed(f).then((x) => { ps.push(...x); }).catch(() => fehler.push(feedFehlerText(f, null))));
       melde(ps); return;
     }
     const ps = [];
     for (const f of paket) {
       try { ps.push(...feedPosts(f, d.feeds[f.url] || {})); }
-      catch (e) { fehler.push(f.title + (d.feeds[f.url] && d.feeds[f.url].status === 'limit' ? tt(': Abrufgrenze erreicht, später erneut') : tt(' nicht erreichbar'))); }
+      catch (e) { fehler.push(feedFehlerText(f, d.feeds[f.url])); }
     }
     melde(ps);
   });

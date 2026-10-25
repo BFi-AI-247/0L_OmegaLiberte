@@ -88,6 +88,21 @@ function briefingHeute(d) {
   });
   return { wert: d.toLocaleDateString(loc, { weekday: 'long', day: 'numeric', month: 'long' }), notiz: teile.join(', ') + '.' };
 }
+// Heizöl: Deutschlandpreis aus dem EU Oil Bulletin (#51, Modul heizoel-de, M029) und der Link zum Preis in der Region
+function heizoelZeilen(region, d) {
+  const hz = modulAn('heizoel-de') && d && d.heizoel && d.heizoel.je100l ? d.heizoel : null;
+  const link = h('a', Object.assign({ class: 'markt-link', href: region.link }, EXT), tt('Preis für {ort} (3.000 l) bei {portal} ansehen ↗').replace('{ort}', region.name).replace('{portal}', region.portal));
+  if (!hz) return [h('div', { class: 'markt-zeile' }, h('span', { class: 'markt-name' }, tt('Heizöl')), link, h('span', { class: 'markt-notiz' }, tt('Deutschlandpreis aus amtlicher Quelle folgt.')))];
+  const stand = hz.stand ? ', ' + tt('Stand ') + new Date(hz.stand + 'T12:00:00').toLocaleDateString(LANG === 'de' ? 'de-DE' : 'en-GB', { day: 'numeric', month: 'numeric' }) : '';
+  return [marktZeile(tt('Heizöl'), marktZahl(hz.je100l, 2) + ' €', null, tt('je 100 Liter, Durchschnitt Deutschland (EU Oil Bulletin') + stand + ')'),
+    h('div', { class: 'markt-zeile' }, h('span', { class: 'markt-name' }), link)];
+}
+// Namens- und Aktionstag als eigene Zeile (#51, Modul heute-tage) – nur auf Deutsch, die Liste ist deutschsprachig
+function heuteTageZeile(d) {
+  const t = LANG === 'de' && typeof heuteTage === 'function' ? heuteTage(d) : null;
+  if (!t) return null;
+  return t.namen ? marktZeile(tt('Namenstag'), t.namen, null, t.aktion || null) : marktZeile(tt('Aktionstag'), t.aktion, null, null);
+}
 function marktKarte(p) {
   if (!p || p.service !== 'markt') return null;
   const d = MARKT.daten; if (!d) return null;
@@ -96,30 +111,28 @@ function marktKarte(p) {
   const region = MARKT_REGIONEN.find((r) => settings.radar && settings.radar[r.radar]);
   const zeilen = [marktZeile(tt('Dollar/Euro'), marktZahl(usd.kurs, 4), usd.prozent,
     tt('1 Euro = {k} US-Dollar (EZB-Referenzkurs {d})').replace('{k}', marktZahl(usd.kurs, 4)).replace('{d}', marktDatum(usd.datum)))];
-  if (region) zeilen.push(h('div', { class: 'markt-zeile' }, h('span', { class: 'markt-name' }, tt('Heizöl')),
-    h('a', Object.assign({ class: 'markt-link', href: region.link }, EXT), tt('Preis für {ort} (3.000 l) bei {portal} ansehen ↗').replace('{ort}', region.name).replace('{portal}', region.portal)),
-    h('span', { class: 'markt-notiz' }, tt('Deutschlandpreis aus amtlicher Quelle folgt.'))));
+  if (region) zeilen.push(...heizoelZeilen(region, d));
   return h('article', { class: 'card markt-karte', 'aria-label': tt('Markt am Morgen') },
     h('div', { class: 'card-body' },
       h('div', { class: 'markt-box' },
         h('h2', { class: 'markt-titel' }, tt('Markt am Morgen')),
         h('div', { class: 'markt-zeilen' }, ...zeilen),
-        h('p', { class: 'markt-quellen' }, tt('Quellen: ') + tt('EZB (Dollar/Euro)') + (region ? ' · ' + region.portal + tt(' (Heizöl, nur Link)') : '') + '. ' + tt('Einmal am Tag, kein Ticker.')))));
+        h('p', { class: 'markt-quellen' }, tt('Quellen: ') + tt('EZB (Dollar/Euro)') + (region && modulAn('heizoel-de') && d.heizoel ? ' · ' + tt('EU Oil Bulletin (Heizöl)') : '') + (region ? ' · ' + region.portal + tt(' (Heizöl, nur Link)') : '') + '. ' + tt('Einmal am Tag, kein Ticker.')))));
 }
 modusRegistrieren({ id: 'markt', label: tt('Markt am Morgen'), aktiv: () => false, karte: marktKarte });
 function briefingKarte(art, d) {
   const ort = BRIEFING_ORTE[art]; const jetzt = new Date();
   const heute = briefingHeute(jetzt); const so = briefingSonne(jetzt, ort.lat, ort.lon);
   const zeilen = [marktZeile(tt('Heute ist …'), heute.wert, null, heute.notiz)];
+  const tage = heuteTageZeile(jetzt); if (tage) zeilen.push(tage);
   if (so) zeilen.push(marktZeile(tt('Sonne'), '↑ ' + briefingUhr(so.auf) + '  ↓ ' + briefingUhr(so.unter), null, tt('Auf- und Untergang in {ort}').replace('{ort}', ort.name)));
   const usd = d.dollar;
   if (usd) zeilen.push(marktZeile(tt('Dollar/Euro'), marktZahl(usd.kurs, 4), usd.prozent,
     tt('1 Euro = {k} US-Dollar (EZB-Referenzkurs {d})').replace('{k}', marktZahl(usd.kurs, 4)).replace('{d}', marktDatum(usd.datum))));
   const region = art === 'wiesenzeitung' ? MARKT_REGIONEN[0] : null;
-  if (region) zeilen.push(h('div', { class: 'markt-zeile' }, h('span', { class: 'markt-name' }, tt('Heizöl')),
-    h('a', Object.assign({ class: 'markt-link', href: region.link }, EXT), tt('Preis für {ort} (3.000 l) bei {portal} ansehen ↗').replace('{ort}', region.name).replace('{portal}', region.portal)),
-    h('span', { class: 'markt-notiz' }, tt('Deutschlandpreis aus amtlicher Quelle folgt.'))));
-  const quellen = [tt('Datum und Sonne: auf deinem Gerät berechnet')].concat(usd ? [tt('EZB (Dollar/Euro)')] : []).concat(region ? [region.portal + tt(' (Heizöl, nur Link)')] : []);
+  if (region) zeilen.push(...heizoelZeilen(region, d));
+  const quellen = [tt('Datum und Sonne: auf deinem Gerät berechnet')].concat(tage ? [tt('Namens- und Aktionstage: Wikipedia (CC BY-SA 4.0)')] : []).concat(usd ? [tt('EZB (Dollar/Euro)')] : [])
+    .concat(region && modulAn('heizoel-de') && d && d.heizoel ? [tt('EU Oil Bulletin (Heizöl)')] : []).concat(region ? [region.portal + tt(' (Heizöl, nur Link)')] : []);
   return h('article', { class: 'card markt-karte briefing-' + art, 'aria-label': tt('Auf einen Blick') },
     h('div', { class: 'card-body' },
       h('div', { class: 'markt-box' },

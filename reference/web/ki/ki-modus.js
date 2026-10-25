@@ -1008,6 +1008,7 @@ function kifSeite() {
       top.length ? h('section', { class: 'kif-liste', 'aria-label': tt('Häufigste Themen') }, top.map(kifZeile))
         : h('p', { class: 'kif-satz' }, tt('Noch keine Themen – nach der ersten KI-Auswahl stehen sie hier.')),
       rest.length ? h('details', { class: 'kif-weitere' }, h('summary', {}, tt('Weitere Themen') + ' (' + rest.length + ')'), h('section', { class: 'kif-liste' }, rest.map(kifZeile))) : null,
+      modulAn('ki-filter-dialog') && typeof kifDialog === 'function' ? kifDialog() : null,  // #80 Schritt 2 (ki/filter-dialog.js)
       h('section', { class: 'kif-verstehe', 'aria-label': tt('So verstehe ich dich') },
         h('h2', {}, tt('So verstehe ich dich')),
         verstehe.length ? h('ul', {}, verstehe) : h('p', { class: 'kif-satz' }, tt('Noch keine Vorgaben – die KI wählt nur nach dem, was in deinen Quellen wichtig ist.')),

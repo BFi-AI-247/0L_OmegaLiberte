@@ -42,6 +42,7 @@ const KI = {
   ui: { orModelle: null, orLaden: false, geminiKey: '', oaUrl: '', oaKey: '', oaModell: '', laden: null, fehler: '', test: '' },
   keys: {},          // entschlüsselte Schlüssel nur im Arbeitsspeicher
   engine: null, engineId: '', engineLaden: null,
+  browserStatus: '',  // #96: Ergebnis von LanguageModel.availability() – 'unavailable' = Schnittstelle da, Modell läuft hier aber nicht
   // Die KI-Wahl gilt je Gerät (store, nicht im Abgleich): Laptop lokal, Handy z. B. OpenRouter.
   // Einmalige Übernahme aus dem früher abgeglichenen settings.ki.
   _c: null,
@@ -61,7 +62,7 @@ const KI = {
     if (c.art === 'kompass') return kiProbeErlaubt();
     if (c.art === 'openrouter' || c.art === 'gemini') return !!this.keys[c.art];
     if (c.art === 'openai') return !!c.url;
-    if (c.art === 'browser') return typeof self.LanguageModel !== 'undefined';
+    if (c.art === 'browser') return kiBrowserDa();
     if (c.art === 'lokal') return !!store.get('kiLokalGeladen', '');
     return false;
   },
@@ -74,4 +75,5 @@ const KI = {
   },
   klein() { const c = this.cfg(); return this.bereit() && (c.art === 'lokal' || c.art === 'browser'); }
 };
-
+// #96: Browser-KI nutzbar = Schnittstelle vorhanden und das Gerät schafft das Modell (availability ≠ 'unavailable')
+function kiBrowserDa() { return typeof self.LanguageModel !== 'undefined' && KI.browserStatus !== 'unavailable'; }

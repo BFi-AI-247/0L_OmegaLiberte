@@ -560,9 +560,110 @@ function ll2_feed(string $url, string $body): ?array {
         'bild' => $bild, 'autor' => 'The Space Devs', 'video' => null, 'medien' => null]]];
 }
 
+// ---------- #99: YouTube-Ausweichweg, wenn der Feed-Dienst 404 meldet -----------------
+// YouTubes Feed-Dienst (feeds/videos.xml) fällt immer wieder stundenweise für alle Kanäle aus. Dann lesen wir die
+// Kanalseite (/channel/<id>/videos, gleicher Zustimmungs-Cookie wie bei der Handle-Auflösung) und bauen daraus Einträge.
+const YT_AUSWEICH_MELDUNG = 'YouTube antwortet gerade nicht – KOMPASS versucht es später wieder.';
+function yt_kanal_id(string $url): ?string {
+    $p = parse_url($url);
+    $host = strtolower($p['host'] ?? '');
+    if (!($host === 'www.youtube.com' || $host === 'youtube.com' || (TESTMODUS && $host === '127.0.0.1'))) return null;
+    if (($p['path'] ?? '') !== '/feeds/videos.xml') return null;
+    parse_str((string)($p['query'] ?? ''), $q);
+    $id = (string)($q['channel_id'] ?? '');
+    return preg_match('/^UC[\w-]{22}$/', $id) ? $id : null;
+}
+function yt_seite_url(string $url, string $id): string {
+    $p = parse_url($url);
+    $wurzel = TESTMODUS && ($p['host'] ?? '') === '127.0.0.1' ? 'http://127.0.0.1:' . ($p['port'] ?? 80) : 'https://www.youtube.com';
+    return $wurzel . '/channel/' . $id . '/videos';
+}
+function yt_braucht_ausweich(string $url, array $h): bool {
+    return yt_kanal_id($url) !== null && ($h[0] !== 200 || $h[1] === '' || !ist_feed($h[1]));
+}
+/** „vor 3 Tagen“ / „3 days ago“ / „Live gestreamt vor 2 Stunden“ → ungefährer Zeitpunkt (Unix), sonst null. */
+function yt_relativ(string $t): ?int {
+    $t = mb_strtolower(trim($t));
+    if (!preg_match('/(\d+)\s*([a-zäöü]+)/u', $t, $m)) return null;
+    $n = (int)$m[1]; $e = $m[2];
+    $einheiten = ['sek' => 1, 'second' => 1, 'min' => 60, 'stund' => 3600, 'hour' => 3600, 'tag' => 86400, 'day' => 86400,
+                  'woch' => 604800, 'week' => 604800, 'monat' => 2592000, 'month' => 2592000, 'jahr' => 31536000, 'year' => 31536000];
+    foreach ($einheiten as $k => $sek) if (str_starts_with($e, $k)) return time() - $n * $sek;
+    return null;
+}
+function yt_text($v): string {
+    if (is_string($v)) return $v;
+    if (!is_array($v)) return '';
+    if (isset($v['simpleText'])) return (string)$v['simpleText'];
+    if (isset($v['content']) && is_string($v['content'])) return $v['content'];
+    if (isset($v['runs']) && is_array($v['runs'])) return implode('', array_map(fn($r) => (string)($r['text'] ?? ''), $v['runs']));
+    return '';
+}
+/** Videos aus ytInitialData sammeln: ältere Seiten „videoRenderer“, neuere „lockupViewModel“. */
+function yt_videos_sammeln($n, array &$out): void {
+    if (!is_array($n) || count($out) >= 30) return;
+    if (isset($n['videoRenderer']['videoId'])) {
+        $v = $n['videoRenderer'];
+        $out[] = ['id' => (string)$v['videoId'], 'titel' => yt_text($v['title'] ?? ''), 'zeit' => yt_text($v['publishedTimeText'] ?? ''),
+                  'text' => yt_text($v['descriptionSnippet'] ?? '')];
+        return;
+    }
+    if (isset($n['lockupViewModel']['contentId']) && str_contains((string)($n['lockupViewModel']['contentType'] ?? 'VIDEO'), 'VIDEO')) {
+        $v = $n['lockupViewModel']; $md = $v['metadata']['lockupMetadataViewModel'] ?? [];
+        $teile = [];
+        foreach (($md['metadata']['contentMetadataViewModel']['metadataRows'] ?? []) as $zeile)
+            foreach (($zeile['metadataParts'] ?? []) as $teil) $teile[] = yt_text($teil['text'] ?? '');
+        $zeit = '';
+        foreach ($teile as $t) if (yt_relativ($t) !== null) { $zeit = $t; break; }
+        $out[] = ['id' => (string)$v['contentId'], 'titel' => yt_text($md['title'] ?? ''), 'zeit' => $zeit, 'text' => ''];
+        return;
+    }
+    foreach ($n as $k => $kind) { if (is_array($kind)) yt_videos_sammeln($kind, $out); if (count($out) >= 30) return; }
+}
+/** Kanalseite → ['titel', 'seite', 'eintraege'] wie lies_feed, oder null. */
+function yt_seite_lesen(string $html, string $id): ?array {
+    // ohne Regex über die ganze Seite (1–2 MB sprengen sonst die PCRE-Grenze): Anfang suchen, Ende „};</script>“
+    $daten = null;
+    if (preg_match('/(?:var\s+ytInitialData|window\["ytInitialData"\])\s*=\s*\{/', $html, $m, PREG_OFFSET_CAPTURE)) {
+        $a = $m[0][1] + strlen($m[0][0]) - 1;
+        $e = strpos($html, '</script>', $a);
+        if ($e !== false) {
+            $json = rtrim(substr($html, $a, $e - $a));
+            $json = rtrim($json, ';');
+            $daten = json_decode($json, true);
+        }
+    }
+    $roh = [];
+    if (is_array($daten)) yt_videos_sammeln($daten['contents'] ?? $daten, $roh);
+    if (!$roh) return null;
+    $titel = is_array($daten) ? (string)($daten['metadata']['channelMetadataRenderer']['title'] ?? '') : '';
+    if ($titel === '' && preg_match('/<meta\s+property="og:title"\s+content="([^"]*)"/i', $html, $m)) $titel = html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $seite = 'https://www.youtube.com/channel/' . $id;
+    $out = []; $gesehen = []; $vorige = time();
+    foreach ($roh as $v) {
+        if (!preg_match('/^[\w-]{11}$/', $v['id']) || isset($gesehen[$v['id']])) continue;
+        $gesehen[$v['id']] = true;
+        // Datum steht nur relativ da („vor 3 Tagen“) – ungefähr; ohne Angabe knapp hinter dem vorigen Video, damit die Reihenfolge bleibt
+        $t = yt_relativ($v['zeit']) ?? ($vorige - 60);
+        $t = min($t, $vorige); $vorige = $t;
+        $out[] = ['titel' => text($v['titel'], 300), 'link' => 'https://www.youtube.com/watch?v=' . $v['id'], 'datum' => gmdate('c', $t),
+                  'text' => text($v['text'], 700), 'bild' => 'https://i.ytimg.com/vi/' . $v['id'] . '/hqdefault.jpg',
+                  'autor' => text($titel, 80), 'video' => $v['id'], 'medien' => null, 'ungefaehr' => true];
+    }
+    return $out ? ['titel' => text($titel, 120), 'seite' => $seite, 'eintraege' => $out] : null;
+}
+
 // ---------- Feed: Abruf → Antwort -----------------------------------------
-function feed_ergebnis(string $url, array $h): array {
+function feed_ergebnis(string $url, array $h, ?array $seiteH = null): array {
     [$code, $body, , $end, $gekuerzt] = $h;
+    if (($id = yt_kanal_id($url)) && yt_braucht_ausweich($url, $h)) {  // #99
+        if ($seiteH === null) { bremse_buchen(1); $seiteH = hole(yt_seite_url($url, $id)); }
+        $f = $seiteH[0] === 200 && $seiteH[1] !== '' ? yt_seite_lesen($seiteH[1], $id) : null;
+        if (!$f) return feed_fehler($url, YT_AUSWEICH_MELDUNG);
+        $d = ['status' => 'ok', 'url' => $url, 'titel' => $f['titel'], 'seite' => $f['seite'], 'abgerufen' => gmdate('c'), 'eintraege' => $f['eintraege'], 'ausweich' => 'kanalseite'];
+        @file_put_contents(puffer_datei('feed', $url), als_json($d), LOCK_EX);
+        return $d;
+    }
     if ($code === 200 && ll2_url($url)) {  // #42: Startplan als JSON
         $f = ll2_feed($url, (string)$body);
         if (!$f) return feed_fehler($url, 'Startplan konnte nicht gelesen werden.');
@@ -641,9 +742,15 @@ if ($aktion === 'sammel') {
         unset($jetzt[$roh]);
     }
     $schluessel = array_keys($jetzt);
-    foreach (hole_viele(array_values($jetzt), 6) as $i => $h) {
+    $antworten = hole_viele(array_values($jetzt), 6);
+    // #99: YouTube-Feeds ohne Antwort – Kanalseiten gemeinsam (parallel) als Ausweichweg holen
+    $ausweich = [];
+    foreach ($antworten as $i => $h) { $u = $jetzt[$schluessel[$i]]; if (yt_braucht_ausweich($u, $h)) $ausweich[$i] = yt_seite_url($u, (string)yt_kanal_id($u)); }
+    $seiten = [];
+    if ($ausweich) { bremse_buchen(count($ausweich)); $seiten = array_combine(array_keys($ausweich), hole_viele(array_values($ausweich), 8)); }
+    foreach ($antworten as $i => $h) {
         $roh = $schluessel[$i]; $u = $jetzt[$roh];
-        $d = feed_ergebnis($u, $h);
+        $d = feed_ergebnis($u, $h, $seiten[$i] ?? null);
         if ($d['status'] !== 'ok' && ($alt = puffer_alt($u))) $d = $alt;
         $feeds[$roh] = $d;
     }
