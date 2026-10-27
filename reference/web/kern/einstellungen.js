@@ -112,30 +112,63 @@ function renderStorage(onboarding) {
     h('button', { type: 'button', class: 'filter-pill', style: 'align-self:auto', 'aria-pressed': SY.pick === 'dav' ? 'true' : 'false', onClick: () => { SY.pick = 'dav'; render(); } }, tt('WebDAV (EU)'))));
   if (!onboarding && (!SY.pick || SY.pick === 'geraet')) box.append(h('span', { class: 'small', style: 'line-height:1.4' }, tt('Standard: Alles bleibt in diesem Browser – kein Abgleich, kein fremder Speicher. Sichere ab und zu eine Datei (unten).')));
   if (SY.pick === 'dav') {
+    const merken = modulAn('speicher-merken');  // #98: Anbieter-Knöpfe füllen die Adresse; Benutzer/Passwort für den Passwortmanager beschriftet
+    const AUTO = { url: 'url', user: 'username', pass: 'current-password', profil: 'off' };
     const inp = (id, label, key, type, ph) => h('div', { class: 'field' }, h('label', { for: id }, label),
-      h('input', { id, type, value: SY.dav[key], placeholder: ph, autocomplete: type === 'password' ? 'current-password' : 'off', autocapitalize: 'off', spellcheck: 'false',
-        onInput: (e) => { SY.dav[key] = e.target.value.trim(); } }));
-    box.append(
+      h('input', { id, type, name: merken ? 'kompass-dav-' + key : null, value: SY.dav[key], placeholder: ph,
+        autocomplete: merken ? AUTO[key] : (type === 'password' ? 'current-password' : 'off'), autocapitalize: 'off', spellcheck: 'false',
+        onInput: (e) => { SY.dav[key] = e.target.value.trim(); if (merken && key === 'user' && davAnbieterAktiv() === 'disroot') { SY.dav.url = davAnbieterUrl('disroot'); const u = document.getElementById('k-dav-url'); if (u) u.value = SY.dav.url; } } }));
+    const verbinden = async () => {
+      SY.connecting = true; render();
+      try { if (modulAn('speicher-profil') && SY.dav.profil && !davProfil(SY.dav)) throw new Error(tt('Profil: 1–40 Zeichen, Buchstaben, Ziffern, Leerzeichen, Punkt, Minus, Unterstrich.'));
+        await DAV.connect({ url: SY.dav.url, user: SY.dav.user, pass: SY.dav.pass, profil: SY.dav.profil }); }
+      catch (e) { flash(e.message); }
+      SY.connecting = false; render();
+    };
+    const aktiv = merken ? davAnbieterAktiv() : '';
+    const anb = aktiv ? DAV_ANBIETER.find((a) => a.id === aktiv) : null;
+    const ziel = merken ? h('form', { class: 'dav-form', autocomplete: 'on', onSubmit: (e) => { e.preventDefault(); if (!SY.connecting && !SY.busy) verbinden(); } }) : box;
+    if (merken) box.append(...[
+      h('div', { class: 'dav-anbieter', role: 'group', 'aria-label': tt('Anbieter wählen') },
+        h('span', { class: 'small' }, tt('Anbieter wählen – füllt die Adresse:')),
+        h('div', { class: 'btn-row' }, DAV_ANBIETER.map((a) => h('button', { type: 'button', class: 'filter-pill', style: 'align-self:auto', 'aria-pressed': aktiv === a.id ? 'true' : 'false',
+          onClick: () => { SY.dav.url = davAnbieterUrl(a.id); render(); const f = document.getElementById(SY.dav.user ? 'k-dav-pass' : 'k-dav-user'); if (f) f.focus({ preventScroll: true }); } }, a.name)))),
+      anb ? h('span', { class: 'small dav-tipp', style: 'line-height:1.4' }, tt(anb.tipp)) : null,
+      ziel].filter(Boolean));
+    ziel.append(...[
       inp('k-dav-url', 'WebDAV-Adresse', 'url', 'url', 'https://cloud.beispiel.de/remote.php/dav/files/name/'),
       inp('k-dav-user', tt('Benutzer'), 'user', 'text', ''),
       inp('k-dav-pass', 'App-Passwort', 'pass', 'password', ''),
       modulAn('speicher-profil') ? inp('k-dav-profil', tt('Profil (wenn sich mehrere einen Zugang teilen)'), 'profil', 'text', tt('leer lassen oder z. B. Papa')) : null,  // #60
       modulAn('speicher-profil') ? h('span', { class: 'small', style: 'line-height:1.4' }, tt('Jede Person braucht einen eigenen Ordner oder ein eigenes Profil – sonst teilt ihr Quellen und Verlauf. Mit Profil liegen die Dateien in KOMPASS/<Profil>/.')) : null,
-      h('ul', { class: 'small dav-dienste' },  // Stand M015 (Oktober 2026); MagentaCLOUD vom Betreiber live geprüft
+      merken ? h('span', { class: 'small', style: 'line-height:1.4' }, tt('Tipp: Dein Browser oder Handy kann Benutzer und App-Passwort in seinem Passwortmanager speichern und beim nächsten Mal einfügen.')) : null,
+      merken ? null : h('ul', { class: 'small dav-dienste' },  // Stand M015 (Oktober 2026); MagentaCLOUD vom Betreiber live geprüft
         h('li', {}, tt('Nextcloud (z. B. Disroot, 2 GB gratis): Dateien → Einstellungen → WebDAV-Adresse; App-Passwort unter Sicherheit anlegen.')),
         h('li', {}, tt('Koofr (Slowenien, 10 GB gratis): https://app.koofr.net/dav/Koofr – eigenes Passwort unter Account Settings → Preferences → Password erzeugen.')),
         h('li', {}, tt('pCloud (Schweiz, bis 10 GB gratis): https://ewebdav.pcloud.com für EU-Konten.')),
         h('li', {}, tt('MagentaCLOUD (Telekom, Deutschland): https://magentacloud.de/remote.php/webdav'))),
       h('span', { class: 'small', style: 'line-height:1.4' }, tt('Die Anfragen laufen per HTTPS über das KOMPASS-Backend (der Browser darf diese Speicher nicht direkt ansprechen); dort wird nichts gespeichert. Das App-Passwort bleibt auf diesem Gerät.')),
-      h('button', { type: 'button', class: 'btn primary', disabled: SY.connecting || SY.busy, onClick: async () => {
-        SY.connecting = true; render();
-        try { if (modulAn('speicher-profil') && SY.dav.profil && !davProfil(SY.dav)) throw new Error(tt('Profil: 1–40 Zeichen, Buchstaben, Ziffern, Leerzeichen, Punkt, Minus, Unterstrich.'));
-          await DAV.connect({ url: SY.dav.url, user: SY.dav.user, pass: SY.dav.pass, profil: SY.dav.profil }); }
-        catch (e) { flash(e.message); }
-        SY.connecting = false; render();
-      } }, SY.connecting ? tt('Verbinde …') : tt('Verbinden')));
+      h('button', { type: merken ? 'submit' : 'button', class: 'btn primary', disabled: SY.connecting || SY.busy, onClick: merken ? null : verbinden }, SY.connecting ? tt('Verbinde …') : tt('Verbinden'))].filter(Boolean));  // DOM-append schreibt sonst „null“
   }
   return box;
+}
+
+// #98 (Modul speicher-merken): bekannte WebDAV-Anbieter – ein Tipp füllt die Adresse (Stand M015, MagentaCLOUD vom Betreiber geprüft).
+// Disroot ist Nextcloud: die Adresse endet mit dem Benutzernamen und folgt dem Feld „Benutzer“.
+const DAV_ANBIETER = [
+  { id: 'magenta', name: 'Telekom MagentaCLOUD', url: 'https://magentacloud.de/remote.php/webdav', tipp: 'MagentaCLOUD (Telekom, Deutschland): Benutzer und Passwort deines MagentaCLOUD-Zugangs.' },
+  { id: 'koofr', name: 'Koofr', url: 'https://app.koofr.net/dav/Koofr', tipp: 'Koofr (Slowenien, 10 GB gratis): eigenes Passwort unter Account Settings → Preferences → Password erzeugen.' },
+  { id: 'pcloud', name: 'pCloud (EU)', url: 'https://ewebdav.pcloud.com', tipp: 'pCloud (Schweiz, bis 10 GB gratis): Adresse für Konten mit Speicherort EU.' },
+  { id: 'disroot', name: 'Disroot (Nextcloud)', url: 'https://cloud.disroot.org/remote.php/dav/files/', tipp: 'Nextcloud (z. B. Disroot, 2 GB gratis): Dateien → Einstellungen → WebDAV-Adresse; App-Passwort unter Sicherheit anlegen.' }
+];
+function davAnbieterUrl(id) {
+  const a = DAV_ANBIETER.find((x) => x.id === id); if (!a) return '';
+  return id === 'disroot' ? a.url + (SY.dav.user ? encodeURIComponent(SY.dav.user) + '/' : '') : a.url;
+}
+function davAnbieterAktiv() {
+  const u = String(SY.dav.url || '').replace(/\/+$/, '');
+  const a = DAV_ANBIETER.find((x) => u === x.url.replace(/\/+$/, '') || (x.id === 'disroot' && u.startsWith(x.url.replace(/\/+$/, ''))));
+  return a ? a.id : '';
 }
 
 // Einstellungen in Reitern (Allgemein · Quellen · Konten · KI · Speicher); Willkommen als geführter Ablauf in drei Schritten
@@ -293,6 +326,7 @@ function renderSettings(onboarding) {
     inhalt = [einstSprache(),
       h('div', { class: 'card-box' }, h('h3', {}, tt('Darstellung')), einstWahl([['system', tt('System')], ['hell', tt('Hell')], ['dunkel', tt('Dunkel')]], f.thema, (w) => { f.thema = w; settings.thema = w; zentraleThema(); })),
       typeof sprachfilterBox === 'function' ? sprachfilterBox() : null,  // #69
+      typeof uebersetzenBox === 'function' ? uebersetzenBox() : null,  // #97
       typeof briefingWahl === 'function' ? briefingWahl() : null,  // #51
       einstPause(f), zentralePingBox(f), speichern, einstDatenschutz(),
       h('div', { class: 'card-box' }, h('h3', {}, tt('Über')),

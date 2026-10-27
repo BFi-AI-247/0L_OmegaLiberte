@@ -159,12 +159,17 @@ function cardFor(p) {
   const creator = e.name || v.who;
   const via = viaText(v, creator);
   // Mit Titel: Titel neben dem Creator-Bild, Creator klein darunter – spart eine Zeile
+  const tr = typeof uebersetzung === 'function' ? uebersetzung(p, v) : null;  // #97: übersetzte Fassung statt Original
+  const titel = tr && tr.title ? tr.title : p.title;
+  const tv = tr && tr.text ? Object.assign({}, v, { text: tr.text, rich: false }) : v;
+  const uebZ = typeof uebZeile === 'function' ? uebZeile(p, v) : null;
+  const artLang = !tr && typeof uebFremd === 'function' ? uebFremd(p) || null : null;  // #97: Sprache am Beitrag, damit „Übersetzen“ im Browser-Menü sie erkennt
   const titled = !!p.title && !(v.video && v.short);
   const goCreator = () => openCreator(v.whoKey);
   const whoPart = titled
     ? [h('button', { type: 'button', class: 'card-av-btn', 'aria-label': tt('Beiträge von ') + creator + ' zeigen', title: tt('Beiträge von ') + creator, onClick: goCreator },
         avatar(Object.assign({}, e, { avatar: v.avatar || e.avatar, name: creator }), 40)),
-      h('div', { class: 'card-who' }, h('h1', { class: 'card-title' }, p.title),
+      h('div', { class: 'card-who' }, h('h1', { class: 'card-title' }, titel),
         h('span', { class: 'card-meta' }, h('button', { type: 'button', class: 'card-creator-link', onClick: goCreator }, creator), [typ, ago(v.date), v.note].filter(Boolean).map((x) => ' · ' + x).join('')))]
     : [h('button', { type: 'button', class: 'card-who-btn', 'aria-label': tt('Beiträge von ') + creator + ' zeigen', title: tt('Beiträge von ') + creator, onClick: goCreator },
         avatar(Object.assign({}, e, { avatar: v.avatar || e.avatar, name: creator }), 40),
@@ -182,28 +187,31 @@ function cardFor(p) {
       v.link ? h('a', Object.assign({ href: v.link, title: tt('Auf ') + label + tt(' öffnen') }, EXT), p.variants ? tt('Öffnen ↗') : v.video ? tt('In YouTube öffnen') : v.service === 'rss' ? tt('Artikel öffnen') : tt('Original öffnen')) : null);
   // YouTube Shorts: Hochformat-Player über die volle Kartenhöhe, Text daneben (Laptop) bzw. darunter (Handy)
   if (v.video && v.short) {
-    return h('article', { class: 'card short-card' },
+    return uebLangSetzen(h('article', { class: 'card short-card' },
       h('div', { class: 'card-body short-body' },
         videoBlock(v, p),
-        h('div', { class: 'short-side' }, kartenZusatz(p, 'oben'), head, p.title ? h('h1', {}, p.title) : null,
-          showText ? h('p', { class: 'card-text video-text' }, richNodes(v)) : null)),
-      foot);
+        h('div', { class: 'short-side' }, kartenZusatz(p, 'oben'), head, p.title ? h('h1', {}, titel) : null,
+          showText ? h('p', { class: 'card-text video-text' }, richNodes(tv)) : null, uebZ)),
+      foot), artLang);
   }
-  return h('article', { class: 'card' },
+  return uebLangSetzen(h('article', { class: 'card' },
     kartenZusatz(p, 'oben'),
     head,
     h('div', { class: 'card-body' },
-      p.title && !titled ? h('h1', {}, p.title) : null,
+      p.title && !titled ? h('h1', {}, titel) : null,
       v.video ? videoBlock(v, p) : null,
       v.ptEmbed && modulAn('peertube') ? peertubeBlock(v, p) : v.medien ? mediaBlock(v) : null,
       v.service === 'rss' && !v.medien && !v.video && v.link && (!showText || thinText(v) || /video|sendung|tagesthemen|tagesschau_20/i.test(v.link)) ? watchBlock(v) : null,
-      showText ? clampText(p, v) : null,
+      showText ? clampText(p, tv) : null,
+      uebZ,
       media.length ? h('div', { class: 'card-media' + (media.length === 1 ? ' one' : '') }, media.map((src, i) => bildInKarte(v, src, i))) : null,
       linkVideoBlock(v, p) || linkCard(v.card),
       kartenZusatz(p, 'unten'),  // #23: z. B. „Antworten ansehen“
       p.kind === 'neu' ? h('button', { type: 'button', class: 'follow-btn', onClick: () => kfollow(p) }, S.kfollows.some((f) => f.key === p.whoKey) ? tt('In KOMPASS gefolgt ✓') : tt('In KOMPASS folgen')) : null),
-    foot);
+    foot), artLang);
 }
+// #97: Titel und Text tragen die Sprache des Beitrags (Bildschirmleser, „Übersetzen“ im Browser-Menü); Knöpfe bleiben in der App-Sprache
+function uebLangSetzen(el, lang) { if (lang) el.querySelectorAll('h1, .card-text').forEach((x) => { x.lang = lang; }); return el; }
 function kfollow(p) {
   const i = S.kfollows.findIndex((f) => f.key === p.whoKey);
   if (i >= 0) S.kfollows.splice(i, 1);
