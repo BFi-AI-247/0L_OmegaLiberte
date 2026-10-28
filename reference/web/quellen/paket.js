@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Quellen – Starter-Paket: lesen (Kurzform v1, source-pack JSON, OPML), Vorschau, übernehmen, teilen. Besitzer: Quellen.
 // Wege hinein: Link …/#paket=<Kurzform>, …/#paket-url=<https-JSON>, Einstellungen → „Paket einfügen“.
 // Nie automatisch: immer erst Vorschau, der Mensch übernimmt. Formate: 0L formats/source-pack.md

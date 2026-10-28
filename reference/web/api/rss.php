@@ -1,4 +1,5 @@
 <?php
+// SPDX-License-Identifier: AGPL-3.0-only
 // ===================================================================
 // rss.php – RSS/Atom- und YouTube-Feeds für die KOMPASS-Web-App
 // ===================================================================

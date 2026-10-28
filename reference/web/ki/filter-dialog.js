@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // KI – #80 Schritt 2 (Modul ki-filter-dialog): Dialog auf der Seite „KI-Filter“. Besitzer: KI-Modus.
 // Teil von KOMPASS. Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
 // Der Nutzer schreibt in Alltagssprache („weniger Fußball, nie mehr Promis“), die KI antwortet in einem Satz und stellt

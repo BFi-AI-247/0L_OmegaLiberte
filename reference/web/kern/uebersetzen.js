@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Übersetzen fremdsprachiger Beiträge (Issue #97, Modul uebersetzen). Teil von KOMPASS (klassisches Skript, globaler Namensraum).
 // Festlegung (#97): beide Wege anbieten, Wahl in Einstellungen → Allgemein, am Beitrag nur ein kleiner Knopf.
 //   'standard' – Übersetzung des Browsers: eingebauter Übersetzer (Translator-API, läuft auf dem Gerät); fehlt er,

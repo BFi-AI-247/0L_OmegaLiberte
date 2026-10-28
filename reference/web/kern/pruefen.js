@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Vorschau – Prüfhilfen (Issue #74, Modul pruefhilfen). Nur in der Vorschau-Instanz (INSTANZ.speicher 'vorschau'), live nie sichtbar.
 // Menü „Prüfen“ am Etikett „VORSCHAU“ oben: Beispieldaten laden (fester Testsatz ohne Netz), Zustände sofort zeigen,
 // Version und Hinweis „neu laden“, wenn eine neuere Vorschau ausgeliefert wurde.

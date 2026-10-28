@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // KI – Einstellungen „Deine KI“ (Wahl, Vorlagen, Test), Start (kiInit), Quellen-Vorschläge. Besitzer: KI-Modus. Teil von KOMPASS (aus ki/ki.js geteilt, #88).
 // Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
 'use strict';

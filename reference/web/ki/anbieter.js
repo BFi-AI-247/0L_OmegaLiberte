@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // KI – Anbieter: OpenRouter-Anmeldung, Modell auf dem Gerät (WebLLM), Zeitgrenze/Abbrechen und ein Aufruf für alle Anbieter (kiFrage). Besitzer: KI-Modus. Teil von KOMPASS (aus ki/ki.js geteilt, #88).
 // Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
 'use strict';

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Service Worker – macht KOMPASS installierbar und hält die App-Hülle offline bereit.
 // Daten (api/, Mastodon, Bluesky) kommen immer frisch aus dem Netz.
 const VERSION = 'kompass-v0-110';

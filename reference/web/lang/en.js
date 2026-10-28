@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Sprachdatei Englisch (führende Sprache von OmegaLiberte). Schlüssel = deutscher Originaltext, Wert = Übersetzung; leer = Original anzeigen.
 // Übersetzung: Mistral (M005, Karte A004), geprüft vom Bau-Kern. Neue Texte hier mit leerem Wert ergänzen.
 window.SPRACHE = window.SPRACHE || {};

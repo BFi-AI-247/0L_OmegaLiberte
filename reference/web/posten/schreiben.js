@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Posten – Modus „Schreiben“: eigene Bühne mit Schreibfeld, Entwürfen und „Antworten an dich“. Besitzer: Posten.
 // Leise: Antworten werden nur beim Öffnen des Modus (oder auf Knopfdruck) abgefragt, keine Zähler, keine Abzeichen.
 // Entwürfe liegen nur auf diesem Gerät (store 'posten.entwuerfe', 'posten.entwurf' – nicht im Abgleich).

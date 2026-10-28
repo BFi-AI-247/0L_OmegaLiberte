@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
 /* Posten – Blatt „Neuer Beitrag“ und Knöpfe an Karten (posten/posten.js) */
 .posten-acts { display: inline-flex; gap: 6px; flex-wrap: wrap; }
 .posten-text { font: 15px/1.5 inherit; font-family: inherit; word-break: normal; }

@@ -1,4 +1,5 @@
 <?php
+// SPDX-License-Identifier: AGPL-3.0-only
 // ===================================================================
 // ai.php – Dialog am Beitrag: leitet eine Frage an Mistral weiter
 // ===================================================================

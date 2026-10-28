@@ -1,4 +1,5 @@
 <?php
+// SPDX-License-Identifier: AGPL-3.0-only
 // ===================================================================
 // markt.php – Werte für die Karte „Markt am Morgen“ (Issue #24, Modul markt)
 // GET markt.php → { status, dollar: { kurs, datum, vortag, vortagDatum, prozent }, heizoel?: { je100l, stand }, quelle }

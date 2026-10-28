@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Kern – Datenmodell: Zusammenführen (Creator, Wege, gleiche Beiträge), build(), loadAll(). Besitzer: Bau-Kern.
 // Teil von KOMPASS. Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
 

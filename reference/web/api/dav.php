@@ -1,4 +1,5 @@
 <?php
+// SPDX-License-Identifier: AGPL-3.0-only
 // ===================================================================
 // dav.php – WebDAV-Durchleitung für den Speicher-Konnektor (europäische Speicher)
 // ===================================================================

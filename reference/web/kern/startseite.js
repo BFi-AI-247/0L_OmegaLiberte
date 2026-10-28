@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Startseite (Issue #43, Modul startseite): YOUR / SOCIAL / MEDIA / KOMPASS ~ OmegaLiberte, zentriert, Zeile für Zeile.
 // Normaler Start: blendet aus, sobald der erste Beitrag da ist (spätestens nach 6 s, Antippen schließt sofort).
 // Erststart: danach „Start“ und „Know more“; „Know more“ zeigt eine zweite Seite, „I want to try“ führt ins Willkommen.

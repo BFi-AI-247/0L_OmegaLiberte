@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Sprache der Beiträge filtern (Issue #69, Modul sprachfilter). Teil von KOMPASS (klassisches Skript, globaler Namensraum).
 // Woher die Sprache kommt: 1. Angabe der Plattform (Mastodon `language`, Bluesky `langs`, Feed <language>/xml:lang) –
 // 2. sonst kleine Erkennung auf dem Gerät über häufige Wörter (kein Server). Zu kurzer oder unklarer Text = „unbekannt“ und bleibt sichtbar.

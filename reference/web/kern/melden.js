@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Vorschau – Knopf „Problem melden“ (Issue #46, Modul vorschau-melden). Nur in der Vorschau-Instanz (INSTANZ.speicher 'vorschau').
 // Baut im Browser einen Link auf ein neues GitHub-Issue mit Stelle, Modus, Version, Sprache und Gerät – oder kopiert diese Angaben.
 // Nichts geht an uns: das Issue legt der Prüfer selbst auf GitHub an. Teil von KOMPASS (klassisches Skript, globaler Namensraum).

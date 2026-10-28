@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Quellen – YouTube-Abos aus Google Takeout übernehmen (Issue #67, Modul yt-takeout). Besitzer: Quellen.
 // Der Nutzer lädt bei takeout.google.com nur „YouTube und YouTube Music“ → „Abos“ herunter und wählt hier die CSV (oder die ganze ZIP).
 // Gelesen wird nur im Browser – nichts geht an unseren Server oder an Google. Danach dieselbe Vorschau wie beim Paket-Import.

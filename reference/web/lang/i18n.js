@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Kern – Sprachen. ttt('Deutscher Text') liefert die Übersetzung der aktiven Sprache oder den Originaltext.
 // Sprachdateien (lang/<code>.js) setzen SPRACHE.<code> = { 'Deutscher Text': 'Übersetzung', … }. Fehlende Einträge → Original.
 // Aktive Sprache: Einstellung „sprache“, sonst Browsersprache (de → Deutsch, alles andere → Englisch). Wechsel ohne Neuladen: spracheSetzen() (#44).

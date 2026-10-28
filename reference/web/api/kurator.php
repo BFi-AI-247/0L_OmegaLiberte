@@ -1,4 +1,5 @@
 <?php
+// SPDX-License-Identifier: AGPL-3.0-only
 // ===================================================================
 // kurator.php – KI-Auswahl: Mistral wählt aus den ungelesenen Beiträgen aus
 // ===================================================================

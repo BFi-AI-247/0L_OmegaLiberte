@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Quellen – Abruf und Umwandlung: RADAR, Mastodon, Bluesky, RSS/YouTube. Besitzer: Quellen.
 // Teil von KOMPASS. Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
 

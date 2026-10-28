@@ -1,4 +1,5 @@
 <?php
+// SPDX-License-Identifier: AGPL-3.0-only
 // ===================================================================
 // feed.php – holt freigegebene RSS-/Atom-Feeds für die KOMPASS-Web-App
 // ===================================================================

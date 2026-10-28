@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Posten – eigene Beiträge, Teilen und Antworten auf Mastodon und Bluesky. Besitzer: Posten.
 // Mastodon: OAuth mit PKCE (App-Anmeldung je Server lokal gemerkt), Zugangs-Token im Tresor („posten:masto:<host>“).
 // Bluesky: App-Passwort → createSession; refreshJwt im Tresor („posten:bsky“), accessJwt nur im Arbeitsspeicher.

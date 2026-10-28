@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // KI-Modus – KI-Auswahl, Band, Lage-Karte, Notizen an Karten; meldet sich über modusRegistrieren() an. Besitzer: KI-Modus.
 // Teil von KOMPASS. Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
 

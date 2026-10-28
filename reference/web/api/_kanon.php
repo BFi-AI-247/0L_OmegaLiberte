@@ -1,4 +1,5 @@
 <?php
+// SPDX-License-Identifier: AGPL-3.0-only
 // Prüfbausteine für KI-Antworten (Kanon Basis, #103). Nur Funktionen, keine Ausgabe; eingebunden von kurator.php.
 declare(strict_types=1);
 
