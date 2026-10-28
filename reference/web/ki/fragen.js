@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // KI – Aufgaben: Dialog/Faktencheck-Prompt, KI-Auswahl (Kuratieren, Stückeln). Besitzer: KI-Modus. Teil von KOMPASS (aus ki/ki.js geteilt, #88).
 // Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
 'use strict';
@@ -78,10 +77,21 @@ async function kiKuratierenStuecke(kandidaten, wunsch, favoriten, anzahl, kontex
   return { lage: lage.slice(0, 6), auswahl, n: liste.length, hinweis: teile.map((t) => t.hinweis).find(Boolean) || '',
     ueberschrift: teile.map((t) => t.ueberschrift).find(Boolean) || '' };
 }
+// #103 (Kanon B7 „wörtlich übernehmen, nicht präzisieren“, Modul lage-zahlen): Jede Zahl im Lage-Satz muss in Titel oder Anriss
+// eines seiner Beiträge stehen – sonst bleibt der Satz leer (das Thema bleibt). Tausenderpunkte zählen nicht. Gleich in api/_kanon.php.
+function kiZahlen(s) {
+  const aus = new Set();
+  (String(s || '').match(/(?<![\p{L}\p{N}_.,])\d+(?:[.,]\d+)*(?!\d)/gu) || []).forEach((z) => { aus.add(z); if (/^\d{1,3}(?:\.\d{3})+$/.test(z)) aus.add(z.replace(/\./g, '')); });
+  return aus;
+}
+function kiZahlenBelegt(satz, texte) {
+  const im = kiZahlen(texte.join(' '));
+  return [...kiZahlen(satz)].every((z) => im.has(z));
+}
 async function kiKuratierenTeil(liste, wunsch, favoriten, n, bekannt) {
   const klein = KI.klein() || (kiKontext() && kiKontext() < 6000); const kontext = kiKontext();
-  const rueck = {};
-  const zeilen = liste.map((x, i) => { const nr = 'b' + (i + 1); rueck[nr] = x.id;
+  const rueck = {}; const belege = {};
+  const zeilen = liste.map((x, i) => { const nr = 'b' + (i + 1); rueck[nr] = x.id; belege[x.id] = String(x.titel || '') + ' ' + String(x.text || '');
     return nr + ' | ' + String(x.quelle).slice(0, 60) + ' | ' + String(x.titel).slice(0, klein ? 110 : 160) + (!klein && x.text ? ' — ' + String(x.text).slice(0, kontext ? 140 : 220) : ''); });
   const system = `Du bist der Kurator in KOMPASS, einer Media-Zentrale, die dem Nutzer gehört. Aus einer Liste ungelesener Beiträge
 wählst du die lesenswertesten aus – weniger ist mehr. Regeln:
@@ -116,7 +126,9 @@ Antworte ausschließlich mit JSON in genau dieser Form:
     auswahl.push(Object.assign({ id, warum: String(a.warum || '').slice(0, 120) }, g >= 1 && g <= 3 ? { gewicht: g } : {}, auch.length ? { auch } : {})); } });
   const lage = (Array.isArray(j.lage) ? j.lage : []).map((t) => {
     const ids = ((t && t.ids) || []).map(zu).filter(Boolean).slice(0, 12); const leit = t && zu(t.leit);
-    return Object.assign({ thema: String((t && t.thema) || '').slice(0, 80), satz: String((t && t.satz) || '').slice(0, 280), ids }, leit && ids.includes(leit) ? { leit } : {});
+    let satz = String((t && t.satz) || '').slice(0, 280);
+    if (modulAn('lage-zahlen') && !kiZahlenBelegt(satz, ids.map((id) => belege[id] || ''))) satz = '';  // #103 (Kanon B7)
+    return Object.assign({ thema: String((t && t.thema) || '').slice(0, 80), satz, ids }, leit && ids.includes(leit) ? { leit } : {});
   }).filter((t) => t.ids.length).slice(0, 6);
   if (!auswahl.length) throw new Error(tt('Deine KI hat keine Auswahl getroffen.'));
   return { lage, auswahl, n: liste.length, hinweis: String(j.hinweis || '').slice(0, 240), ueberschrift: String(j.ueberschrift || '').replace(/\s+/g, ' ').trim().slice(0, 90) };

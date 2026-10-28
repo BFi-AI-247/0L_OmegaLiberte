@@ -1,5 +1,4 @@
 <?php
-// SPDX-License-Identifier: AGPL-3.0-only
 // health.php – Lebenszeichen des KOMPASS-Backends
 // Gibt nur aus, ob der Dienst läuft und ob die KI-Anbindung grundsätzlich bereit ist.
 // Keine Pfade, keine Schlüssel, keine Versionsdetails des Servers.

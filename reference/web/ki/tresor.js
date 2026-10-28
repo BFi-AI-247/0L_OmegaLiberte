@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // KI – Tresor: Zugangsschlüssel verschlüsselt (AES-GCM) in IndexedDB, nur auf diesem Gerät (Schutzregeln siehe Kopf von ki/ki.js). Besitzer: KI-Modus. Teil von KOMPASS (aus ki/ki.js geteilt, #88).
 // Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
 'use strict';

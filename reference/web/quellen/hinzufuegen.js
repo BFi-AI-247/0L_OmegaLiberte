@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // Quellen – Fenster „Quelle hinzufügen“ (KI-Vorschläge, Katalog, Suche je Dienst). Besitzer: Quellen.
 // Teil von KOMPASS. Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
 

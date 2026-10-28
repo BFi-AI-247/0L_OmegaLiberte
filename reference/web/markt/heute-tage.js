@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // „Heute ist …“ (#51, Modul heute-tage): Namenstage und Aktionstage je Kalendertag – Daten: Wikipedia (CC BY-SA 4.0),
 // zusammengestellt von Mistral (Lieferungen M031 Jan–März, M032 Apr–Jun, M033 Jul–Sep, M030 Okt–Dez); Aktionstage nur, wenn geprüft. Fehlt ein Tag, steht nichts da.
 // Teil von KOMPASS. Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.

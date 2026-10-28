@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // Kern – Hilfen (h, icon, getJSON …) und Zustand (settings, S, Speichern). Besitzer: Bau-Kern.
 // Teil von KOMPASS. Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
 
@@ -11,7 +10,7 @@
 'use strict';
 
 /* ---------- Hilfen ---------------------------------------------------- */
-const VERSION = 'v0.108';
+const VERSION = 'v0.110';
 const LS = 'kompass.v0.' + (INSTANZ.speicher ? INSTANZ.speicher + '.' : '');
 // Modul-Schalter (instanz.js → module): false zieht ein Feature zurück, fehlt = an
 function modulAn(id) { return !(INSTANZ.module && INSTANZ.module[id] === false); }
@@ -119,6 +118,7 @@ async function pool(items, n, fn) {
 /* ---------- Zustand --------------------------------------------------- */
 const RADAR_FEEDS = ttFest(() => { const r = {
   'radar': tt('RADAR 724'),
+  'radar-artikel': tt('RADAR 724 · Artikel'),
   'radar-gifhorn': tt('Wiesenzeitung Gifhorn'),
   'radar-borkum': tt('Wattpost Borkum'),
   'radar-idstein': tt('Idsteiner Hexenpost')
@@ -335,7 +335,7 @@ function isWide() { return wideMQ.matches; }
 
 const settings = Object.assign({
   mastodon: '', bluesky: '',
-  radar: { 'radar': false, 'radar-gifhorn': false, 'radar-borkum': false, 'radar-idstein': false },
+  radar: { 'radar': false, 'radar-artikel': false, 'radar-gifhorn': false, 'radar-borkum': false, 'radar-idstein': false },
   pauseAfter: 20, onboarded: false, feeds: [], aiWunsch: '', name: '', olAnhang: true
 }, store.get('settings', {}));
 if (!Array.isArray(settings.feeds)) settings.feeds = [];

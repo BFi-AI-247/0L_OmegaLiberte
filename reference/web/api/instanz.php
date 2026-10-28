@@ -1,5 +1,4 @@
 <?php
-// SPDX-License-Identifier: AGPL-3.0-only
 // instanz.php – kleines Skript für die Seite: bindet GoatCounter ein, wenn die Instanz einen Zähler hat
 // (OL_ZAEHLER in _instanz.php oder „goatcounter“ in config.php). Sonst leer: nichts wird gezählt oder nachgeladen.
 // Setzt window.OL_ZAEHLER, damit der Datenschutztext den Zähler nur nennt, wenn er läuft.

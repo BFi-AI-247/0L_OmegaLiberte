@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // Antworten an Karten (Issue #23, Modul antworten): „Antworten ansehen“ unter Mastodon-/Bluesky-Beiträgen. Erst der Druck holt den
 // Gesprächsverlauf (Mastodon /api/v1/statuses/:id/context beim Herkunftsserver, Bluesky getPostThread über public.api.bsky.app),
 // direkt vom Gerät, ohne Anmeldung, ohne Zahlen, nichts im Hintergrund. Ergebnis nur im Arbeitsspeicher.

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // Kern – Name der Zentrale (aus der Instanz-Konfiguration) und freiwilliger Installations-Ping ins Zero Ledger. Nach basis.js geladen.
 // Name: kommt nur aus INSTANZ (instanz.js, Betreiber); Nutzer wählen ihn nicht (#8). Ein früher gesetztes settings.name wird still ignoriert.
 // Ping: nur nach Einwilligung; Zustand nur auf diesem Gerät (store 'ping', nicht im Abgleich – eine Installation, nicht eine Person).

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // Quellen – OPML lesen und schreiben (Feed-Listen anderer Reader). Funktionen von Mistral (M004, Karte A003), geprüft und ergänzt vom Bau-Kern.
 // Teil von KOMPASS. Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
 

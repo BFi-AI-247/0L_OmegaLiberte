@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // Markt am Morgen (Issue #24, Modul markt): einmal am Tag eine Karte vorne im Stapel – Pull, kein Ticker.
 // Werte über api/markt.php (EZB-Referenzkurs Dollar/Euro mit Vortag). Heizöl: Deutschlandpreis folgt aus offizieller Quelle
 // (Karte A021); der regionale Preis ist nur ein Link zum Portal – Portalpreise werden nicht ausgelesen (#24).

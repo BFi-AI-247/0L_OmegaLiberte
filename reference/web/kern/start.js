@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // Kern – render(), Wischen, Tastatur, Start der App. Wird als letzte Datei geladen. Besitzer: Bau-Kern.
 // Teil von KOMPASS. Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
 
@@ -118,6 +117,7 @@ document.addEventListener('visibilitychange', () => {
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 const EINLADUNG_NEU = einladungAusAdresse();  // #5: …#einladung=<code>
 const EINSTIEG_NEULADEN = einstiegAusAdresse();  // #39: fester Einstieg (z. B. #einstieg=w0) vor dem ersten Zeichnen; Sprache wechselt ohne Neuladen (#44)
+if (typeof einstiegNachziehen === 'function') einstiegNachziehen();  // #102: ältere W0-Geräte bekommen den RADAR-Artikel-Feed
 const GOOGLE_ENDE = googleUebergang();  // #66: Google-Drive-Abgleich einmalig trennen, Hinweis unter Speicher
 if (!GOOGLE_ENDE) startseiteOeffnen();  // #43: Startseite über der App
 render(true);

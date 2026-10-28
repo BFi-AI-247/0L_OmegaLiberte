@@ -1,5 +1,4 @@
 <?php
-// SPDX-License-Identifier: AGPL-3.0-only
 // _instanz.php – alles, was diese Installation von anderen unterscheidet (nicht direkt aufrufen)
 // Eine andere Instanz ändert nur den Block „Instanz“ unten (oder setzt die Werte in config.php).
 // Konfiguration: Umgebungsvariable OMEGALIBERTE_CONFIG (Pfad zu einer PHP-Datei, die ein Array zurückgibt),
@@ -14,7 +13,7 @@ const OL_DATEN    = '';                                                // Puffer
 const OL_HERKUNFT = [];                                                // zusätzlich zur eigenen Seite
 const OL_UA       = 'Mozilla/5.0 (compatible; OmegaLiberte-Feed/1; +https://github.com/BFi-AI-247/0L_OmegaLiberte)';
 const OL_ZAEHLER  = '';                                                // GoatCounter; '' = aus
-const OL_PING     = false;                                            // api/ping.php nimmt Installations-Pings an (Zero Ledger)
+const OL_PING     = true;                                             // api/ping.php nimmt Installations-Pings an (Zero Ledger)
 // ---------- Ende Instanz ----------
 
 // Umgebung: getenv (CLI, mod_php) oder $_SERVER (CGI/FPM, auch REDIRECT_… nach SetEnv in .htaccess)

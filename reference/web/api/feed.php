@@ -1,5 +1,4 @@
 <?php
-// SPDX-License-Identifier: AGPL-3.0-only
 // ===================================================================
 // feed.php – holt freigegebene RSS-/Atom-Feeds für die KOMPASS-Web-App
 // ===================================================================
@@ -19,6 +18,7 @@ if (OL_HERKUNFT) { header('Access-Control-Allow-Origin: ' . OL_HERKUNFT[0]); hea
 
 const QUELLEN = [
     'radar'          => ['name' => 'RADAR 724',            'url' => 'https://radar724.de/feed.xml'],
+    'radar-artikel'  => ['name' => 'RADAR 724 · Artikel',  'url' => 'https://radar724.de/feed-artikel.xml'],  // #102: ein Eintrag je Artikel
     'radar-gifhorn'  => ['name' => 'Wiesenzeitung Gifhorn', 'url' => 'https://radar724.de/wiesenzeitung_gifhorn/feed.xml'],
     'radar-borkum'   => ['name' => 'Wattpost Borkum',       'url' => 'https://radar724.de/borkum_kurier/feed.xml'],
     'radar-idstein'  => ['name' => 'Idsteiner Hexenpost',   'url' => 'https://radar724.de/idstein/feed.xml'],
@@ -85,6 +85,9 @@ $roh = preg_replace_callback('/&([a-zA-Z][a-zA-Z0-9]*);/', function ($m) {
     $z = html_entity_decode($m[0], ENT_HTML5 | ENT_QUOTES, 'UTF-8');
     return $z === $m[0] ? '&amp;' . $m[1] . ';' : htmlspecialchars($z, ENT_XML1 | ENT_QUOTES, 'UTF-8');
 }, $roh);
+
+// 1b) Rohe „&“ (z. B. in category von feed-artikel.xml, #102) – sonst verwirft der XML-Leser den ganzen Feed
+$roh = preg_replace('/&(?!(?:[a-zA-Z][a-zA-Z0-9]*|#[0-9]+|#x[0-9a-fA-F]+);)/', '&amp;', $roh);
 
 // 2) Doppelt kodierte Umlaute („Ã¼“ statt „ü“) zurückführen
 function heile(string $s): string {

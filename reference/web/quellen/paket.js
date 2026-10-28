@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // Quellen – Starter-Paket: lesen (Kurzform v1, source-pack JSON, OPML), Vorschau, übernehmen, teilen. Besitzer: Quellen.
 // Wege hinein: Link …/#paket=<Kurzform>, …/#paket-url=<https-JSON>, Einstellungen → „Paket einfügen“.
 // Nie automatisch: immer erst Vorschau, der Mensch übernimmt. Formate: 0L formats/source-pack.md
@@ -123,19 +122,38 @@ function paketVorschau(text, woher) {
 // Schon eingerichtete Geräte werden nicht still verändert: sie sehen die übliche Paket-Vorschau.
 const EINSTIEGE = {
   // spaeter: #39 „Neue Wiesenzeitung“ – erst Gifhorn, dann Niedersachsen (Modul w0-gifhorn-zuerst, siehe einstiegOrdnen)
-  w0: { modul: 'einstieg-w0', sprache: 'de', radar: ['radar-gifhorn'], gruppe: 'Regional: Gifhorn',
-    spaeter: ['https://www.ndr.de/nachrichten/niedersachsen/index~rss2.xml'] }
+  // #102 (Modul w0-meldungen): Wiesenzeitung Meldung für Meldung als erste Quelle (zuerst), RADAR-Artikel-Feed hinter den Gifhorn-Quellen;
+  // Einträge mit Ort „Gifhorn“ (category) zählen als Gifhorn. In spaeter stehen Feed-Adressen oder RADAR-Schlüssel.
+  w0: { modul: 'einstieg-w0', sprache: 'de', radar: ['radar-gifhorn'], gruppe: 'Regional: Gifhorn', ort: 'Gifhorn',
+    zuerst: ['radar-gifhorn'], dazu: { modul: 'w0-meldungen', radar: ['radar-artikel'] },
+    spaeter: ['https://www.ndr.de/nachrichten/niedersachsen/index~rss2.xml', 'radar-artikel'] }
 };
 // #39 (Modul w0-gifhorn-zuerst): Auf W0-Geräten stehen Beiträge der Gifhorn-Quellen aus den letzten 48 Stunden vorne,
 // Niedersachsen (NDR) und ältere Beiträge folgen danach in zeitlicher Reihenfolge – wie in der Wiesenzeitung (M025: ~80 % lokal).
+// #102 (Modul w0-meldungen): innerhalb der frischen Gifhorn-Beiträge stehen die Wiesenzeitung-Meldungen zuerst.
 function einstiegOrdnen(liste) {
   const E = EINSTIEGE[settings.einstieg];
   if (!E || !E.spaeter || S.filter || !modulAn('w0-gifhorn-zuerst') || !modulAn(E.modul)) return liste;
-  const spaet = new Set(settings.feeds.filter((f) => E.spaeter.includes(f.url)).map((f) => 'f:' + f.id));
+  const meld = !!(E.dazu && modulAn(E.dazu.modul));
+  const spaet = new Set(settings.feeds.filter((f) => E.spaeter.includes(f.url)).map((f) => 'f:' + f.id).concat(E.spaeter.filter((k) => !/^https?:/.test(k))));
+  const zuerst = new Set(meld ? E.zuerst || [] : []);
+  const amOrt = (p) => meld && E.ort && (p.rubriken || []).some((r) => r.toLowerCase() === E.ort.toLowerCase());
   const grenze = Date.now() - 48 * 3600e3;
-  const vorne = [], rest = [];
-  liste.forEach((p) => ((!p.tags.some((t) => spaet.has(t)) && new Date(p.date).getTime() >= grenze) ? vorne : rest).push(p));
-  return vorne.concat(rest);
+  const erst = [], vorne = [], rest = [];
+  liste.forEach((p) => {
+    const frisch = new Date(p.date).getTime() >= grenze;
+    if (frisch && p.tags.some((t) => zuerst.has(t))) erst.push(p);
+    else if (frisch && (!p.tags.some((t) => spaet.has(t)) || amOrt(p))) vorne.push(p);
+    else rest.push(p);
+  });
+  return erst.concat(vorne, rest);
+}
+// #102: W0-Geräte, die vor der Umstellung eingerichtet wurden, bekommen den RADAR-Artikel-Feed einmalig dazu (still, nur Quelle ergänzt)
+function einstiegNachziehen() {
+  const E = EINSTIEGE[settings.einstieg];
+  if (!E || !E.dazu || !modulAn(E.modul) || !modulAn(E.dazu.modul) || (settings.einstiegStand || 0) >= 1) return;
+  E.dazu.radar.forEach((k) => { if (k in RADAR_FEEDS) settings.radar[k] = true; });
+  settings.einstiegStand = 1; save('settings');
 }
 function einstiegAusAdresse() {
   const m = /^#(?:einstieg=)?(w0)$/i.exec(location.hash || ''); if (!m) return false;
@@ -148,6 +166,7 @@ function einstiegAusAdresse() {
     return false;
   }
   E.radar.forEach((k) => { if (k in RADAR_FEEDS) settings.radar[k] = true; });
+  if (E.dazu && modulAn(E.dazu.modul)) { E.dazu.radar.forEach((k) => { if (k in RADAR_FEEDS) settings.radar[k] = true; }); settings.einstiegStand = 1; }
   if (gruppe) gruppe.items.forEach(([n, u, d, kind]) => {
     if (!settings.feeds.some((x) => x.url === u)) settings.feeds.push({ id: hashId(u), url: u, title: n, kind: kind === 'youtube' ? 'youtube' : 'rss', icon: '', site: 'https://' + d + '/' });
   });

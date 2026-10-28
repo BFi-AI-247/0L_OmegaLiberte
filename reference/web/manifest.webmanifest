@@ -1,7 +1,7 @@
 {
-  "name": "Kompass~OmegaLiberte",
-  "short_name": "Kompass",
-  "description": "OmegaLiberte reference app – your sources, your AI, your data",
+  "name": "KOMPASS (Prototyp)",
+  "short_name": "KOMPASS",
+  "description": "KI-unterstützte Media-Zentrale – Prototyp",
   "lang": "de",
   "start_url": "./",
   "scope": "./",

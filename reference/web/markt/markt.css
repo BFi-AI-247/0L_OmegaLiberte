@@ -1,4 +1,3 @@
-/* SPDX-License-Identifier: AGPL-3.0-only */
 /* Markt am Morgen (#24) – Zeitungsbox wie in der Wiesenzeitung: Serifentitel, Linien, Pfeile grün/rot */
 .markt-karte .card-body { justify-content: center; }
 .markt-box { border-top: 3px solid var(--ink); border-bottom: 1px solid var(--line2); padding: 14px 0 10px; max-width: 40rem; width: 100%; align-self: center; }

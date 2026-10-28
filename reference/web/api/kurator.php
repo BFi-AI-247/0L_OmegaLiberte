@@ -1,5 +1,4 @@
 <?php
-// SPDX-License-Identifier: AGPL-3.0-only
 // ===================================================================
 // kurator.php – KI-Auswahl: Mistral wählt aus den ungelesenen Beiträgen aus
 // ===================================================================
@@ -148,13 +147,15 @@ TXT;
     }
     aus(['status' => 'ok', 'antwort' => $kurz($j['antwort'] ?? '', 240), 'setzen' => $setzen, 'wunsch' => is_string($j['wunsch'] ?? null) ? $kurz($j['wunsch'], 400) : null]);
 }
-$ids = []; $zeilen = []; $rueck = [];
+require_once __DIR__ . '/_kanon.php';  // #103: zahlen_belegt()
+$ids = []; $zeilen = []; $rueck = []; $belege = [];
 foreach (array_slice($in['kandidaten'], 0, 150) as $i => $k) {
     if (!is_array($k)) continue;
     $id = $kurz($k['id'] ?? '', 300);
     if ($id === '' || isset($ids[$id])) continue;
     $nr = 'b' . (count($ids) + 1);
     $ids[$id] = $nr; $rueck[$nr] = $id;
+    $belege[$id] = $kurz($k['titel'] ?? '', 160) . ' ' . $kurz($k['text'] ?? '', 220);  // #103: Titel und Anriss, wie die KI sie sieht
     $zeilen[] = $nr . ' | ' . $kurz($k['quelle'] ?? '', 60) . ' | ' . $kurz($k['titel'] ?? '', 160) . ($kurz($k['text'] ?? '', 220) !== '' ? ' — ' . $kurz($k['text'] ?? '', 220) : '');
 }
 if (!$zeilen) nein('fehler', 'Keine Beiträge übergeben.', 400);
@@ -236,7 +237,9 @@ foreach ((array)($j['lage'] ?? []) as $t) {
     $tids = array_values(array_filter(array_map($zurueck, (array)($t['ids'] ?? []))));
     if (!$tids) continue;
     $tids = array_slice($tids, 0, 12);
-    $thema = ['thema' => $kurz($t['thema'] ?? '', 80), 'satz' => $kurz($t['satz'] ?? '', 280), 'ids' => $tids];
+    $satz = $kurz($t['satz'] ?? '', 280);
+    if (!zahlen_belegt($satz, array_map(fn($x) => $belege[$x] ?? '', $tids))) $satz = '';  // #103 (Kanon B7): keine Zahl, die nicht in den Beiträgen steht
+    $thema = ['thema' => $kurz($t['thema'] ?? '', 80), 'satz' => $satz, 'ids' => $tids];
     $leit = $zurueck(is_scalar($t['leit'] ?? null) ? $t['leit'] : '');
     if ($leit && in_array($leit, $tids, true)) $thema['leit'] = $leit;
     $lage[] = $thema;

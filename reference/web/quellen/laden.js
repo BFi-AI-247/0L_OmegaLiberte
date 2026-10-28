@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // Quellen – Abruf und Umwandlung: RADAR, Mastodon, Bluesky, RSS/YouTube. Besitzer: Quellen.
 // Teil von KOMPASS. Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
 
@@ -8,7 +7,8 @@ async function loadRadar(key) {
   return (d.eintraege || []).map((e) => ({
     id: 'r:' + (e.link || e.titel), service: 'radar', tags: [key],
     who: RADAR_FEEDS[key] || d.titel || tt('RADAR 724'), whoKey: key,
-    title: leerPlatzhalter(e.titel), text: ohneAnhaengsel(leerPlatzhalter(e.text)), link: e.link || '', date: e.datum, media: []
+    title: leerPlatzhalter(e.titel), text: ohneAnhaengsel(leerPlatzhalter(e.text)), link: e.link || '', date: e.datum, media: [],
+    rubriken: Array.isArray(e.rubriken) ? e.rubriken.map(String).slice(0, 6) : []  // #102: Rubrik und Ort (artikelgenaue Feeds)
   }));
 }
 

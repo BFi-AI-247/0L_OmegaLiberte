@@ -1,5 +1,4 @@
 <?php
-// SPDX-License-Identifier: AGPL-3.0-only
 // ===================================================================
 // ping.php – Zero Ledger: freiwillige Installations-Pings (nur nach Einwilligung in der App)
 // ===================================================================

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // Kern – Gerüst: Kopf- und Fußleisten (Handy), Seitenspalte (Laptop), Aktionen, Ebenen (Blätter, Toasts). Besitzer: Bau-Kern.
 // Teil von KOMPASS. Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
 

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // Morgenformate in der Briefing Box (Issue #34, Modul morgenformate). Besitzer: Bau-Kern. Teil von KOMPASS (klassisches Skript).
 // Die Box „Auf einen Blick“ zeigt unten „Zum Aufstehen“: je kurzem Nachrichtenformat der neueste Eintrag mit Titel, Zeit und
 // Link bzw. ▶ Anhören. Keine Uhrzeit-Einstellung, kein Abo nötig – wer die App öffnet, sieht das Neueste (Pull statt Scroll).

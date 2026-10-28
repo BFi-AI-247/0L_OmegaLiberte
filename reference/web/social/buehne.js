@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // Social-Modus – Bühne: eine Karte pro Beitrag, Wisch-Animation; meldet sich über modusRegistrieren() an. Besitzer: Social-Modus (bis zum Start: Bau-Kern).
 // Teil von KOMPASS. Alle Dateien teilen sich einen globalen Namensraum (klassische Skripte); Ladereihenfolge: index.html.
 
