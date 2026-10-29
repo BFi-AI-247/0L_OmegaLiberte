@@ -119,7 +119,7 @@ if (isset($xml->channel)) {
             'titel'    => heile((string)$it->title),
             'link'     => trim((string)$it->link),
             'datum'    => ($t = strtotime((string)$it->pubDate)) ? gmdate('c', $t) : null,
-            'text'     => mb_substr(heile(strip_tags((string)$it->description)), 0, 600),
+            'text'     => mb_substr(heile(strip_tags((string)$it->description)), 0, 20000),  // #105: voller Text, nur Schutzgrenze
             'rubriken' => $kats,
         ];
     }
@@ -132,7 +132,7 @@ if (isset($xml->channel)) {
             'titel'    => heile((string)$e->title),
             'link'     => $link,
             'datum'    => ($t = strtotime((string)($e->updated ?: $e->published))) ? gmdate('c', $t) : null,
-            'text'     => mb_substr(heile(strip_tags((string)($e->summary ?: $e->content))), 0, 600),
+            'text'     => mb_substr(heile(strip_tags((string)($e->summary ?: $e->content))), 0, 20000),  // #105: voller Text, nur Schutzgrenze
             'rubriken' => [],
         ];
     }

@@ -206,6 +206,8 @@ function hole_viele(array $urls, int $proAbruf = 12): array {
 function hole(string $u): array { return hole_viele([$u])[0]; }
 
 // ---------- Lesen ---------------------------------------------------------
+// #105: Beitragstext in voller Länge (nur Schutzgrenze); kürzen tut bei Bedarf die App (Modul feed-volltext aus)
+const VOLLTEXT_MAX = 20000;
 function text(string $s, int $max = 600): string {
     $s = preg_replace('#<(script|style)[^>]*>.*?</\1>#is', ' ', $s) ?? $s;
     $s = preg_replace('#<br\s*/?>|</p>#i', "\n", $s) ?? $s;
@@ -307,7 +309,7 @@ function lies_feed(string $body, string $feedUrl): ?array {
             'titel' => text(kt($x, $it, 'title'), 300),
             'link'  => $link ? absolut($feedUrl, $link) : '',
             'datum' => ($t = strtotime($datum)) ? gmdate('c', $t) : null,
-            'text'  => text($beschr, 700),
+            'text'  => text($beschr, VOLLTEXT_MAX),
             'bild'  => $bild,
             'autor' => text($autor, 80),
             'video' => $video ?: null,
@@ -390,7 +392,7 @@ function jf_text($item): string {
     foreach (['content_text', 'summary', 'content_html'] as $k) {
         $v = jf_get($item, $k);
         if ($v !== null && !is_array($v) && !is_object($v)) {
-            return jf_klartext($v, 700);
+            return jf_klartext($v, VOLLTEXT_MAX);
         }
     }
     return '';

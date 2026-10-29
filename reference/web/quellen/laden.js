@@ -8,7 +8,7 @@ async function loadRadar(key) {
   return (d.eintraege || []).map((e) => ({
     id: 'r:' + (e.link || e.titel), service: 'radar', tags: [key],
     who: RADAR_FEEDS[key] || d.titel || tt('RADAR 724'), whoKey: key,
-    title: leerPlatzhalter(e.titel), text: ohneAnhaengsel(leerPlatzhalter(e.text)), link: e.link || '', date: e.datum, media: [],
+    title: leerPlatzhalter(e.titel), text: feedText(ohneAnhaengsel(leerPlatzhalter(e.text))), link: e.link || '', date: e.datum, media: [],
     rubriken: Array.isArray(e.rubriken) ? e.rubriken.map(String).slice(0, 6) : []  // #102: Rubrik und Ort (artikelgenaue Feeds)
   }));
 }
@@ -314,6 +314,11 @@ const TEASER_ANHAENGSEL = [
   /\s*the post .{1,300}? appeared first on .{1,200}$/i,
   /\s*der beitrag .{1,300}? erschien zuerst auf .{1,200}$/i
 ];
+// #105: Feeds liefern den Text in voller Länge; ist das Modul feed-volltext aus, kürzt die App wie früher auf 700 Zeichen
+function feedText(t) {
+  const s = String(t || '');
+  return modulAn('feed-volltext') || s.length <= 700 ? s : s.slice(0, 699).trimEnd() + '…';
+}
 function ohneAnhaengsel(t) {
   let s = String(t || ''); const alt = s;
   for (let i = 0; i < 3; i++) {
@@ -352,7 +357,7 @@ function feedPosts(f, d) {
   return (d.eintraege || []).map((e) => ({ ptEmbed: ptEmbed(e.link) || undefined,
     id: e.video ? 'y:' + e.video : 'w:' + (e.link || e.titel), service: yt ? 'youtube' : 'rss', tags: [yt ? 'youtube' : 'rss', key],
     who: f.title || d.titel, whoKey: key, avatar: f.icon || '', handle: hostOf(f.site || f.url), sprache: d.sprache || undefined,  // #69
-    title: leerPlatzhalter(e.titel), text: ohneAnhaengsel(leerPlatzhalter(e.text)), link: e.link || '', date: e.datum,
+    title: leerPlatzhalter(e.titel), text: feedText(ohneAnhaengsel(leerPlatzhalter(e.text))), link: e.link || '', date: e.datum,
     media: e.bild && !e.video && !e.medien ? [e.bild] : [], video: e.video || null, short: /youtube\.com\/shorts\//.test(e.link || ''), medien: e.medien || null, thumb: e.bild || '', card: null, urls: e.link ? [urlKey(e.link)] : [],
     rubriken: modulAn('feed-rubriken') && Array.isArray(e.rubriken) ? e.rubriken.map(String).slice(0, 6) : []  // #105: Kategorien des Feeds
   }));
