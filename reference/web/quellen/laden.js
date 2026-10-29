@@ -353,7 +353,8 @@ function feedPosts(f, d) {
     id: e.video ? 'y:' + e.video : 'w:' + (e.link || e.titel), service: yt ? 'youtube' : 'rss', tags: [yt ? 'youtube' : 'rss', key],
     who: f.title || d.titel, whoKey: key, avatar: f.icon || '', handle: hostOf(f.site || f.url), sprache: d.sprache || undefined,  // #69
     title: leerPlatzhalter(e.titel), text: ohneAnhaengsel(leerPlatzhalter(e.text)), link: e.link || '', date: e.datum,
-    media: e.bild && !e.video && !e.medien ? [e.bild] : [], video: e.video || null, short: /youtube\.com\/shorts\//.test(e.link || ''), medien: e.medien || null, thumb: e.bild || '', card: null, urls: e.link ? [urlKey(e.link)] : []
+    media: e.bild && !e.video && !e.medien ? [e.bild] : [], video: e.video || null, short: /youtube\.com\/shorts\//.test(e.link || ''), medien: e.medien || null, thumb: e.bild || '', card: null, urls: e.link ? [urlKey(e.link)] : [],
+    rubriken: modulAn('feed-rubriken') && Array.isArray(e.rubriken) ? e.rubriken.map(String).slice(0, 6) : []  // #105: Kategorien des Feeds
   }));
 }
 // Beiträge eines einzelnen Kontos – Mastodon notfalls direkt von dessen Heim-Instanz

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Service Worker – macht KOMPASS installierbar und hält die App-Hülle offline bereit.
 // Daten (api/, Mastodon, Bluesky) kommen immer frisch aus dem Netz.
-const VERSION = 'kompass-v0-110';
+const VERSION = 'kompass-v0-112';
 // Je Instanz eigener Cache (mehrere Instanzen auf einer Domain, z. B. /kompass und /kompass-vorschau)
 const CACHE = VERSION + '@' + self.registration.scope;
 const SHELL = ['./', './index.html', './instanz.js', './app.css', './ki/ki-modus.css', './lang/en.js', './lang/i18n.js', './kern/basis.js', './kern/zentrale.js', './quellen/laden.js', './kern/daten.js', './kern/navigation.js', './kern/sprache.js', './kern/uebersetzen.js', './kern/modi.js', './ki/agent.js', './kern/speicher.js', './ki/ki.js', './ki/tresor.js', './ki/anbieter.js', './ki/fragen.js', './ki/ki-box.js', './ki/ki-modus.js', './ki/filter-dialog.js', './kern/geruest.js', './social/karten.js', './social/buehne.js', './quellen/hinzufuegen.js', './quellen/opml.js', './quellen/paket.js', './quellen/takeout.js', './posten/posten.js', './posten/schreiben.js', './posten/posten.css', './kern/einstellungen.js', './kern/startseite.js', './kern/melden.js', './kern/pruefen.js', './kern/start.js', './manifest.webmanifest', './icons/icon-192.png', './posten/antworten.js', './markt/heute-tage.js', './markt/markt.js', './markt/morgen.js', './markt/markt.css'];

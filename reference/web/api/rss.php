@@ -292,6 +292,15 @@ function lies_feed(string $body, string $feedUrl): ?array {
         }
         $beschr = $roh;
         if ($video) { $g = $x->query('.//*[local-name()="group"]/*[local-name()="description"]', $it); if ($g->length) $beschr = $g->item(0)->textContent; }
+        // #105: Kategorien als Rubriken – RSS: Text von <category>, Atom: Attribut label (sonst term); höchstens 6, ohne Doppelte
+        $rubriken = [];
+        foreach ($x->query('./*[local-name()="category"]', $it) as $c) {
+            /** @var DOMElement $c */
+            $r = $atom ? ($c->getAttribute('label') ?: $c->getAttribute('term')) : ($c->textContent ?: $c->getAttribute('term'));
+            $r = text($r, 80);
+            if ($r !== '' && !in_array($r, $rubriken, true)) $rubriken[] = $r;
+            if (count($rubriken) >= 6) break;
+        }
         $autor = kt($x, $it, 'creator');
         if ($autor === '' && ($a = kind($x, $it, 'author'))) $autor = trim(kt($x, $a, 'name') ?: $a->textContent);
         $out[] = [
@@ -303,6 +312,7 @@ function lies_feed(string $body, string $feedUrl): ?array {
             'autor' => text($autor, 80),
             'video' => $video ?: null,
             'medien' => $medien,
+            'rubriken' => $rubriken,
         ];
     }
     // #69: Sprache des Feeds (RSS <language>, Atom xml:lang) – zwei Buchstaben, sonst leer

@@ -159,6 +159,10 @@ const DAV_ANBIETER = [
   { id: 'magenta', name: 'Telekom MagentaCLOUD', url: 'https://magentacloud.de/remote.php/webdav', tipp: 'MagentaCLOUD (Telekom, Deutschland): Benutzer und Passwort deines MagentaCLOUD-Zugangs.' },
   { id: 'koofr', name: 'Koofr', url: 'https://app.koofr.net/dav/Koofr', tipp: 'Koofr (Slowenien, 10 GB gratis): eigenes Passwort unter Account Settings → Preferences → Password erzeugen.' },
   { id: 'pcloud', name: 'pCloud (EU)', url: 'https://ewebdav.pcloud.com', tipp: 'pCloud (Schweiz, bis 10 GB gratis): Adresse für Konten mit Speicherort EU.' },
+  // M034 (Mistral, Hilfeseiten der Anbieter): feste Adressen; Benutzer ist die E-Mail-Adresse
+  { id: 'gmx', name: 'GMX Cloud', url: 'https://webdav.mc.gmx.net', tipp: 'GMX Cloud (Deutschland): Benutzer ist deine GMX-E-Mail-Adresse; vorher bei GMX ein App-Passwort anlegen.' },
+  { id: 'webde', name: 'WEB.DE Online-Speicher', url: 'https://webdav.smartdrive.web.de', tipp: 'WEB.DE Online-Speicher (Deutschland): Benutzer ist deine WEB.DE-E-Mail-Adresse; vorher bei WEB.DE ein App-Passwort anlegen.' },
+  { id: 'einsundeins', name: '1&1 Online-Speicher', url: 'https://sd2dav.1und1.de', tipp: '1&1 Online-Speicher (Deutschland): Benutzer und Passwort deines 1&1-Cloud-Speichers.' },
   { id: 'disroot', name: 'Disroot (Nextcloud)', url: 'https://cloud.disroot.org/remote.php/dav/files/', tipp: 'Nextcloud (z. B. Disroot, 2 GB gratis): Dateien → Einstellungen → WebDAV-Adresse; App-Passwort unter Sicherheit anlegen.' }
 ];
 function davAnbieterUrl(id) {
