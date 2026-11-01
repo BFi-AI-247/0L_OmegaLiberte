@@ -71,12 +71,15 @@ async function curate(weiter, auto) {
       if (d.status === 'limit' || d.status === 'pause') d.antwort = (d.antwort || '') + tt(' Verbinde deine eigene KI in den Einstellungen.');
     }
     if (d.status !== 'ok') throw new Error(d.antwort || tt('Die KI-Auswahl hat gerade nicht geklappt.'));
+    if (modulAn('mosaik-seiten')) d.lage = kibThemenVereinen(d.lage || []);  // #84: gleichnamige Themen zusammenführen
     if (weiter) {
       // Anhängen: at bleibt (Ids der Themen hängen daran), neue Themen hinten, gleiche Beiträge nicht doppelt
       const r = S.ai.res; if (r !== r0) return 'fehler';  // inzwischen neu kuratiert
       const da = kibSchonAusgewaehlt();
-      const lage = (d.lage || []).map((x) => Object.assign({}, x, { ids: (x.ids || []).filter((id) => !da.has(id)), runde: (r.runde || 1) + 1 })).filter((x) => x.ids.length);
-      if (!lage.length) return 'leer';
+      let lage = (d.lage || []).map((x) => Object.assign({}, x, { ids: (x.ids || []).filter((id) => !da.has(id)), runde: (r.runde || 1) + 1 })).filter((x) => x.ids.length);
+      // #84: Thema der neuen Runde, das es schon gibt (gleicher oder fast gleicher Name) → Beiträge dort anhängen statt neue Kachel
+      if (modulAn('mosaik-seiten')) lage = lage.filter((x) => { const alt = r.lage.find((y) => kibThemaGleich(y.thema, x.thema)); if (!alt) return true; alt.ids = [...new Set((alt.ids || []).concat(x.ids))]; return false; });
+      if (!lage.length && !(d.auswahl || []).some((a) => !da.has(a.id))) return 'leer';
       r.lage = r.lage.concat(lage); r.auswahl = r.auswahl.concat((d.auswahl || []).filter((a) => !da.has(a.id)));
       r.n += cand.length; r.runde = (r.runde || 1) + 1; r.nachAt = Date.now();
       store.set('aiRes', r); if (modulAn('ki-filter')) kifZaehlen(lage); aiPrepare();
@@ -122,6 +125,18 @@ function kibKnopfText() { return S.ai.busy ? tt('Kuratiere …') : KIB.bereit ? 
 // Nur die Knopf-Beschriftungen auffrischen, ohne die Bühne neu zu zeichnen (nichts verschiebt sich unter dem Finger)
 function kibKnopfNeu() {
   document.querySelectorAll('button[data-kuratieren]').forEach((b) => { b.textContent = kibKnopfText(); b.disabled = !!S.ai.busy; b.classList.toggle('primaer', !!KIB.bereit); });
+}
+// #84: Themen mit gleichem oder fast gleichem Namen (z. B. „Politische Spannungen in Deutschland und Europa“ zweimal) sind eines
+function kibThemaWoerter(t) { return new Set(String(t || '').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((w) => w.length >= 3 && !KIB_STOP.has(w)).map((w) => w.replace(/(en|er|es|e|n|s)$/, ''))); }
+function kibThemaGleich(a, b) {
+  const A = kibThemaWoerter(a); const B = kibThemaWoerter(b); if (!A.size || !B.size) return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+  let g = 0; A.forEach((w) => { if (B.has(w)) g++; });
+  return g / (A.size + B.size - g) >= 0.7 || (g === Math.min(A.size, B.size) && g >= 2);
+}
+function kibThemenVereinen(lage) {
+  const out = [];
+  lage.forEach((t) => { const alt = out.find((x) => kibThemaGleich(x.thema, t.thema)); if (alt) alt.ids = [...new Set((alt.ids || []).concat(t.ids || []))]; else out.push(Object.assign({}, t, { ids: (t.ids || []).slice() })); });
+  return out;
 }
 function setAiMode(on) {
   S.ai.on = on; store.set('aiOn', on); S.filter = null; S.overview = false;
@@ -515,14 +530,14 @@ function kibMosaik() {
   const kopf = h('div', { class: 'kib-titel' },
     h('h1', {}, r.ueberschrift || tt('Heute in deinen Quellen')),
     h('span', { class: 'kib-datum' }, datum + ' · ' + th.length + (th.length === 1 ? tt(' Thema') : tt(' Themen'))),
-    // #91: „Als Liste“ entfällt; nur wer über „Weitere Themen“ in der Liste ist, bekommt den Weg zurück ins Mosaik
-    KIB.alsListe ? h('button', { type: 'button', class: 'kib-knopf', onClick: () => { KIB.alsListe = false; kibZeichnen(els.stage); } }, tt('Als Mosaik')) : null,
+    // #91: „Als Liste“ entfällt; #84 (mosaik-seiten): auch „Weitere Themen“ führt nicht mehr in die Liste; nur wer über „Weitere Themen“ in der Liste ist, bekommt den Weg zurück ins Mosaik
+    KIB.alsListe && !modulAn('mosaik-seiten') ? h('button', { type: 'button', class: 'kib-knopf', onClick: () => { KIB.alsListe = false; kibZeichnen(els.stage); } }, tt('Als Mosaik')) : null,
     !isWide() ? h('button', { type: 'button', class: 'kib-knopf' + (KIB.bereit ? ' primaer' : ''), 'data-kuratieren': '', disabled: S.ai.busy, onClick: () => curate() }, kibKnopfText()) : null);  // Handy: Laptop hat den Knopf in der Kopfzeile
   const hinweis = r.hinweis || (r.wunsch && r.treffer === 0) ? h('div', { class: 'kib-hinweis' },
     h('span', {}, r.hinweis || tt('Zu deinem Wunsch finde ich nichts in deinen Quellen.')),
     h('button', { type: 'button', class: 'kib-knopf', onClick: () => openAdd('ki', r.wunsch) }, tt('✦ KI nach passenden Quellen fragen'))) : null;
   if (!th.length) return h('div', { class: 'kib kib-mosaik' }, kopf, hinweis, h('p', { class: 'kib-leer' }, tt('Die KI hat keine Themen erkannt. „Neu kuratieren“ versucht es noch einmal.')));
-  if (KIB.alsListe) return h('div', { class: 'kib kib-mosaik' }, kopf, hinweis, modulAn('ki-filter') ? kifKachel() : null, kibAlsListe(th));
+  if (KIB.alsListe && !modulAn('mosaik-seiten')) return h('div', { class: 'kib kib-mosaik' }, kopf, hinweis, modulAn('ki-filter') ? kifKachel() : null, kibAlsListe(th));
   const flaeche = h('section', { class: 'kib-flaeche', 'aria-label': tt('Themen des Tages') });
   const root = h('div', { class: 'kib kib-mosaik' }, kopf, hinweis, modulAn('ki-filter') ? kifKachel() : null, flaeche);
   root._legen = () => {
@@ -535,14 +550,41 @@ function kibMosaik() {
   };
   return root;
 }
-// #61 Handy: kein Treemap mit vielen schmalen Kacheln – größtes Thema volle Breite, darunter zwei Spalten,
-// höchstens KIB_HANDY_MAX Themen; der Rest steckt hinter „Weitere Themen (N)“ (öffnet die Liste). Die Fläche scrollt bei Bedarf.
-const KIB_HANDY_MAX = 7;
+// #61 Handy: kein Treemap mit vielen schmalen Kacheln – größtes Thema volle Breite, darunter zwei Spalten.
+// #84 (Modul mosaik-seiten): Themen über KIB_HANDY_MAX folgen als weitere Mosaik-Seiten (je KIB_HANDY_SEITE, gleiche Form),
+// fortlaufend gescrollt; am Ende „Neues“ und „Neu kuratieren“ statt eines leeren Schlusses. Ohne Modul: „Weitere Themen (N)“ öffnet die Liste.
+const KIB_HANDY_MAX = 7; const KIB_HANDY_SEITE = 6;
 function kibHandyRaster(flaeche, th, W, H) {
   const sortiert = th.slice().sort((a, b) => b.ps.length - a.ps.length);
+  const f = KIB_ABSTAND / 2; const halb = (W + f) / 2;
+  flaeche.classList.add('handy');
+  if (modulAn('mosaik-seiten')) {
+    const seiten = [sortiert.slice(0, KIB_HANDY_MAX)];
+    for (let k = KIB_HANDY_MAX; k < sortiert.length; k += KIB_HANDY_SEITE) seiten.push(sortiert.slice(k, k + KIB_HANDY_SEITE));
+    const kids = []; let y0 = 0;
+    seiten.forEach((seite, s) => {
+      const letzte = s === seiten.length - 1;
+      if (s > 0) { kids.push(h('h2', { class: 'kib-seite-titel', style: 'top:' + y0 + 'px' }, tt('Weitere Themen') + ' · ' + (s + 1) + '/' + seiten.length)); y0 += 34; }
+      const ersteH = s === 0 ? Math.max(170, Math.round(H * 0.34)) : Math.max(150, Math.round(H * 0.28));
+      const rest = seite.length - 1 + (letzte ? 2 : 0);
+      const reihen = Math.ceil(rest / 2);
+      const rh = Math.max(116, Math.floor((H - ersteH - (s > 0 ? 34 : 0)) / Math.max(1, reihen)));
+      const rects = [{ x: 0, y: y0, w: W + f, h: ersteH + f }];
+      for (let k = 0; k < rest; k++) {
+        const r = Math.floor(k / 2); const allein = k === rest - 1 && rest % 2 === 1;
+        rects.push({ x: allein ? 0 : (k % 2) * halb, y: y0 + ersteH + f + r * rh, w: allein ? W + f : halb, h: rh });
+      }
+      seite.forEach((x, k) => { kids.push(kibKachel(x, rects[k])); const m = typeof kibKachelMenueKnopf === 'function' && kibKachelMenueKnopf(x, rects[k]); if (m) kids.push(m); });  // ⋯ aus #77, falls vorhanden
+      if (letzte) { kids.push(kibNeuesKachel(rects[seite.length]), kibNeuKuratierenKachel(rects[seite.length + 1])); }
+      y0 += ersteH + f + reihen * rh;
+    });
+    flaeche.replaceChildren(...kids);
+    // Nähert man sich dem Ende, legt die KI im Hintergrund nach (nur eigene KI, siehe kibVorladen) – neue Themen hängen sich als Seite an
+    if (!flaeche._kibEnde) { flaeche._kibEnde = true; flaeche.addEventListener('scroll', () => { if (flaeche.scrollTop + flaeche.clientHeight >= flaeche.scrollHeight - H * 0.6) kibVorladen(); }, { passive: true }); }
+    return;
+  }
   const mehr = sortiert.length > KIB_HANDY_MAX;
   const zeig = sortiert.slice(0, mehr ? KIB_HANDY_MAX - 1 : KIB_HANDY_MAX);
-  const f = KIB_ABSTAND / 2; const halb = (W + f) / 2;
   const ersteH = Math.max(170, Math.round(H * 0.34));
   const rest = zeig.length - 1 + (mehr ? 1 : 0) + 1; // weitere Themen + „Neues“
   const reihen = Math.ceil(rest / 2);
@@ -562,8 +604,12 @@ function kibHandyRaster(flaeche, th, W, H) {
     n++;
   }
   kids.push(kibNeuesKachel(rects[n]));
-  flaeche.classList.add('handy');
   flaeche.replaceChildren(...kids);
+}
+function kibNeuKuratierenKachel(rc) {
+  return h('button', { type: 'button', class: 'kib-kachel neues neu-kuratieren', 'data-nav': '', 'data-fokus': 'neu-kuratieren', style: kibLage(rc), disabled: S.ai.busy,
+    'aria-label': tt('Neu kuratieren – die KI stellt die Auswahl frisch zusammen'), onClick: () => curate() },
+    h('span', { class: 'kib-frage', 'aria-hidden': 'true' }, '↻'), h('span', { class: 'kib-name' }, S.ai.busy ? tt('Kuratiere …') : tt('Neu kuratieren')), h('span', { class: 'kib-satz' }, tt('frische Auswahl')));
 }
 function kibLage(rc) {
   const f = KIB_ABSTAND / 2;

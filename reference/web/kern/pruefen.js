@@ -43,6 +43,11 @@ function pruefBeitraege() {
   for (let i = 0; i < 12; i++) rest.push(p(i % 2 ? 'bsp-nachrichten' : 'bsp-zeitung', 'meldung' + i, 190 + i * 15, { title: 'Meldung ' + (i + 1) + ' aus dem Beispielsatz', text: 'Füllbeitrag, damit Pause-Fenster und Zähler erreichbar sind.' }));
   return { mmx, alle: mmx.concat(rest) };
 }
+// #84: genug Themen für eine zweite Mosaik-Seite am Handy (Indizes in pruefBeitraege().alle: 9 Podcast … 13 Video, 15–26 Meldungen)
+const PRUEF_THEMEN = [['Katzen am Sonntag', 'Zwei Bilder zum #caturday.', 10, 13], ['Herbstlaub erklärt', 'Ein Podcast über bunte Blätter.', 9, 10],
+  ['Bahn und Verkehr', 'Beispiel-Thema mit drei Meldungen.', 15, 18], ['Energiepreise', 'Beispiel-Thema mit zwei Meldungen.', 18, 20],
+  ['Bundesliga', 'Beispiel-Thema mit zwei Meldungen.', 20, 22], ['Schule und Bildung', 'Beispiel-Thema.', 22, 23], ['Kultur am Abend', 'Beispiel-Thema.', 23, 24],
+  ['Gesundheit', 'Beispiel-Thema.', 24, 25], ['Landwirtschaft', 'Beispiel-Thema.', 25, 26], ['Ein Tag im Observatorium', 'Beispiel-Video.', 13, 14]];
 function pruefDatenBauen() {
   const base = {};
   PRUEF_QUELLEN.forEach(([id, title, kind]) => { base['f:' + id] = feedEntry({ id, url: 'https://' + id + '.invalid/feed.xml', title, kind, icon: '', site: '' }); });
@@ -56,8 +61,8 @@ function pruefDatenBauen() {
   const ids = b.alle.map((x) => x.id);
   S.ai.res = S.pruefDaten === 'leer' ? null : { at: Date.now(), ueberschrift: 'Beispiel-Auswahl', n: ids.length, quellen: PRUEF_QUELLEN.length, von: 'Beispieldaten', hinweis: '',
     lage: [{ thema: 'Landung auf Phobos', satz: 'Fünf Quellen berichten über die MMX-Landung.', ids: b.mmx.map((x) => x.id) },
-      { thema: 'Stadt und Wetter', satz: 'Sturmwarnung, Radwege, Museum.', ids: ids.slice(5, 9) }],
-    auswahl: [{ id: b.mmx[0].id, warum: 'Beispiel: eine Geschichte, mehrere Berichte', auch: b.mmx.slice(1).map((x) => x.id) }].concat(ids.slice(5, 9).map((id) => ({ id, warum: 'Beispiel' }))) };
+      { thema: 'Stadt und Wetter', satz: 'Sturmwarnung, Radwege, Museum.', ids: ids.slice(5, 9) }].concat(PRUEF_THEMEN.map(([thema, satz, von, bis]) => ({ thema, satz, ids: ids.slice(von, bis) }))),
+    auswahl: [{ id: b.mmx[0].id, warum: 'Beispiel: eine Geschichte, mehrere Berichte', auch: b.mmx.slice(1).map((x) => x.id) }].concat(ids.slice(5, 9).concat(ids.slice(9)).map((id) => ({ id, warum: 'Beispiel' }))) };
   if (S.ai.res) aiPrepare();
   S.loading = false; S.stack = []; S.pos = -1; S.ended = false; S.filter = null;
   if (S.ai.on && S.ai.res) { show(lageId(), 'up'); return; }

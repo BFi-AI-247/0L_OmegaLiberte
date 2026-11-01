@@ -169,7 +169,7 @@ function cardFor(p) {
   const whoPart = titled
     ? [h('button', { type: 'button', class: 'card-av-btn', 'aria-label': tt('Beiträge von ') + creator + ' zeigen', title: tt('Beiträge von ') + creator, onClick: goCreator },
         avatar(Object.assign({}, e, { avatar: v.avatar || e.avatar, name: creator }), 40)),
-      h('div', { class: 'card-who' }, h('h1', { class: 'card-title' }, titel),
+      h('div', { class: 'card-who' }, rubrikZeile(p), h('h1', { class: 'card-title' }, titel),
         h('span', { class: 'card-meta' }, h('button', { type: 'button', class: 'card-creator-link', onClick: goCreator }, creator), [typ, ago(v.date), v.note].filter(Boolean).map((x) => ' · ' + x).join('')))]
     : [h('button', { type: 'button', class: 'card-who-btn', 'aria-label': tt('Beiträge von ') + creator + ' zeigen', title: tt('Beiträge von ') + creator, onClick: goCreator },
         avatar(Object.assign({}, e, { avatar: v.avatar || e.avatar, name: creator }), 40),
@@ -198,7 +198,7 @@ function cardFor(p) {
     kartenZusatz(p, 'oben'),
     head,
     h('div', { class: 'card-body' },
-      p.title && !titled ? h('h1', {}, titel) : null,
+      p.title && !titled ? [rubrikZeile(p), h('h1', {}, titel)] : null,
       v.video ? videoBlock(v, p) : null,
       v.ptEmbed && modulAn('peertube') ? peertubeBlock(v, p) : v.medien ? mediaBlock(v) : null,
       v.service === 'rss' && !v.medien && !v.video && v.link && (!showText || thinText(v) || /video|sendung|tagesthemen|tagesschau_20/i.test(v.link)) ? watchBlock(v) : null,
@@ -209,6 +209,11 @@ function cardFor(p) {
       kartenZusatz(p, 'unten'),  // #23: z. B. „Antworten ansehen“
       p.kind === 'neu' ? h('button', { type: 'button', class: 'follow-btn', onClick: () => kfollow(p) }, S.kfollows.some((f) => f.key === p.whoKey) ? tt('In KOMPASS gefolgt ✓') : tt('In KOMPASS folgen')) : null),
     foot), artLang);
+}
+// #105 (Modul rubrik-zeile): erste Rubrik des Feeds (z. B. Serie „Gedanken zu KI · Teil 7 von 7“) als kleine Zeile über dem Titel
+function rubrikZeile(p) {
+  const r = modulAn('rubrik-zeile') && Array.isArray(p.rubriken) ? String(p.rubriken[0] || '').trim() : '';
+  return r ? h('span', { class: 'card-rubrik' }, r) : null;
 }
 // #97: Titel und Text tragen die Sprache des Beitrags (Bildschirmleser, „Übersetzen“ im Browser-Menü); Knöpfe bleiben in der App-Sprache
 function uebLangSetzen(el, lang) { if (lang) el.querySelectorAll('h1, .card-text').forEach((x) => { x.lang = lang; }); return el; }

@@ -1015,6 +1015,8 @@ SPRACHE.en = Object.fromEntries(Object.entries({
   "Datum und Sonne: auf deinem Gerät berechnet": "date and sun: calculated on your device",
   "↑ Zurück: Thema „": "↑ Back: topic “",
   "Abspielen lädt das Video von ": "Playing loads the video from ",
+  "Neu kuratieren – die KI stellt die Auswahl frisch zusammen": "Curate again – the AI builds a fresh selection",
+  "frische Auswahl": "fresh selection",
   "KI-Filter": "AI filter",
   "KI-Filter einstellen": "Set AI filter",
   "Noch nichts eingestellt": "Nothing set yet",

@@ -233,6 +233,8 @@ body:has(#vorschau-melden) .kib-flaeche.handy { margin-bottom: 40px; }
 .ki-vorlage-satz a { color: var(--accent-ink); }
 .ki-erweitert summary { cursor: pointer; padding: 4px 0; }
 .ki-erweitert[open] { display: flex; flex-direction: column; gap: 6px; }
+/* #84 weitere Mosaik-Seiten am Handy */
+.kib-flaeche.handy .kib-seite-titel { position: absolute; left: 2px; right: 0; margin: 0; height: 34px; display: flex; align-items: center; font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink3); }
 /* #80 KI-Filter: Steuer-Kachel (violett, gestrichelt) und eigene Seite */
 .kif-kachel { flex: none; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 8px 14px; border-radius: 14px; border: 1.5px dashed #9B87F5;
   background: color-mix(in srgb, #7C5CE0 14%, var(--bg)); color: var(--ink); text-align: left; cursor: pointer; }
