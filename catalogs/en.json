@@ -1,0 +1,372 @@
+{
+ "format": "0l.catalog/1",
+ "language": "en",
+ "edition": "2026-11-01",
+ "groups": [
+  {
+   "name": "Nachrichten",
+   "order": 1,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "BBC News – World",
+     "url": "https://feeds.bbci.co.uk/news/world/rss.xml",
+     "site": "https://bbc.co.uk",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "The Guardian – World",
+     "url": "https://www.theguardian.com/world/rss",
+     "site": "https://theguardian.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Sky News",
+     "url": "https://feeds.skynews.com/feeds/rss/home.xml",
+     "site": "https://news.sky.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "NPR News",
+     "url": "https://feeds.npr.org/1001/rss.xml",
+     "site": "https://npr.org",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Al Jazeera English",
+     "url": "https://www.aljazeera.com/xml/rss/all.xml",
+     "site": "https://aljazeera.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "RTÉ News",
+     "url": "https://www.rte.ie/feeds/rss/?index=/news/",
+     "site": "https://rte.ie",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Euronews",
+     "url": "https://www.euronews.com/rss",
+     "site": "https://euronews.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Podcasts",
+   "order": 2,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "Guardian – Today in Focus",
+     "url": "https://www.theguardian.com/news/series/todayinfocus/rss",
+     "site": "https://theguardian.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Sport",
+   "order": 3,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "BBC Sport",
+     "url": "https://feeds.bbci.co.uk/sport/rss.xml",
+     "site": "https://bbc.co.uk",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Sky Sports",
+     "url": "https://www.skysports.com/rss/11661",
+     "site": "https://skysports.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "The Guardian – Sport",
+     "url": "https://www.theguardian.com/us/sport/rss",
+     "site": "https://theguardian.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "RTÉ Sport",
+     "url": "https://www.rte.ie/feeds/rss/?index=/sport/",
+     "site": "https://rte.ie",
+     "language": "en",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Kultur & Satire",
+   "order": 4,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "The Onion",
+     "url": "https://theonion.com/feed/",
+     "site": "https://theonion.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "The Daily Mash",
+     "url": "https://www.thedailymash.co.uk/feed",
+     "site": "https://thedailymash.co.uk",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "The Shovel",
+     "url": "https://theshovel.com.au/feed/",
+     "site": "https://theshovel.com.au",
+     "language": "en",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Lifestyle & Beauty",
+   "order": 5,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "Lifehacker",
+     "url": "https://lifehacker.com/feed/rss",
+     "site": "https://lifehacker.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "BBC Good Food",
+     "url": "https://www.bbcgoodfood.com/feed",
+     "site": "https://bbcgoodfood.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Apartment Therapy",
+     "url": "https://www.apartmenttherapy.com/main.rss",
+     "site": "https://apartmenttherapy.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "The Guardian – Life & Style",
+     "url": "https://www.theguardian.com/us/lifeandstyle/rss",
+     "site": "https://theguardian.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Tech & Netz",
+   "order": 6,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "Ars Technica",
+     "url": "https://feeds.arstechnica.com/arstechnica/index",
+     "site": "https://arstechnica.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Engadget",
+     "url": "https://www.engadget.com/rss.xml",
+     "site": "https://engadget.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "The Verge",
+     "url": "https://www.theverge.com/rss/index.xml",
+     "site": "https://theverge.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "TechCrunch",
+     "url": "https://techcrunch.com/feed/",
+     "site": "https://techcrunch.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "WIRED",
+     "url": "https://www.wired.com/feed/rss",
+     "site": "https://wired.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Hacker News",
+     "url": "https://news.ycombinator.com/rss",
+     "site": "https://news.ycombinator.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "ProPublica",
+     "url": "https://www.propublica.org/feed",
+     "site": "https://propublica.org",
+     "language": "en",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Wirtschaft & Unternehmen",
+   "order": 7,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "Quartz",
+     "url": "https://qz.com/rss",
+     "site": "https://qz.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Wissen & Raumfahrt",
+   "order": 8,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "ScienceDaily",
+     "url": "https://www.sciencedaily.com/rss/top/science.xml",
+     "site": "https://sciencedaily.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Phys.org",
+     "url": "https://phys.org/rss-feed/",
+     "site": "https://phys.org",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "NASA",
+     "url": "https://www.nasa.gov/feed/",
+     "site": "https://nasa.gov",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Space.com",
+     "url": "https://www.space.com/feeds.xml",
+     "site": "https://space.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "ESA – Space News",
+     "url": "https://www.esa.int/rssfeed/Our_Activities/Space_News",
+     "site": "https://esa.int",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Wikipedia – Today's featured article",
+     "url": "https://en.wikipedia.org/w/api.php?action=featuredfeed&feed=featured&feedformat=atom",
+     "site": "https://en.wikipedia.org",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Wikipedia – On this day",
+     "url": "https://en.wikipedia.org/w/api.php?action=featuredfeed&feed=onthisday&feedformat=atom",
+     "site": "https://en.wikipedia.org",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "WHO – News (Institution)",
+     "url": "https://www.who.int/rss-feeds/news-english.xml",
+     "site": "https://who.int",
+     "language": "en",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Dossier Ukraine",
+   "order": 9,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "The Kyiv Independent",
+     "url": "https://kyivindependent.com/news-archive/rss/",
+     "site": "https://kyivindependent.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Ukrainska Pravda (EN)",
+     "url": "https://www.pravda.com.ua/eng/rss",
+     "site": "https://pravda.com.ua",
+     "language": "en",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "YouTube: Top-YouTuber",
+   "order": 14,
+   "sources": [
+    {
+     "kind": "youtube",
+     "title": "MrBeast",
+     "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCX6OQ3DkcsbYNE6H8uQQuVA",
+     "site": "https://youtube.com",
+     "language": "en",
+     "checked": "2026-11-01"
+    }
+   ],
+   "all_languages": true
+  }
+ ]
+}

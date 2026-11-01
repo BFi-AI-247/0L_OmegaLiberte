@@ -9,7 +9,7 @@ Why: AIs happily suggest sources that do not exist. In the first run of the refe
 ```sh
 php -S 127.0.0.1:8099 -t reference/web &              # the reference relay
 python3 pruefstand/pruefe.py pruefstand/lists/de-sources.txt
-python3 pruefstand/pruefe.py catalogs/de-starter.json  # a source pack works too
+python3 pruefstand/pruefe.py catalogs/archive/de-starter-2026-10-20.json  # a source pack works too
 ```
 Needs PHP 8.1+ with curl and Python 3.8+ (standard library only). Another server: `PRUEFSTAND_API=https://your.host/path/api/rss.php`.
 Note: a real server's `rss.php` only answers same-origin browser calls and limits requests per hour; the local one is the easy way.

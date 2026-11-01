@@ -1,0 +1,21 @@
+{
+ "format": "0l.catalog/1",
+ "language": "fr",
+ "edition": "2026-11-01",
+ "groups": [
+  {
+   "name": "Nachrichten",
+   "order": 1,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "Le Monde",
+     "url": "https://www.lemonde.fr/rss/une.xml",
+     "site": "https://lemonde.fr",
+     "language": "fr",
+     "checked": "2026-11-01"
+    }
+   ]
+  }
+ ]
+}

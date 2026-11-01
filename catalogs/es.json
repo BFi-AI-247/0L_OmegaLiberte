@@ -1,0 +1,21 @@
+{
+ "format": "0l.catalog/1",
+ "language": "es",
+ "edition": "2026-11-01",
+ "groups": [
+  {
+   "name": "Nachrichten",
+   "order": 1,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "DW Español",
+     "url": "https://rss.dw.com/rdf/rss-sp-all",
+     "site": "https://dw.com",
+     "language": "es",
+     "checked": "2026-11-01"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,21 @@
+{
+ "format": "0l.catalog/1",
+ "language": "ru",
+ "edition": "2026-11-01",
+ "groups": [
+  {
+   "name": "Dossier Ukraine",
+   "order": 9,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "Meduza",
+     "url": "https://meduza.io/rss/all",
+     "site": "https://meduza.io",
+     "language": "ru",
+     "checked": "2026-11-01"
+    }
+   ]
+  }
+ ]
+}

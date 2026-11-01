@@ -1,0 +1,731 @@
+{
+ "format": "0l.catalog/1",
+ "language": "de",
+ "edition": "2026-11-01",
+ "groups": [
+  {
+   "name": "Nachrichten",
+   "order": 1,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "Tagesschau",
+     "url": "https://www.tagesschau.de/index~rss2.xml",
+     "site": "https://tagesschau.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "ZDFheute",
+     "url": "https://www.zdfheute.de/rss/zdf/nachrichten",
+     "site": "https://zdfheute.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Deutschlandfunk",
+     "url": "https://www.deutschlandfunk.de/nachrichten-100.rss",
+     "site": "https://deutschlandfunk.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "DER SPIEGEL",
+     "url": "https://www.spiegel.de/schlagzeilen/index.rss",
+     "site": "https://spiegel.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "DIE ZEIT",
+     "url": "https://newsfeed.zeit.de/index",
+     "site": "https://zeit.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "taz",
+     "url": "https://taz.de/!p4608;rss/",
+     "site": "https://taz.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Süddeutsche Zeitung",
+     "url": "https://rss.sueddeutsche.de/rss/Topthemen",
+     "site": "https://sueddeutsche.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "n-tv",
+     "url": "https://www.n-tv.de/rss",
+     "site": "https://n-tv.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Deutsche Welle",
+     "url": "https://rss.dw.com/rdf/rss-de-all",
+     "site": "https://dw.com",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "ORF",
+     "url": "https://rss.orf.at/news.xml",
+     "site": "https://orf.at",
+     "language": "de",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Podcasts",
+   "order": 2,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "Dlf – Die Nachrichten",
+     "url": "https://www.deutschlandfunk.de/nachrichten-108.xml",
+     "site": "https://deutschlandfunk.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Dlf – Der Tag",
+     "url": "https://www.deutschlandfunk.de/podcast-104.xml",
+     "site": "https://deutschlandfunk.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Lage der Nation",
+     "url": "https://lagedernation.org/feed/mp3/",
+     "site": "https://lagedernation.org",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "MDR – Was tun, Herr General?",
+     "url": "https://www.mdr.de/nachrichten/podcast/general/russland-angriff-krieg-ukraine-mdr-100.xml",
+     "site": "https://mdr.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Dlf – Forschung aktuell",
+     "url": "https://www.deutschlandfunk.de/forschung-aktuell-104.xml",
+     "site": "https://deutschlandfunk.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Hörsaal (Dlf Nova)",
+     "url": "https://www.deutschlandfunknova.de/podcast/hoersaal-der-podcast",
+     "site": "https://deutschlandfunknova.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Senkrechtstarter (Raumfahrt)",
+     "url": "https://senkrechtstarter.podigee.io/feed/mp3",
+     "site": "https://podigee.io",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "WDR 2 Einfach Fußball",
+     "url": "https://www1.wdr.de/mediathek/audio/wdr2/wdr2-bundesliga-togo/bundesliga-togo-102.podcast",
+     "site": "https://wdr.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Dlf Sport",
+     "url": "https://www.deutschlandfunk.de/sport-aktuell-podcast-100.xml",
+     "site": "https://deutschlandfunk.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Dlf – Essay und Diskurs",
+     "url": "https://www.deutschlandfunk.de/essay-und-diskurs-102.xml",
+     "site": "https://deutschlandfunk.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Dlf – Tatort Kunst",
+     "url": "https://www.deutschlandfunk.de/tatort-kunst-102.xml",
+     "site": "https://deutschlandfunk.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Ohrenbär (Kinder)",
+     "url": "https://www.ohrenbaer.de/podcast/podcast.xml/feed=podcast.xml",
+     "site": "https://ohrenbaer.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Sport",
+   "order": 3,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "Sportschau",
+     "url": "https://www.sportschau.de/index~rss2.xml",
+     "site": "https://sportschau.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Sportschau – Bundesliga",
+     "url": "https://www.sportschau.de/fussball/bundesliga/index~rss2.xml",
+     "site": "https://sportschau.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "kicker",
+     "url": "https://newsfeed.kicker.de/news/aktuell",
+     "site": "https://kicker.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Kultur & Satire",
+   "order": 4,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "Deutschlandfunk – Kultur",
+     "url": "https://www.deutschlandfunk.de/kulturportal-100.rss",
+     "site": "https://deutschlandfunk.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Lifestyle & Beauty",
+   "order": 5,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "Vogue Germany",
+     "url": "https://www.vogue.de/feed/rss",
+     "site": "https://vogue.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "GLAMOUR Germany",
+     "url": "https://www.glamour.de/feed/rss",
+     "site": "https://glamour.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "BRIGITTE",
+     "url": "https://www.brigitte.de/feed.rss",
+     "site": "https://brigitte.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Tech & Netz",
+   "order": 6,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "heise online",
+     "url": "https://www.heise.de/rss/heise-atom.xml",
+     "site": "https://heise.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "netzpolitik.org",
+     "url": "https://netzpolitik.org/feed/",
+     "site": "https://netzpolitik.org",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "CORRECTIV",
+     "url": "https://correctiv.org/feed/",
+     "site": "https://correctiv.org",
+     "language": "de",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Wirtschaft & Unternehmen",
+   "order": 7,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "Moneycab",
+     "url": "https://www.moneycab.com/feed/",
+     "site": "https://moneycab.com",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Volkswagen Group – Pressemitteilungen (Unternehmen)",
+     "url": "https://www.volkswagen-group.com/de/feeds/pressemitteilungen",
+     "site": "https://volkswagen-group.com",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Lufthansa Group – Newsroom (Unternehmen)",
+     "url": "https://newsroom.lufthansagroup.com/feed/de",
+     "site": "https://lufthansagroup.com",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Deutsche Bahn – Presseinformationen (Unternehmen)",
+     "url": "https://www.deutschebahn.com/service/rss/de/6868410/feed.rss",
+     "site": "https://deutschebahn.com",
+     "language": "de",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Wissen & Raumfahrt",
+   "order": 8,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "Spektrum der Wissenschaft",
+     "url": "https://www.spektrum.de/alias/rss/spektrum-de-rss-feed/996406",
+     "site": "https://spektrum.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "ESA – Weltraumforschung",
+     "url": "https://www.esa.int/rssfeed/Our_Activities/Space_Science",
+     "site": "https://esa.int",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "wissenschaft.de – Bild der Wissenschaft",
+     "url": "https://wissenschaft.de/feed.xml",
+     "site": "https://wissenschaft.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Raumfahrer.net",
+     "url": "https://www.raumfahrer.net/feed/",
+     "site": "https://raumfahrer.net",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Wikipedia – Artikel des Tages",
+     "url": "https://de.wikipedia.org/w/api.php?action=featuredfeed&feed=featured&feedformat=atom",
+     "site": "https://de.wikipedia.org",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Wikipedia – Was geschah am …?",
+     "url": "https://de.wikipedia.org/w/api.php?action=featuredfeed&feed=onthisday&feedformat=rss",
+     "site": "https://de.wikipedia.org",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "GEO",
+     "url": "https://www.geo.de/feed/rss/geo/",
+     "site": "https://geo.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "idw – Pressemitteilungen aus der Forschung",
+     "url": "https://idw-online.de/de/pressreleasesrss",
+     "site": "https://idw-online.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Uni Oldenburg – Nachrichten (Hochschule)",
+     "url": "https://uol.de/aktuelles/rss",
+     "site": "https://uol.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Dossier Ukraine",
+   "order": 9,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "Russland verstehen (LibMod)",
+     "url": "https://russlandverstehen.eu/de/feed/",
+     "site": "https://russlandverstehen.eu",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "MDR – Was tun, Herr General?",
+     "url": "https://www.mdr.de/nachrichten/podcast/general/russland-angriff-krieg-ukraine-mdr-100.xml",
+     "site": "https://mdr.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Regional: Gifhorn",
+   "order": 10,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "NDR Niedersachsen",
+     "url": "https://www.ndr.de/nachrichten/niedersachsen/index~rss2.xml",
+     "site": "https://ndr.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Aller-Zeitung – Gifhorn",
+     "url": "https://www.az-online.de/isenhagener-land/gifhorn/rssfeed.rdf",
+     "site": "https://az-online.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Braunschweiger Zeitung – Gifhorn",
+     "url": "https://www.braunschweiger-zeitung.de/niedersachsen/gifhorn/rss",
+     "site": "https://braunschweiger-zeitung.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Polizeiinspektion Gifhorn",
+     "url": "https://www.presseportal.de/rss/dienststelle_56517.rss2",
+     "site": "https://presseportal.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "MTV Gifhorn",
+     "url": "https://www.mtv-gifhorn.de/?format=feed&type=rss",
+     "site": "https://mtv-gifhorn.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Regional: Wolfsburg & Braunschweig",
+   "order": 11,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "WAZ Wolfsburger Allgemeine",
+     "url": "https://www.waz-online.de/arc/outboundfeeds/rss/",
+     "site": "https://waz-online.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Polizei Wolfsburg (Presseportal)",
+     "url": "https://www.presseportal.de/rss/polizei/r/Wolfsburg.rss2",
+     "site": "https://presseportal.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Polizei Braunschweig (Presseportal)",
+     "url": "https://www.presseportal.de/rss/polizei/r/Braunschweig.rss2",
+     "site": "https://presseportal.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Regional: Borkum",
+   "order": 12,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "Borkum-News",
+     "url": "https://www.borkum-news.de/feed/",
+     "site": "https://borkum-news.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Nationalpark Wattenmeer",
+     "url": "https://www.nationalpark-wattenmeer.de/feed/",
+     "site": "https://nationalpark-wattenmeer.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Polizeiinspektion Leer/Emden",
+     "url": "https://www.presseportal.de/rss/dienststelle_104235.rss2?langid=1",
+     "site": "https://presseportal.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "PeerTube (Fediverse-Video)",
+   "order": 15,
+   "sources": [
+    {
+     "kind": "rss",
+     "title": "heise c’t 3003",
+     "url": "https://peertube.heise.de/feeds/podcast/videos.xml?videoChannelId=4",
+     "site": "https://peertube.heise.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "heise c’t uplink",
+     "url": "https://peertube.heise.de/feeds/podcast/videos.xml?videoChannelId=1129",
+     "site": "https://peertube.heise.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "heise show",
+     "url": "https://peertube.heise.de/feeds/podcast/videos.xml?videoChannelId=1132",
+     "site": "https://peertube.heise.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Digitalcourage – Medienecho",
+     "url": "https://digitalcourage.video/feeds/podcast/videos.xml?videoChannelId=11",
+     "site": "https://digitalcourage.video",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Digitalcourage – Freie Software und Bildung",
+     "url": "https://digitalcourage.video/feeds/podcast/videos.xml?videoChannelId=1469",
+     "site": "https://digitalcourage.video",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "LfDI BW – Datenfreiheit",
+     "url": "https://tube.xn--baw-joa.social/feeds/podcast/videos.xml?videoChannelId=23",
+     "site": "https://tube.xn--baw-joa.social",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Zeitzeugeninterviews (LFB BW)",
+     "url": "https://pt01.lehrerfortbildung-bw.de/feeds/podcast/videos.xml?videoChannelId=42",
+     "site": "https://pt01.lehrerfortbildung-bw.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "KH Berlin – Projekte Mode-Design",
+     "url": "https://tube.kh-berlin.de/feeds/videos.xml?videoChannelName=projekte_modedesign",
+     "site": "https://tube.kh-berlin.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "KH Berlin – Videokunst",
+     "url": "https://tube.kh-berlin.de/feeds/videos.xml?videoChannelName=vk_kanal",
+     "site": "https://tube.kh-berlin.de",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "rss",
+     "title": "Virtuelle PH",
+     "url": "https://tube.virtuelle-ph.at/feeds/podcast/videos.xml?videoChannelId=2",
+     "site": "https://tube.virtuelle-ph.at",
+     "language": "de",
+     "checked": "2026-11-01"
+    }
+   ]
+  },
+  {
+   "name": "Bluesky",
+   "order": 1000,
+   "sources": [
+    {
+     "kind": "bluesky-list",
+     "title": "Deutsche Medienlandschaft",
+     "url": "https://bsky.app/starter-pack/hoppeditza.bsky.social/3lh2xqejfy62a",
+     "topic": "Nachrichten",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "bluesky-list",
+     "title": "Deutschsprachige Medien",
+     "url": "https://bsky.app/starter-pack/tibor.net/3lbdiinjnya2z",
+     "topic": "Nachrichten",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "bluesky-list",
+     "title": "Journalisten",
+     "url": "https://bsky.app/profile/tibor.net/lists/3kaphizvhza2u",
+     "topic": "Nachrichten",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "bluesky-list",
+     "title": "Die Krautreporter-Redaktion",
+     "url": "https://bsky.app/starter-pack/krautreporter.bsky.social/3lgamvtkp3a2q",
+     "topic": "Nachrichten",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "bluesky-list",
+     "title": "Recherchekooperation NDR, WDR, SZ",
+     "url": "https://bsky.app/starter-pack/did:plc:5zs2wvlkigmvgbqlwmmy5rml/3lbbxr4srav2a",
+     "topic": "Recherche",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "bluesky-list",
+     "title": "Deutsche Bundesbehörden",
+     "url": "https://bsky.app/starter-pack/behoerden.bsky.social/3lk6a4e6kb22j",
+     "topic": "Verwaltung",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "bluesky-list",
+     "title": "Katastrophen- und Zivilschutz",
+     "url": "https://bsky.app/profile/hoppeditza.bsky.social/lists/3lglxlvnpzo2q",
+     "topic": "Gesellschaft",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "bluesky-list",
+     "title": "Grüne Unternehmen und NGOs",
+     "url": "https://bsky.app/starter-pack/greenjobs.de/3lbztqm5nix2u",
+     "topic": "Klima & Umwelt",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "bluesky-list",
+     "title": "Grüne Organisationen",
+     "url": "https://bsky.app/profile/greenjobs.de/lists/3kdk7r34wf52v",
+     "topic": "Klima & Umwelt",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "bluesky-list",
+     "title": "Momentum Institut (AT)",
+     "url": "https://bsky.app/starter-pack/momentum-institut.at/3lmu46qbxje2c",
+     "topic": "Wirtschaft",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "bluesky-list",
+     "title": "Österreichs Politik",
+     "url": "https://bsky.app/profile/thomasmohr.bsky.social/lists/3lcdb3j5njb2c",
+     "topic": "Politik (AT)",
+     "language": "de",
+     "checked": "2026-11-01"
+    },
+    {
+     "kind": "bluesky-list",
+     "title": "Politik in Bremen",
+     "url": "https://bsky.app/starter-pack/abgeordnete.bsky.social/3lkkvn7chuv24",
+     "topic": "Politik (Bremen)",
+     "language": "de",
+     "checked": "2026-11-01"
+    }
+   ]
+  }
+ ]
+}
