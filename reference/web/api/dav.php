@@ -60,10 +60,13 @@ $p = parse_url($url);
 if (!$p || ($p['scheme'] ?? '') !== 'https' || empty($p['host']) || isset($p['user']) || isset($p['query']) || isset($p['fragment'])) nein('Nur https-Adressen ohne Zusatz.');
 $pfad = (string)($p['path'] ?? '/');
 if (str_contains($pfad, '..')) nein('Pfad nicht erlaubt.');
-// Nur der Ordner KOMPASS (bzw. KOMPASS/<Profil>, #60) und Dateien kompass-*.json darin
+// Nur der Ordner KOMPASS (bzw. KOMPASS/<Profil>, #60) und Dateien kompass-*.json darin (dazu die Gedächtnis-.md, #95)
 if (preg_match('#%2[ef]|%5c#i', $pfad)) nein('Pfad nicht erlaubt.');
 $istOrdner = (bool)preg_match('#/KOMPASS(/[A-Za-z0-9%._~-]{1,160})?/?$#', $pfad);
 $istDatei = (bool)preg_match('#/KOMPASS/([A-Za-z0-9%._~-]{1,160}/)?kompass-[a-z0-9-]{1,40}\.json$#', $pfad);
+// #95: dazu genau die Gedächtnis-Datei <profil>~Kompass~OmegaLiberte.md
+$istMd = (bool)preg_match('#/KOMPASS/([A-Za-z0-9%._~-]{1,160}/)?[A-Za-z0-9%._-]{1,160}(~|%7E)Kompass(~|%7E)OmegaLiberte\.md$#i', $pfad);
+if ($istMd) $istDatei = true;
 if ($istDatei) $istOrdner = false;
 if (!$istOrdner && !$istDatei) nein('Nur der Ordner KOMPASS ist erlaubt.');
 if ($methode === 'MKCOL' && !$istOrdner) nein('Nur der Ordner KOMPASS.');
@@ -92,7 +95,7 @@ $opts = [
     CURLOPT_HTTPAUTH => CURLAUTH_BASIC, CURLOPT_USERPWD => $user . ':' . $pass,
     CURLOPT_MAXFILESIZE => MAX_BYTES,
 ];
-if ($methode === 'PUT') { $opts[CURLOPT_POSTFIELDS] = $inhalt; $kopf[] = 'Content-Type: application/json; charset=utf-8'; }
+if ($methode === 'PUT') { $opts[CURLOPT_POSTFIELDS] = $inhalt; $kopf[] = 'Content-Type: ' . (!empty($istMd) ? 'text/markdown' : 'application/json') . '; charset=utf-8'; }
 if ($methode === 'PROPFIND') { $kopf[] = 'Depth: 0'; }
 $opts[CURLOPT_HTTPHEADER] = $kopf;
 curl_setopt_array($ch, $opts);

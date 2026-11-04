@@ -1058,7 +1058,8 @@ function kifSeite() {
       h('section', { class: 'kif-verstehe', 'aria-label': tt('So verstehe ich dich') },
         h('h2', {}, tt('So verstehe ich dich')),
         verstehe.length ? h('ul', {}, verstehe) : h('p', { class: 'kif-satz' }, tt('Noch keine Vorgaben – die KI wählt nur nach dem, was in deinen Quellen wichtig ist.')),
-        h('p', { class: 'kif-klein' }, tt('Das geht bei jeder Auswahl an die KI.')), kifOrdnenTeil()),
+        h('p', { class: 'kif-klein' }, tt('Das geht bei jeder Auswahl an die KI.')), kifOrdnenTeil(),
+        modulAn('gedaechtnis') ? h('button', { type: 'button', class: 'kib-knopf kif-ged', onClick: () => { S.screen = 'settings'; S.einstReiter = 'ki'; render(); } }, '📄 ' + tt('Als Datei ansehen und bearbeiten')) : null),  // #95
       h('div', { class: 'kif-fuss' },
         h('button', { type: 'button', class: 'kib-knopf primaer', disabled: !!(S.ai.busy || S.pruefDaten), onClick: () => { KIF.geaendert = false; curate(); } }, tt('Neu kuratieren mit diesem Filter')),
         KIF.geaendert ? h('span', { class: 'kif-klein', role: 'status' }, tt('Geändert – wirkt bei der nächsten Auswahl.')) : null)));

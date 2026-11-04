@@ -101,6 +101,7 @@ function kiLaufAnzeige(kennung, standText) {
 }
 async function kiFrage(msgs, opt = {}) {
   const c = KI.cfg(); const ac = new AbortController(); let abbruch = () => ac.abort();
+  if (typeof gedVorspann === 'function' && !opt.ohneGedaechtnis) msgs = gedVorspann(msgs);  // #95: Gedächtnis des Nutzers an jede eigene KI
   let stoppen; const stopp = new Promise((_, nein) => { stoppen = () => { try { abbruch(); } catch (e) { /* egal */ } nein(new Error(tt('Abgebrochen.'))); }; });
   stopp.catch(() => {});
   const lokalLaedt = c.art === 'lokal' && !(KI.engine && KI.engineId === (c.modell || KI_LOKAL_MODELLE[0].id));

@@ -186,6 +186,7 @@ async function syncNow(manual) {
       SY.applying = false;
       if (push) await conn.write(fdef.name, fileFor(fkey));
     }
+    if (typeof gedDavSchreiben === 'function') await gedDavSchreiben(conn);  // #95: Gedächtnis als eigene .md-Datei (nur schreiben)
     sync.last = Date.now(); storeSync();
     if (manual) flash(tt('Abgeglichen mit ') + conn.label() + '.');
   } catch (e) {
@@ -226,7 +227,7 @@ const DAV = {
     try { return JSON.parse(d.inhalt); } catch (e) { throw new Error(name + tt(' ist kein gültiges JSON.')); }
   },
   async write(name, obj) {
-    const body = JSON.stringify(obj, null, 2);
+    const body = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);  // Text: Gedächtnis-.md (#95)
     let d = await this.req('PUT', name, body);
     if (d.code === 404 || d.code === 409) { if (davProfil()) await this.req('MKCOL', '', null, null, true); await this.req('MKCOL', ''); d = await this.req('PUT', name, body); }
     if (![200, 201, 204].includes(d.code)) throw new Error(tt('WebDAV speichert nicht (') + d.code + ').');

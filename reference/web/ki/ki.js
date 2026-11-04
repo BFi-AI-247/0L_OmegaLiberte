@@ -68,12 +68,18 @@ const KI = {
   },
   name() {
     const c = this.cfg();
+    if (modulAn('ki-geraet-standard') && !kiProbeErlaubt() && (c.art === 'kompass' || !this.bereit())) return tt('Ohne KI');  // #96
     if (!this.bereit() || c.art === 'kompass') return kiEinladung() ? tt('Mistral (Einladung von {name})').replace('{name}', INSTANZ.betreiber[LANG] || INSTANZ.betreiber.de) : tt('Mistral (KOMPASS-Probe)');
     if (c.art === 'lokal') return (KI_LOKAL_MODELLE.find((m) => m.id === c.modell) || {}).label || tt('Modell auf dem Gerät');
-    if (c.art === 'browser') return 'Browser-KI';
+    if (c.art === 'browser') return modulAn('ki-geraet-standard') ? tt('KI deines Geräts') : 'Browser-KI';
     return (c.modell || KI_ARTEN[c.art].label).replace(/:free$/, '') + (c.art === 'openrouter' ? tt(' (OpenRouter)') : '');
   },
   klein() { const c = this.cfg(); return this.bereit() && (c.art === 'lokal' || c.art === 'browser'); }
 };
-// #96: Browser-KI nutzbar = Schnittstelle vorhanden und das Gerät schafft das Modell (availability ≠ 'unavailable')
-function kiBrowserDa() { return typeof self.LanguageModel !== 'undefined' && KI.browserStatus !== 'unavailable'; }
+// #96: Browser-KI nutzbar = Schnittstelle vorhanden und das Gerät schafft das Modell (availability ≠ 'unavailable').
+// Mit Modul ki-geraet-standard nur, wenn das Modell schon fertig auf dem Gerät ist ('available') – KOMPASS stößt keinen Download an.
+function kiBrowserDa() {
+  if (typeof self.LanguageModel === 'undefined') return false;
+  if (modulAn('ki-geraet-standard') && typeof self.LanguageModel.availability === 'function') return KI.browserStatus === 'available';
+  return KI.browserStatus !== 'unavailable';
+}

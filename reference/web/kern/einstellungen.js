@@ -392,7 +392,7 @@ function renderSettings(onboarding) {
       postenVerbunden() ? h('button', { type: 'button', class: 'mini primary', style: 'align-self:flex-start', onClick: () => { S.screen = null; postenOeffnen('neu'); } }, tt('✎ Neuer Beitrag')) : null,
       speichern];
   } else if (reiter === 'ki') {
-    inhalt = [renderKiBox(),
+    inhalt = [renderKiBox(), typeof gedBox === 'function' ? gedBox() : null,  // #95
       h('div', { class: 'card-box' }, h('h3', {}, tt('Wunsch für die KI-Auswahl')),
         einstFeld(f, 'k-ki-wunsch', '', tt('Was soll die KI eher zeigen, was weglassen? Z. B. „mehr Raumfahrt, kein Fußball“.'), tt('mehr …, weniger …'), 'aiWunsch')),
       speichern];

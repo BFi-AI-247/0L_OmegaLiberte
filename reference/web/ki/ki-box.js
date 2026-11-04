@@ -5,7 +5,10 @@
 
 /* ---------- Einstellungen: „Deine KI“ ---------- */
 function kiWaehlen(art) {
-  const c = KI.cfg(); if (c.art === art) return;
+  const c = KI.cfg(); const gs = modulAn('ki-geraet-standard');
+  // #96: gewählte KI nochmal antippen = abwählen → ohne KI (bzw. Einladung); die Zeile „Ohne KI“ entfällt
+  if (c.art === art) { if (!gs || art === 'kompass') return; art = 'kompass'; }
+  if (gs) store.set('kiGeraetAuto', 'manuell');  // #96: eigene Wahl – nie wieder automatisch umstellen
   c.art = art; c.modell = art === 'lokal' ? KI_LOKAL_MODELLE[0].id : art === 'gemini' ? KI_GEMINI_STD : ''; c.url = art === 'openai' ? c.url : c.url;
   KI.ui.fehler = ''; KI.ui.test = ''; kiCfgSpeichern(); render();
   if (art === 'openrouter' && KI.keys.openrouter && !KI.ui.orModelle) kiOpenRouterModelle();
@@ -46,11 +49,18 @@ function kiFehlerKlar(e) {
 function renderKiBox() {
   const c = KI.cfg(); const u = KI.ui;
   const hatBrowserKi = kiBrowserDa();
-  const arten = ['openrouter', 'gemini', 'lokal', 'openai'].concat(hatBrowserKi ? ['browser'] : []).concat(kiProbeErlaubt() ? ['kompass'] : []);
-  const row = (a) => h('button', { type: 'button', class: 'toggle-row ki-row', 'aria-pressed': c.art === a ? 'true' : 'false', onClick: () => kiWaehlen(a) },
-    h('span', { class: 'row-text' }, h('span', { class: 'row-title', style: 'font-size:15px' }, KI_ARTEN[a].label,
+  const gs = modulAn('ki-geraet-standard');
+  // #96 (Modul ki-geraet-standard): eigener Schlüssel → eigene Installation/Adresse → KI des Geräts → ohne KI (bzw. Einladung);
+  // das Modell zum Herunterladen („Auf diesem Gerät“) bieten wir nicht mehr an – nur wer es schon gewählt hat, sieht es weiter.
+  const arten = gs ? ['openrouter', 'gemini', 'openai'].concat(hatBrowserKi ? ['browser'] : []).concat(c.art === 'lokal' ? ['lokal'] : []).concat(kiProbeErlaubt() ? ['kompass'] : [])
+    : ['openrouter', 'gemini', 'lokal', 'openai'].concat(hatBrowserKi ? ['browser'] : []).concat(kiProbeErlaubt() ? ['kompass'] : []);
+  const text = (a) => gs ? kiArtText(a) : KI_ARTEN[a];
+  const abwaehlbar = (a) => gs && a === c.art && a !== 'kompass';
+  const row = (a) => h('button', { type: 'button', class: 'toggle-row ki-row', 'aria-pressed': c.art === a ? 'true' : 'false', onClick: () => kiWaehlen(a),
+      title: abwaehlbar(a) ? tt('Nochmal antippen: abwählen – dann läuft KOMPASS ohne KI') : undefined },
+    h('span', { class: 'row-text' }, h('span', { class: 'row-title', style: 'font-size:15px' }, text(a).label,
       a === c.art && KI.bereit() && a !== 'kompass' ? h('span', { class: 'ki-ok' }, tt(' · verbunden')) : null),
-      h('span', { class: 'row-sub', style: 'white-space:normal' }, KI_ARTEN[a].sub)),
+      h('span', { class: 'row-sub', style: 'white-space:normal' }, text(a).sub)),
     h('span', { class: 'radio' }));
   let detail = null;
   if (c.art === 'openrouter' && KI.keys.openrouter && !u.orModelle && !u.orLaden) setTimeout(kiOpenRouterModelle, 0);
@@ -113,16 +123,20 @@ function renderKiBox() {
       h('span', { class: 'small' }, navigator.gpu ? tt('Einmalige Last über WLAN empfohlen. Danach antwortet die KI ohne Internet-Dienst – langsamer und einfacher als große Modelle, aber privat.') : tt('Dieser Browser kann keine Modelle auf dem Gerät ausführen (WebGPU fehlt). Am besten Chrome auf dem Laptop.')));
   } else if (c.art === 'browser') {
     detail = h('div', { class: 'ki-detail' }, h('div', { class: 'ki-btns' }, h('button', { type: 'button', class: 'mini primary', onClick: kiTesten }, tt('Testen'))),
-      h('span', { class: 'small' }, tt('Beim ersten Mal lädt der Browser seine KI selbst nach. Antworten auf Deutsch sind je nach Version eingeschränkt.')));
+      h('span', { class: 'small' }, gs ? tt('Läuft auf diesem Gerät, nichts verlässt es. Kleiner als große Online-KIs – bei langen Aufgaben arbeitet KOMPASS in Stücken.')
+        : tt('Beim ersten Mal lädt der Browser seine KI selbst nach. Antworten auf Deutsch sind je nach Version eingeschränkt.')));
+  } else if (gs && kiEinladung()) {
+    detail = h('div', { class: 'ki-detail' }, h('span', { class: 'small' }, tt('{name} teilt ein kleines KI-Kontingent mit dir (Mistral über den KOMPASS-Server). Für mehr: verbinde oben deine eigene KI.').replace('{name}', INSTANZ.betreiber[LANG] || INSTANZ.betreiber.de)));
   } else {
     detail = h('div', { class: 'ki-detail' }, h('span', { class: 'small' }, tt('Die Probe teilt sich ein kleines Kontingent mit allen. Für den Alltag: verbinde deine eigene KI.')));
   }
   return h('div', { class: 'card-box' }, h('h3', {}, tt('Deine KI')),
+    gs && c.art === 'browser' && store.get('kiGeraetAuto', '') && store.get('kiGeraetAuto', '') !== 'manuell' ? h('div', { class: 'note ki-geraet-hinweis' }, '✓ ' + tt('Deine KI ist schon da – sie läuft auf diesem Gerät, nichts verlässt es.')) : null,
     h('p', { class: 'small', style: 'margin:0;line-height:1.5' }, tt('Dialog, Faktencheck und KI-Auswahl laufen über die KI, die du verbindest. Zugangsschlüssel bleiben verschlüsselt nur auf diesem Gerät – nicht im Abgleich, nicht auf unserem Server.')),
     arten.map((a) => [row(a), a === c.art ? detail : null]),
     u.test ? h('div', { class: 'note' }, u.test) : null,
     u.fehler ? h('div', { class: 'note err' }, u.fehler) : null,
-    h('span', { class: 'small' }, tt('Aktiv: ') + KI.name() + (KI.bereit() ? '' : tt(' – deine Wahl ist auf diesem Gerät noch nicht verbunden'))));
+    h('span', { class: 'small' }, tt('Aktiv: ') + KI.name() + (KI.bereit() || (gs && c.art === 'kompass') ? '' : tt(' – deine Wahl ist auf diesem Gerät noch nicht verbunden'))));
 }
 
 async function kiInit() {
@@ -133,8 +147,25 @@ async function kiInit() {
   if (typeof self.LanguageModel !== 'undefined' && typeof self.LanguageModel.availability === 'function') {
     try { KI.browserStatus = String(await self.LanguageModel.availability()); } catch (e) { KI.browserStatus = ''; }
   }
+  kiGeraetStandard();
   if (KI.cfg().art === 'openrouter' && KI.keys.openrouter && S.screen === 'settings') kiOpenRouterModelle();
   render();
+}
+// #96 (Modul ki-geraet-standard): Bringt das Gerät seine KI schon fertig mit (Browser meldet 'available'), wird sie einmal
+// automatisch gewählt – nur, wenn hier noch keine eigene KI eingerichtet ist. Kein Download von uns; wer danach umstellt, bleibt dabei.
+function kiGeraetStandard() {
+  if (!modulAn('ki-geraet-standard') || store.get('kiGeraetAuto', '') || !kiBrowserDa()) return;
+  const c = KI.cfg(); if (c.art !== 'kompass' || kiEinladung()) return;
+  c.art = 'browser'; c.modell = ''; kiCfgSpeichern(); store.set('kiGeraetAuto', new Date().toISOString().slice(0, 10));
+  flash(tt('Deine KI ist schon da – sie läuft auf diesem Gerät, nichts verlässt es.'));
+}
+// Bezeichnungen mit Modul ki-geraet-standard (Reihenfolge eigener Schlüssel → eigene Installation → Gerät → ohne KI)
+function kiArtText(a) {
+  if (a === 'openai') return { label: tt('Eigene Installation oder Adresse'), sub: tt('Ollama, LM Studio oder ein Dienst mit Adresse – auch Mistral, OpenAI, Claude') };
+  if (a === 'browser') return { label: tt('KI deines Geräts'), sub: tt('Schon auf dem Gerät eingebaut – ohne Konto, nichts verlässt es') };
+  if (a === 'kompass') return kiProbeErlaubt() ? (kiEinladung() ? { label: tt('Du bist eingeladen'), sub: tt('Ein kleines KI-Kontingent, das dir jemand schenkt') } : KI_ARTEN.kompass)
+    : { label: tt('Ohne KI'), sub: tt('Lesen geht immer – KI-Funktionen bleiben aus') };
+  return KI_ARTEN[a];
 }
 
 /* ---------- Quellen-Vorschläge: KI nennt Kandidaten, KOMPASS prüft jeden selbst ---------- */

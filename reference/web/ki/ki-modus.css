@@ -300,3 +300,8 @@ body:has(#vorschau-melden) .kib-flaeche.handy { margin-bottom: 40px; }
 .kif-eingabe { display: flex; gap: 8px; }
 .kif-eingabe input { flex: 1; min-width: 0; min-height: 42px; padding: 0 12px; border-radius: 12px; border: 1.5px dashed #9B87F5; background: var(--surface); color: var(--ink); font-size: 16px; }
 .kif-eingabe input:focus-visible { border-style: solid; outline: none; }
+/* #95 Gedächtnis als Markdown-Datei (Modul gedaechtnis) */
+.ged-feld { width: 100%; box-sizing: border-box; font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line2); background: var(--surface); color: var(--ink); resize: vertical; }
+.ged-name { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
+.ged-pre { white-space: pre-wrap; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 6px 0 0; padding: 8px 10px; border-radius: 10px; background: var(--surface2); }
+.kif-ged { align-self: flex-start; }
