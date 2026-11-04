@@ -1105,4 +1105,13 @@ SPRACHE.en = Object.fromEntries(Object.entries({
   "Erledigt.": "Done.",
   "Nichts geändert.": "Nothing changed.",
   "Du": "You",
+  "Profil in diesem Browser": "Profile in this browser",
+  "Standard": "Default",
+  "Neues Profil, z. B. Katzen": "New profile, e.g. Cats",
+  "Name für ein neues Profil": "Name for a new profile",
+  "Wechseln": "Switch",
+  "Jedes Profil hat eigene Quellen, Favoriten, KI-Filter und einen eigenen Verlauf – z. B. „Katzen“ in Chrome und „Nachrichten“ in Firefox. Ein Profil aus einem anderen Browser öffnest du, indem du hier seinen Namen einträgst.": "Each profile has its own sources, favourites, AI filter and history – e.g. “Cats” in Chrome and “News” in Firefox. To open a profile from another browser, enter its name here.",
+  "Zum Profil „{p}“ wechseln? KOMPASS gleicht zuerst ab und lädt dann dieses Profil aus deinem Speicher. Ein neues Profil beginnt mit der Einrichtung.": "Switch to profile “{p}”? KOMPASS syncs first and then loads this profile from your storage. A new profile starts with the setup.",
+  "Profil nicht gewechselt – der Abgleich ging nicht: ": "Profile not switched – sync failed: ",
+  "Profil nicht gewechselt – der Abgleich läuft noch.": "Profile not switched – sync is still running.",
 }).filter(([, v]) => v));

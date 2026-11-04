@@ -98,6 +98,7 @@ function renderStorage(onboarding) {
       h('div', { class: 'store-status' }, h('span', { class: 'dot', style: 'background:' + (SY.error ? 'var(--f-rot)' : 'var(--f-gruen)') }),
         h('span', { class: 'row-text' }, h('b', { style: 'font-size:14px' }, c.label()), h('span', { class: 'row-sub', style: 'white-space:normal' }, st))),
       h('span', { class: 'small' }, tt('Ordner „KOMPASS“: kompass-einstellungen.json und kompass-verlauf.json – lesbares JSON.')),
+      profilAn() ? profilWahl() : null,  // #79
       h('div', { class: 'btn-row' },
         h('button', { type: 'button', class: 'mini primary', disabled: SY.busy, onClick: () => syncNow(true) }, tt('Jetzt abgleichen')),
         url ? h('a', { class: 'mini linkish', href: url, target: '_blank', rel: 'noopener noreferrer' }, tt('Im Drive ansehen')) : null,
@@ -151,6 +152,24 @@ function renderStorage(onboarding) {
       h('button', { type: merken ? 'submit' : 'button', class: 'btn primary', disabled: SY.connecting || SY.busy, onClick: merken ? null : verbinden }, SY.connecting ? tt('Verbinde …') : tt('Verbinden'))].filter(Boolean));  // DOM-append schreibt sonst „null“
   }
   return box;
+}
+
+// #79 (Modul profile): Profil dieses Browsers wählen oder neu anlegen – Wechsel gleicht ab und lädt neu
+function profilFragen(name) {
+  const n = name || tt('Standard');
+  if (!confirm(tt('Zum Profil „{p}“ wechseln? KOMPASS gleicht zuerst ab und lädt dann dieses Profil aus deinem Speicher. Ein neues Profil beginnt mit der Einrichtung.').replace('{p}', n))) { render(); return; }
+  profilWechseln(name);
+}
+function profilWahl() {
+  const akt = davProfil(); const neu = { v: '' };
+  return h('div', { class: 'profil-wahl' },
+    h('label', { for: 'k-profil', class: 'small' }, tt('Profil in diesem Browser')),
+    h('select', { id: 'k-profil', disabled: SY.busy, onChange: (e) => profilFragen(e.target.value) },
+      profileBekannt().map((p) => h('option', { value: p, selected: p === akt }, p || tt('Standard')))),
+    h('form', { class: 'profil-neu', onSubmit: (e) => { e.preventDefault(); if (neu.v.trim()) profilFragen(neu.v.trim()); } },
+      h('input', { id: 'k-profil-neu', type: 'text', placeholder: tt('Neues Profil, z. B. Katzen'), autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', 'aria-label': tt('Name für ein neues Profil'), onInput: (e) => { neu.v = e.target.value; } }),
+      h('button', { type: 'submit', class: 'mini', disabled: SY.busy }, tt('Wechseln'))),
+    h('span', { class: 'small', style: 'line-height:1.4' }, tt('Jedes Profil hat eigene Quellen, Favoriten, KI-Filter und einen eigenen Verlauf – z. B. „Katzen“ in Chrome und „Nachrichten“ in Firefox. Ein Profil aus einem anderen Browser öffnest du, indem du hier seinen Namen einträgst.')));
 }
 
 // #98 (Modul speicher-merken): bekannte WebDAV-Anbieter – ein Tipp füllt die Adresse (Stand M015, MagentaCLOUD vom Betreiber geprüft).

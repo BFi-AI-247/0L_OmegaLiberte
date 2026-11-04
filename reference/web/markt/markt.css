@@ -21,3 +21,14 @@
 .morgen-zeile .markt-link, .morgen-zeile .markt-notiz { grid-column: 2; }
 .morgen-play { grid-column: 2; justify-self: start; font-weight: 600; padding: 4px 12px; border-radius: 16px; border: 1px solid var(--line2); color: var(--ink); text-decoration: none; }
 @media (max-width: 460px) { .morgen-zeile { grid-template-columns: 1fr; } .morgen-zeile .markt-link, .morgen-zeile .markt-notiz, .morgen-play { grid-column: 1; } }
+/* #108 Faktenblatt der Wiesenzeitung: groß und gut lesbar (Betreiber 01.11.: „Bitte darauf achten, dass es lesbar bleibt.“) */
+.fb-gross .markt-name { font-size: 17px; }
+.fb-gross .markt-wert { font-size: 22px; }
+.fb-gross .markt-pfeil { font-size: 16px; }
+.fb-gross .markt-notiz { font-size: 16px; color: var(--ink2); line-height: 1.45; }
+.fb-gross .markt-quellen { font-size: 14px; line-height: 1.45; }
+.fb-gross .fb-text { grid-template-columns: 7.5rem 1fr; }
+.fb-gross .fb-satz { font-size: 17px; line-height: 1.5; color: var(--ink); }
+.fb-untertitel { margin: 16px 0 2px; font-size: 18px; font-weight: 800; }
+@media (max-width: 480px) { .fb-gross .fb-text { grid-template-columns: 1fr; gap: 2px; } }
+

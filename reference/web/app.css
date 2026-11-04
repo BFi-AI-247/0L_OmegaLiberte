@@ -250,6 +250,11 @@ a { color: var(--accent-ink); }
 /* Speicher */
 .accent-box { border: 1px solid var(--accent-ink); }
 .store-status { display: flex; align-items: center; gap: 10px; }
+.profil-wahl { display: flex; flex-direction: column; gap: 6px; }
+.profil-wahl select, .profil-neu input { min-height: 44px; font: inherit; border: 1px solid var(--line2); border-radius: 10px; background: var(--surface); color: inherit; padding: 0 10px; }
+.profil-neu { display: flex; gap: 8px; margin: 0; }
+.profil-neu input { flex: 1; min-width: 0; }
+.profil-neu .mini { min-height: 44px; }
 .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
 a.mini { display: inline-flex; align-items: center; text-decoration: none; color: var(--ink); }
 .field input[type="password"], .field input[type="url"] { font-size: 15px; }

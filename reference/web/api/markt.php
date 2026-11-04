@@ -6,12 +6,15 @@
 // Dollar/Euro: EZB-Referenzkurse (amtlich, ohne Schlüssel), Datei der letzten 90 Tage – daraus Kurs und Vortag.
 // Heizöl (#24, #51): Deutschlandpreis aus dem EU Weekly Oil Bulletin (Preise mit Steuern, XLSX, feste Adresse laut M029),
 // einmal am Tag; Gifhorn nur als Link, Portale werden nicht ausgelesen. VW Vz / DAX erst mit erlaubter Quelle.
+// ?wiesenzeitung=1 (Modul faktenblatt, #108): zusätzlich das Faktenblatt der neuesten Wiesenzeitung-Ausgabe (Wetter, Sonne,
+// „Heute ist …“, Markt am Morgen mit VW, DAX, Dollar, Heizöl) – Texte und Quellen unverändert von RADAR (_radar.php).
 // Datenschutz: keine Nutzerdaten; gespeichert wird nur der Puffer (3 Stunden).
 // ===================================================================
 declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 require __DIR__ . '/_instanz.php';
+require __DIR__ . '/_radar.php';
 
 const EZB_90 = 'https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml';
 const MARKT_PUFFER = 3 * 3600;
@@ -103,8 +106,29 @@ function markt_bauen(?string $xml): array {
         'quelle' => ['dollar' => 'EZB-Referenzkurs']];
 }
 
+/** Faktenblatt der neuesten Wiesenzeitung-Ausgabe (höchstens von gestern), sonst null */
+function wiesenzeitung_faktenblatt(): ?array {
+    $basis = radar_basis() . '/wiesenzeitung_gifhorn/';
+    $last = radar_seite($basis . 'last.json', 1800);
+    $j = is_string($last) ? json_decode($last, true) : null;
+    if (!is_array($j) || !preg_match('~^posts/[A-Za-z0-9_-]+\.html$~', (string)($j['link'] ?? '')) || !preg_match('~^\d{4}-\d{2}-\d{2}$~', (string)($j['datum'] ?? ''))) return null;
+    $heute = new DateTime('now', new DateTimeZone('Europe/Berlin'));
+    if ((string)$j['datum'] < $heute->modify('-1 day')->format('Y-m-d')) return null;
+    $html = radar_seite($basis . $j['link']);
+    $f = is_string($html) ? radar_faktenblatt($html) : null;
+    if (!$f) return null;
+    return $f + ['ausgabe' => (string)($j['ausgabe'] ?? ''), 'datum' => (string)$j['datum'], 'uhrzeit' => (string)($j['uhrzeit'] ?? ''),
+        'link' => 'https://radar724.de/wiesenzeitung_gifhorn/' . $j['link']];
+}
+/** Antwort ausgeben – mit Faktenblatt, wenn die App es verlangt (nicht im 3-Stunden-Puffer, die Ausgabe kommt morgens) */
+function markt_mit_faktenblatt(string $json, int $cache): never {
+    $d = json_decode($json, true);
+    if (is_array($d) && ($_GET['wiesenzeitung'] ?? '') === '1' && ($f = wiesenzeitung_faktenblatt())) { $d['wiesenzeitung'] = $f; $cache = min($cache, 600); }
+    markt_raus(200, is_array($d) ? $d : ['status' => 'fehler'], $cache);
+}
+
 $datei = markt_puffer();
-if (is_readable($datei) && filemtime($datei) > time() - MARKT_PUFFER) { header('Cache-Control: public, max-age=900'); readfile($datei); exit; }
+if (is_readable($datei) && filemtime($datei) > time() - MARKT_PUFFER) markt_mit_faktenblatt((string)file_get_contents($datei), 900);
 $ch = curl_init(EZB_90);
 curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 10, CURLOPT_CONNECTTIMEOUT => 5, CURLOPT_FOLLOWLOCATION => false,
     CURLOPT_PROTOCOLS => CURLPROTO_HTTPS, CURLOPT_USERAGENT => ol_user_agent(), CURLOPT_ENCODING => '']);
@@ -113,8 +137,9 @@ if ($code !== 200) $xml = null;
 $d = markt_bauen(is_string($xml) ? $xml : null);
 if ($d['status'] === 'ok' && ($hz = heizoel_holen())) { $d['heizoel'] = $hz; $d['quelle']['heizoel'] = 'EU Weekly Oil Bulletin'; }
 if ($d['status'] !== 'ok') {
-    if (is_readable($datei)) { readfile($datei); exit; }   // alter Stand besser als nichts
+    if (is_readable($datei)) markt_mit_faktenblatt((string)file_get_contents($datei), 900);   // alter Stand besser als nichts
     markt_raus(502, $d);
 }
-@file_put_contents($datei, json_encode($d, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
-markt_raus(200, $d, 900);
+$json = json_encode($d, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+@file_put_contents($datei, $json, LOCK_EX);
+markt_mit_faktenblatt($json, 900);

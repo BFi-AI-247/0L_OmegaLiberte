@@ -15,6 +15,7 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 require __DIR__ . '/_instanz.php';
+require __DIR__ . '/_radar.php';
 if (OL_HERKUNFT) { header('Access-Control-Allow-Origin: ' . OL_HERKUNFT[0]); header('Vary: Origin'); }
 
 const QUELLEN = [
@@ -60,14 +61,14 @@ if (is_readable($datei) && filemtime($datei) > time() - PUFFER_SEKUNDEN) {
 }
 
 // ---------- Abrufen -----------------------------------------------------
-$ch = curl_init($quelle['url']);
+$ch = curl_init(str_replace('https://radar724.de', radar_basis(), $quelle['url']));
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_FOLLOWLOCATION => true,
     CURLOPT_MAXREDIRS      => 3,
     CURLOPT_TIMEOUT        => 15,
     CURLOPT_USERAGENT      => ol_user_agent(),
-    CURLOPT_PROTOCOLS      => CURLPROTO_HTTPS,
+    CURLOPT_PROTOCOLS      => radar_testmodus() ? CURLPROTO_HTTP | CURLPROTO_HTTPS : CURLPROTO_HTTPS,
 ]);
 $roh = curl_exec($ch);
 $http = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
@@ -136,6 +137,18 @@ if (isset($xml->channel)) {
             'rubriken' => [],
         ];
     }
+}
+
+// ---------- Volltext (Modul w0-volltext, 03.11.2026) ---------------------
+// Die RADAR-Feeds tragen je Meldung nur einen Anriss; die ganze Meldung steht auf der Ausgabeseite unter #artikel-N.
+// Höchstens die 4 neuesten Ausgabeseiten, je 6 Stunden gepuffert. Fehlt eine Seite, bleibt der Anriss.
+$seiten = [];
+foreach ($eintraege as $i => $e) {
+    if (!preg_match('~^(.+\.html)#(artikel-\d+)$~', $e['link'], $m) || !radar_url_ok($m[1])) continue;
+    if (!isset($seiten[$m[1]])) { if (count($seiten) >= 4) continue; $seiten[$m[1]] = null; }
+    $seiten[$m[1]] ??= ($h = radar_seite($m[1])) !== null ? radar_artikel($h) : [];
+    $voll = $seiten[$m[1]][$m[2]] ?? '';
+    if (mb_strlen($voll) > mb_strlen($e['text'])) { $eintraege[$i]['text'] = mb_substr($voll, 0, 20000); $eintraege[$i]['volltext'] = true; }
 }
 
 $daten = [

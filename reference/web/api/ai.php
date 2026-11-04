@@ -55,7 +55,9 @@ if (!is_array($in)) antwort('fehler', TEXTE['fehler'], 400);
 
 $frage = trim((string)($in['frage'] ?? ''));
 if ($frage === '') antwort('abgelehnt', TEXTE['leer']);
-if (mb_strlen($frage) > 1000) antwort('abgelehnt', TEXTE['zu_lang']);
+// #109: Der Faktencheck schickt eine feste Anweisung (~1.400 Zeichen) plus bis zu sechs Stützen aus dem Feed – 1000 war zu knapp.
+const FRAGE_MAX = 4000;
+if (mb_strlen($frage) > FRAGE_MAX) antwort('abgelehnt', TEXTE['zu_lang']);
 
 $b = is_array($in['beitrag'] ?? null) ? $in['beitrag'] : [];
 $kurz = fn($v, int $n) => mb_substr(trim((string)$v), 0, $n);

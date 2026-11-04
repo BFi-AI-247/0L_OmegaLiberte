@@ -18,7 +18,7 @@ function marktLaden() {
     MARKT.post = S.byId[marktId()] = { id: marktId(), service: 'markt', tags: [], who: titel, whoKey: 'markt', title: titel, text: '', date: new Date().toISOString(), media: [] };
     render();
   };
-  getJSON('api/markt.php').then((d) => {
+  getJSON('api/markt.php' + (art === 'wiesenzeitung' && modulAn('faktenblatt') ? '?wiesenzeitung=1' : '')).then((d) => {  // #108
     if (d && d.status === 'ok' && d.dollar) setzen(d); else if (art) setzen(null);  // Briefing: Datum und Sonne gehen auch ohne Kurse
   }).catch(() => { if (art) setzen(null); }).finally(() => { MARKT.laedt = false; });
 }
@@ -120,7 +120,30 @@ function marktKarte(p) {
         h('p', { class: 'markt-quellen' }, tt('Quellen: ') + tt('EZB (Dollar/Euro)') + (region && modulAn('heizoel-de') && d.heizoel ? ' · ' + tt('EU Oil Bulletin (Heizöl)') : '') + (region ? ' · ' + region.portal + tt(' (Heizöl, nur Link)') : '') + '. ' + tt('Einmal am Tag, kein Ticker.')))));
 }
 modusRegistrieren({ id: 'markt', label: tt('Markt am Morgen'), aktiv: () => false, karte: marktKarte });
+// #108 (Modul faktenblatt): Faktenblatt der Wiesenzeitung 1:1 – Wetter, Sonne, „Heute ist …“ und Markt am Morgen so, wie RADAR es
+// in der Ausgabe zeigt (Texte und Quellen unverändert). Groß und gut lesbar (Klasse fb-gross), ▲/▼ zusätzlich zur Farbe.
+function faktenblattKarte(f) {
+  const textZeile = (name, text) => h('div', { class: 'markt-zeile fb-text' }, h('span', { class: 'markt-name' }, name), h('span', { class: 'fb-satz' }, text));
+  const kursZeile = (k) => h('div', { class: 'markt-zeile' },
+    h('span', { class: 'markt-name' }, k.name), h('span', { class: 'markt-wert' }, k.wert),
+    k.veraenderung ? h('span', { class: 'markt-pfeil ' + (k.richtung || 'gleich') }, (k.richtung === 'auf' ? '▲ ' : k.richtung === 'ab' ? '▼ ' : '') + k.veraenderung) : h('span'),
+    k.stand ? h('span', { class: 'markt-notiz' }, k.stand) : null);
+  const zeilen = (f.leiste || []).slice(0, 4).map((l) => textZeile(l.name.replace(/\s*\.\.\.$/, ' …'), l.text));
+  const kurse = (f.kurse || []).slice(0, 6).map(kursZeile);
+  const ausgabe = [f.ausgabe, f.datum ? new Date(f.datum + 'T12:00:00').toLocaleDateString('de-DE') : '', f.uhrzeit ? f.uhrzeit + ' Uhr' : ''].filter(Boolean).join(', ');
+  return h('article', { class: 'card markt-karte briefing-wiesenzeitung fb-gross', 'aria-label': tt('Auf einen Blick') },
+    h('div', { class: 'card-body' },
+      h('div', { class: 'markt-box' },
+        h('h2', { class: 'markt-titel' }, tt('Auf einen Blick')),
+        h('div', { class: 'markt-zeilen' }, ...zeilen),
+        kurse.length ? h('h3', { class: 'fb-untertitel' }, f.markt_titel || tt('Markt am Morgen')) : null,
+        kurse.length ? h('div', { class: 'markt-zeilen' }, ...kurse) : null,
+        typeof morgenBlock === 'function' ? morgenBlock() : null,  // #34
+        h('p', { class: 'markt-quellen' }, (f.quellen ? f.quellen + ' ' : ''),
+          h('a', Object.assign({ href: f.link }, EXT), tt('Wiesenzeitung Gifhorn') + (ausgabe ? ' – ' + ausgabe : '') + ' ↗')))));
+}
 function briefingKarte(art, d) {
+  if (art === 'wiesenzeitung' && modulAn('faktenblatt') && d && d.wiesenzeitung && ((d.wiesenzeitung.kurse || []).length || (d.wiesenzeitung.leiste || []).length)) return faktenblattKarte(d.wiesenzeitung);
   const ort = BRIEFING_ORTE[art]; const jetzt = new Date();
   const heute = briefingHeute(jetzt); const so = briefingSonne(jetzt, ort.lat, ort.lon);
   const zeilen = [marktZeile(tt('Heute ist …'), heute.wert, null, heute.notiz)];

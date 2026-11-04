@@ -126,7 +126,11 @@ const EINSTIEGE = {
   // #102 (Modul w0-meldungen): Wiesenzeitung Meldung für Meldung als erste Quelle (zuerst), RADAR-Artikel-Feed hinter den Gifhorn-Quellen;
   // Einträge mit Ort „Gifhorn“ (category) zählen als Gifhorn. In spaeter stehen Feed-Adressen oder RADAR-Schlüssel.
   w0: { modul: 'einstieg-w0', sprache: 'de', radar: ['radar-gifhorn'], gruppe: 'Regional: Gifhorn', ort: 'Gifhorn',
-    zuerst: ['radar-gifhorn'], dazu: { modul: 'w0-meldungen', radar: ['radar-artikel'] },
+    zuerst: ['radar-gifhorn'], dazu: { modul: 'w0-meldungen', radar: [] },
+    // 03.11. (Modul w0-lokal, Betreiber: „Die KI übersteuert sofort die lokalen Quellen und zeigt allgemeine News“): kein allgemeiner
+    // RADAR-Artikel-Feed mehr (auch auf schon eingerichteten W0-Geräten aus), dazu ein fester KI-Wunsch, wenn keiner gesetzt ist
+    lokal: { modul: 'w0-lokal', ohne: ['radar-artikel'],
+      wunsch: 'Nur Meldungen aus Gifhorn und dem Landkreis Gifhorn, danach Niedersachsen. Keine überregionalen oder internationalen Nachrichten.' },
     spaeter: ['https://www.ndr.de/nachrichten/niedersachsen/index~rss2.xml', 'radar-artikel'] }
 };
 // #39 (Modul w0-gifhorn-zuerst): Auf W0-Geräten stehen Beiträge der Gifhorn-Quellen aus den letzten 48 Stunden vorne,
@@ -150,11 +154,22 @@ function einstiegOrdnen(liste) {
   return erst.concat(vorne, rest);
 }
 // #102: W0-Geräte, die vor der Umstellung eingerichtet wurden, bekommen den RADAR-Artikel-Feed einmalig dazu (still, nur Quelle ergänzt)
+function einstiegLokal(E) {
+  (E.lokal.ohne || []).forEach((k) => { if (settings.radar) settings.radar[k] = false; });
+  if (!String(settings.aiWunsch || '').trim()) settings.aiWunsch = E.lokal.wunsch;
+  if (S.ai && S.ai.res) { S.ai.res = null; store.set('aiRes', null); }  // alte KI-Auswahl mit allgemeinen News verwerfen
+}
+// Geräte, die vor einer Änderung über einen Einstieg eingerichtet wurden, einmalig nachziehen (einstiegStand zählt die Schritte)
 function einstiegNachziehen() {
   const E = EINSTIEGE[settings.einstieg];
-  if (!E || !E.dazu || !modulAn(E.modul) || !modulAn(E.dazu.modul) || (settings.einstiegStand || 0) >= 1) return;
-  E.dazu.radar.forEach((k) => { if (k in RADAR_FEEDS) settings.radar[k] = true; });
-  settings.einstiegStand = 1; save('settings');
+  if (!E || !modulAn(E.modul)) return;
+  const vorher = settings.einstiegStand || 0;
+  if ((settings.einstiegStand || 0) < 1 && E.dazu && modulAn(E.dazu.modul)) {
+    E.dazu.radar.forEach((k) => { if (k in RADAR_FEEDS) settings.radar[k] = true; });
+    settings.einstiegStand = 1;
+  }
+  if ((settings.einstiegStand || 0) < 2 && E.lokal && modulAn(E.lokal.modul)) { einstiegLokal(E); settings.einstiegStand = 2; }
+  if ((settings.einstiegStand || 0) !== vorher) save('settings');
 }
 function einstiegAusAdresse() {
   const m = /^#(?:einstieg=)?(w0)$/i.exec(location.hash || ''); if (!m) return false;
@@ -168,6 +183,7 @@ function einstiegAusAdresse() {
   }
   E.radar.forEach((k) => { if (k in RADAR_FEEDS) settings.radar[k] = true; });
   if (E.dazu && modulAn(E.dazu.modul)) { E.dazu.radar.forEach((k) => { if (k in RADAR_FEEDS) settings.radar[k] = true; }); settings.einstiegStand = 1; }
+  if (E.lokal && modulAn(E.lokal.modul)) { einstiegLokal(E); settings.einstiegStand = 2; }
   if (gruppe) gruppe.items.forEach(([n, u, d, kind]) => {
     if (!settings.feeds.some((x) => x.url === u)) settings.feeds.push({ id: hashId(u), url: u, title: n, kind: kind === 'youtube' ? 'youtube' : 'rss', icon: '', site: 'https://' + d + '/' });
   });

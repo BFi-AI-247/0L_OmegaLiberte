@@ -21,6 +21,32 @@ const SY = { busy: false, again: false, timer: null, at: 0, error: '', applying:
 // Muss nur unter denen eindeutig sein, die sich denselben Zugang teilen; liegt nur auf dem Gerät (store 'sync'), nicht im Abgleich.
 function davProfil(c) { const p = modulAn('speicher-profil') ? String((c || sync.dav || {}).profil || '').trim() : ''; return /^[\p{L}\p{N} ._-]{1,40}$/u.test(p) && !/^\.+$/.test(p) ? p : ''; }
 function storeSync() { store.set('sync', sync); }
+// #79 (Modul profile): mehrere Zusammenstellungen im eigenen Speicher – je Browser ein Profil (KOMPASS/<profil>/, „Standard“ = KOMPASS/).
+// Jedes Profil hat eigene Einstellungen (Quellen, Favoriten, KI-Filter) und eigenen Verlauf; die Profil-Wahl bleibt in diesem Browser.
+function profilAn() { return modulAn('profile') && modulAn('speicher-profil') && sync.provider === 'dav'; }
+function profileBekannt() {
+  const l = (Array.isArray(sync.profile) ? sync.profile : []).filter((p) => davProfil({ profil: p }));
+  const akt = davProfil(); return ['', ...new Set([...l, ...(akt ? [akt] : [])])];
+}
+// Wechsel: erst abgleichen (sonst ginge Ungespeichertes verloren), dann die abgeglichenen Teile in diesem Browser leeren und neu laden –
+// beim Start holt der Abgleich das gewählte Profil; ein neues Profil beginnt mit der Einrichtung. Zähler (heute/gesamt) bleiben.
+async function profilWechseln(name) {
+  name = String(name || '').trim();
+  if (!profilAn()) return false;
+  if (name && !davProfil({ profil: name })) { flash(tt('Profil: 1–40 Zeichen, Buchstaben, Ziffern, Leerzeichen, Punkt, Minus, Unterstrich.')); return false; }
+  if (name === davProfil()) return false;
+  for (let i = 0; SY.busy && i < 150; i++) await new Promise((r) => setTimeout(r, 100));  // laufender Abgleich zuerst fertig
+  if (SY.busy) { flash(tt('Profil nicht gewechselt – der Abgleich läuft noch.')); return false; }
+  await syncNow();
+  if (SY.error) { flash(tt('Profil nicht gewechselt – der Abgleich ging nicht: ') + SY.error); return false; }
+  clearTimeout(SY.timer); SY.timer = null;
+  const liste = profileBekannt().filter(Boolean); if (name && !liste.includes(name)) liste.push(name);
+  sync.profile = liste.slice(-20); sync.dav = Object.assign({}, sync.dav, { profil: name || undefined }); sync.t = {}; sync.last = 0; storeSync();
+  store.set = () => {};  // bis zum Neuladen schreibt nichts mehr in den Browser-Speicher (sonst landete Altes im neuen Profil)
+  Object.keys(PART_FILE).filter((p) => p !== 'zaehler').concat(['aiRes']).forEach((k) => { try { localStorage.removeItem(LS + k); } catch (e) { /* egal */ } });
+  location.reload();
+  return true;
+}
 function deviceName() {
   const ua = navigator.userAgent;
   const os = /Android/.test(ua) ? tt('Android') : /iPhone|iPad/.test(ua) ? 'iOS' : /Windows/.test(ua) ? tt('Windows') : /Mac/.test(ua) ? tt('Mac') : /Linux/.test(ua) ? tt('Linux') : tt('Gerät');
